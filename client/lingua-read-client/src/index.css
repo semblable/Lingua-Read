@@ -1,3 +1,61 @@
+:root {
+  /* Light theme colors */
+  --background-color-light: #f8f9fa;
+  --font-color-light: #212529;
+  --dark-grey-light: #e9ecef;
+  --light-grey-light: #adb5bd;
+  
+  /* Dark theme colors */
+  --background-color-dark: #48484a;
+  --font-color-dark: #c4c8ce;
+  --dark-grey-dark: #333333;
+  --light-grey-dark: #c4c8ce;
+
+  /* Status colors - light theme */
+  --status-0-color-light: rgba(173, 216, 230, 0.5); /* Lighter blue with opacity */
+  --status-1-color-light: #ff6666;
+  --status-2-color-light: #ff9933;
+  --status-3-color-light: #ffdd66;
+  --status-4-color-light: #99dd66;
+  --status-5-color-light: transparent;
+
+  /* Status colors - dark theme */
+  --status-0-color-dark: rgba(86, 146, 174, 0.4); /* Lighter blue with opacity for dark theme */
+  --status-1-color-dark: #b46b7a;
+  --status-2-color-dark: #988542; 
+  --status-3-color-dark: #699859;
+  --status-4-color-dark: #5692AE;
+  --status-5-color-dark: transparent;
+
+  /* Default to light theme */
+  --background-color: var(--background-color-light);
+  --font-color: var(--font-color-light);
+  --dark-grey: var(--dark-grey-light);
+  --light-grey: var(--light-grey-light);
+  
+  --status-0-color: var(--status-0-color-light);
+  --status-1-color: var(--status-1-color-light);
+  --status-2-color: var(--status-2-color-light);
+  --status-3-color: var(--status-3-color-light);
+  --status-4-color: var(--status-4-color-light);
+  --status-5-color: var(--status-5-color-light);
+}
+
+/* Dark theme class that can be applied to body */
+.dark-theme {
+  --background-color: var(--background-color-dark);
+  --font-color: var(--font-color-dark);
+  --dark-grey: var(--dark-grey-dark);
+  --light-grey: var(--light-grey-dark);
+  
+  --status-0-color: var(--status-0-color-dark);
+  --status-1-color: var(--status-1-color-dark);
+  --status-2-color: var(--status-2-color-dark);
+  --status-3-color: var(--status-3-color-dark);
+  --status-4-color: var(--status-4-color-dark);
+  --status-5-color: var(--status-5-color-dark);
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,7 +63,9 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8f9fa;
+  background-color: var(--background-color);
+  color: var(--font-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 code {
@@ -15,8 +75,9 @@ code {
 
 /* Text display word styles */
 .untracked-word {
-  color: #0066ff !important; 
+  color: #fff !important; 
   cursor: pointer;
+  background-color: var(--status-0-color);
 }
 
 .highlighted-word {
@@ -27,29 +88,34 @@ code {
 }
 
 /* Status color scheme */
+.word-status-0 {
+  background-color: var(--status-0-color) !important;
+  color: #000 !important;
+}
+
 .word-status-1 {
-  background-color: #ff6666 !important; /* Red for new words */
-  color: white !important;
+  background-color: var(--status-1-color) !important;
+  color: #000 !important;
 }
 
 .word-status-2 {
-  background-color: #ff9933 !important; /* Orange for learning words */
-  color: #333 !important;
+  background-color: var(--status-2-color) !important;
+  color: #000 !important;
 }
 
 .word-status-3 {
-  background-color: #ffdd66 !important; /* Yellow for familiar words */
-  color: #333 !important;
+  background-color: var(--status-3-color) !important;
+  color: #000 !important;
 }
 
 .word-status-4 {
-  background-color: #99dd66 !important; /* Light green for advanced words */
-  color: #333 !important;
+  background-color: var(--status-4-color) !important;
+  color: #000 !important;
 }
 
 .word-status-5 {
-  background-color: #66cc66 !important; /* Green for known words */
-  color: #333 !important;
+  background-color: transparent !important;
+  color: inherit !important;
 }
 
 .text-content {
@@ -61,16 +127,78 @@ code {
   max-width: 400px;
   margin: 0 auto;
   padding: 20px;
-  background-color: white;
+  background-color: var(--dark-grey);
   border-radius: 5px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .text-card {
   transition: transform 0.2s;
+  background-color: var(--dark-grey);
+  color: var(--font-color);
 }
 
 .text-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme overrides for Bootstrap components */
+.dark-theme .card {
+  background-color: var(--dark-grey-dark);
+  color: var(--font-color-dark);
+  border-color: rgba(255, 255, 255, 0.125);
+}
+
+.dark-theme .form-control {
+  background-color: var(--dark-grey-dark);
+  color: var(--font-color-dark);
+  border-color: var(--light-grey-dark);
+}
+
+.dark-theme .text-muted {
+  color: #a2a2a7 !important;
+}
+
+.dark-theme .modal-content {
+  background-color: var(--dark-grey-dark);
+  color: var(--font-color-dark);
+}
+
+.dark-theme .close {
+  color: var(--font-color-dark);
+}
+
+.dark-theme a {
+  color: #ACACF9;
+}
+
+.dark-theme a:hover {
+  color: #FF5C5C;
+}
+
+/* Fix for horizontal padding in Bootstrap container */
+body, html {
+  overflow-x: hidden;
+  max-width: 100vw;
+  padding: 0;
+  margin: 0;
+}
+
+/* Override Bootstrap container padding */
+.container-fluid {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  max-width: 100vw !important;
+}
+
+/* Override any grid padding */
+.row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.col, [class*="col-"] {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 } 

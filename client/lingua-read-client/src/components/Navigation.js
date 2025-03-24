@@ -36,14 +36,14 @@ const Navigation = () => {
               </>
             )}
           </Nav>
+          
           <Nav>
             {token ? (
-              <>
-                <Navbar.Text className="me-3">
-                  Signed in as: {user?.email}
-                </Navbar.Text>
-                <Button variant="outline-light" onClick={handleLogout}>Logout</Button>
-              </>
+              <NavDropdown title="Account" id="account-dropdown" align="end">
+                <NavDropdown.Item as={Link} to="/settings">Settings</NavDropdown.Item>
+                <NavDropdown.Divider />
+                <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
+              </NavDropdown>
             ) : (
               <>
                 <Nav.Link as={Link} to="/login">Login</Nav.Link>

@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Container, Card, Spinner, Alert, Button, Modal, Form, Row, Col, Badge, ProgressBar } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getText, createWord, updateWord, updateLastRead, completeLesson, getBook, translateText, translateSentence, translateFullText } from '../utils/api';
+import { getText, createWord, updateWord, updateLastRead, completeLesson, getBook, translateText, translateSentence, translateFullText, getUserSettings } from '../utils/api';
 import TranslationPopup from '../components/TranslationPopup';
+import './TextDisplay.css';
 
 // CSS for word highlighting
 const styles = {
@@ -11,13 +12,20 @@ const styles = {
     padding: '0 2px',
     margin: '0 1px',
     borderRadius: '3px',
+    transition: 'all 0.2s ease',
   },
-  wordStatus0: { color: '#000', backgroundColor: 'transparent' }, // Not tracked yet
-  wordStatus1: { color: '#fff', backgroundColor: '#ff6666' },     // New (red)
-  wordStatus2: { color: '#333', backgroundColor: '#ff9933' },     // Learning (orange)
-  wordStatus3: { color: '#333', backgroundColor: '#ffdd66' },     // Familiar (yellow)
-  wordStatus4: { color: '#333', backgroundColor: '#99dd66' },     // Advanced (light green)
-  wordStatus5: { color: '#333', backgroundColor: '#66cc66' },     // Known (green)
+
+  wordStatus1: { color: '#000', backgroundColor: '#ff6666' },  // New (red)
+  wordStatus2: { color: '#000', backgroundColor: '#ff9933' },  // Learning (orange)
+  wordStatus3: { color: '#000', backgroundColor: '#ffdd66' },  // Familiar (yellow)
+  wordStatus4: { color: '#000', backgroundColor: '#99dd66' },  // Advanced (light green)
+  wordStatus5: { color: 'inherit', backgroundColor: 'transparent' }, // Known - no highlighting
+  selectedSentence: {
+    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+    padding: '0.25rem',
+    borderRadius: '0.25rem',
+    border: '1px dashed rgba(0, 123, 255, 0.5)',
+  },
   untrackedWord: {
     cursor: 'pointer',
     color: '#007bff',
@@ -83,6 +91,85 @@ const TextDisplay = () => {
   const [showTranslationPopup, setShowTranslationPopup] = useState(false);
   const [fullTextTranslation, setFullTextTranslation] = useState('');
   const [isFullTextTranslating, setIsFullTextTranslating] = useState(false);
+
+  // Add this to the component's state declarations
+  const [userSettings, setUserSettings] = useState({
+    textSize: 16,
+    textFont: 'default',
+    autoTranslateWords: true,
+    highlightKnownWords: true,
+    autoAdvanceToNextLesson: false,
+    showProgressStats: true
+  });
+
+  // Add these new state variables with the other state declarations
+  const [leftPanelWidth, setLeftPanelWidth] = useState(85); // Default 85% of width for reading panel
+  const [isDragging, setIsDragging] = useState(false);
+  const resizeDividerRef = useRef(null);
+
+  // Add this useEffect for the resizable functionality
+  useEffect(() => {
+    const handleMouseDown = (e) => {
+      setIsDragging(true);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDragging) return;
+      
+      const containerWidth = document.querySelector('.resizable-container').offsetWidth;
+      const newWidth = (e.clientX / containerWidth) * 100;
+      
+      // Limit the width between 20% and 90%
+      const limitedWidth = Math.min(Math.max(newWidth, 30), 90);
+      setLeftPanelWidth(limitedWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+    };
+
+    const divider = resizeDividerRef.current;
+    if (divider) {
+      divider.addEventListener('mousedown', handleMouseDown);
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      if (divider) {
+        divider.removeEventListener('mousedown', handleMouseDown);
+      }
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  // Add this as a new useEffect
+  useEffect(() => {
+    // Fetch user settings
+    const fetchUserSettings = async () => {
+      try {
+        const settings = await getUserSettings();
+        setUserSettings({
+          textSize: settings.textSize || 16,
+          textFont: settings.textFont || 'default',
+          autoTranslateWords: settings.autoTranslateWords ?? true,
+          highlightKnownWords: settings.highlightKnownWords ?? true,
+          autoAdvanceToNextLesson: settings.autoAdvanceToNextLesson ?? false,
+          showProgressStats: settings.showProgressStats ?? true
+        });
+      } catch (err) {
+        console.error('Failed to load user settings:', err);
+        // Use defaults if settings can't be loaded
+      }
+    };
+    
+    fetchUserSettings();
+  }, []);
 
   useEffect(() => {
     const fetchText = async () => {
@@ -167,99 +254,79 @@ const TextDisplay = () => {
     }
   };
 
-  const handleWordClick = async (word) => {
-    console.log(`Word clicked: "${word}"`);
-    console.log(`Character codes: ${Array.from(word).map(c => c.charCodeAt(0))}`);
+  // Update the handleWordClick function to respect auto-translate setting
+  const handleWordClick = useCallback(async (word) => {
     setSelectedWord(word);
+    setProcessingWord(true);
     
-    // Find if the word exists in our words list - use direct comparison instead of normalization
-    // which can potentially modify special characters
-    const wordLower = word.toLowerCase();
+    // Find if the word already exists in our state
     const existingWord = words.find(w => 
-      w.term && 
-      w.term.toLowerCase() === wordLower
+      w.term && w.term.toLowerCase() === word.toLowerCase()
     );
     
     if (existingWord) {
-      console.log(`Word exists in database: ${existingWord.term}, translation: ${existingWord.translation || 'none'}`);
-      // If word exists, set its translation in the form and side panel
-      setTranslation(existingWord.translation || '');
-      setDisplayedWord({
-        term: existingWord.term,
-        translation: existingWord.translation || '',
-        status: existingWord.status
-      });
+      console.log('Found existing word:', existingWord);
+      // Set the currentWord for the side panel
+      setDisplayedWord(existingWord);
       
-      // If no translation exists for this word, try to translate it automatically
-      if (!existingWord.translation) {
+      // Set the translation
+      setTranslation(existingWord.translation || '');
+      
+      // Auto-translate if needed
+      if (!existingWord.translation && userSettings.autoTranslateWords) {
         try {
-          // Access the book's language code from the state
-          const bookLanguage = book?.language?.code || 'FR'; // Default to French if language code is not available
-          const userLanguage = 'EN'; // Default to English as target language
-          
-          console.log(`Attempting to translate existing word: ${word} from ${bookLanguage} to ${userLanguage}`);
           setIsTranslating(true);
-          const result = await translateText(word, bookLanguage, userLanguage);
-          console.log('Translation result:', result);
+          const result = await translateText(word, text.languageCode || 'FR', 'EN');
           
           if (result?.translatedText) {
-            console.log(`Translation successful: "${result.translatedText}"`);
             setTranslation(result.translatedText);
             // Update the displayed word with translation
             setDisplayedWord(prev => ({
               ...prev,
               translation: result.translatedText
             }));
-          } else {
-            console.log('Translation returned empty or undefined result');
           }
         } catch (err) {
           console.error('Translation failed:', err);
-          // Don't show error to user, just silently fail and let them input translation manually
         } finally {
           setIsTranslating(false);
         }
       }
     } else {
-      console.log(`Word not found in database: ${word}`);
-      // For new words, clear translation field first
-      setTranslation('');
-      setDisplayedWord({
+      // Create a new word object
+      const newWord = {
         term: word,
+        status: 0,
         translation: '',
-        status: 0 // Untracked
-      });
+        isNew: true
+      };
+      setDisplayedWord(newWord);
+      setTranslation('');
       
-      // Try to translate the new word automatically
-      try {
-        // Access the book's language code from the state
-        const bookLanguage = book?.language?.code || 'FR'; // Default to French if language code is not available
-        const userLanguage = 'EN'; // Default to English as target language
-        
-        console.log(`Attempting to translate new word: ${word} from ${bookLanguage} to ${userLanguage}`);
-        setIsTranslating(true);
-        const result = await translateText(word, bookLanguage, userLanguage);
-        console.log('Translation result:', result);
-        
-        if (result?.translatedText) {
-          console.log(`Translation successful: "${result.translatedText}"`);
-          setTranslation(result.translatedText);
-          // Update the displayed word with translation
-          setDisplayedWord(prev => ({
-            ...prev,
-            translation: result.translatedText
-          }));
-        } else {
-          console.log('Translation returned empty or undefined result');
+      // Auto-translate if setting is enabled
+      if (userSettings.autoTranslateWords) {
+        try {
+          setIsTranslating(true);
+          const result = await translateText(word, text.languageCode || 'FR', 'EN');
+          
+          if (result?.translatedText) {
+            setTranslation(result.translatedText);
+            // Update the displayed word with translation
+            setDisplayedWord(prev => ({
+              ...prev,
+              translation: result.translatedText
+            }));
+          }
+        } catch (err) {
+          console.error('Translation failed:', err);
+        } finally {
+          setIsTranslating(false);
         }
-      } catch (err) {
-        console.error('Translation failed:', err);
-        // Don't show error to user, just silently fail and let them input translation manually
-      } finally {
-        setIsTranslating(false);
       }
     }
-  };
+    
+    setProcessingWord(false);
+  }, [words, text, userSettings.autoTranslateWords]);
 
   const handleSaveWord = async (status) => {
     if (!selectedWord || processingWord || isTranslating) return;
@@ -330,40 +397,16 @@ const TextDisplay = () => {
     }
   };
 
-  // Add function to handle sentence selection
-  const handleSentenceSelection = () => {
-    console.log("Mouse up event detected");
-    
-    // Get the current selection
-    const selection = window.getSelection();
-    
-    // Skip if the selection is empty or if it's a collapsed selection (just a cursor)
-    if (selection.isCollapsed) {
-      console.log("Selection is empty or collapsed");
-      return;
-    }
-    
-    // Get the selected text with original formatting preserved
-    let selectedText = selection.toString();
-    
-    // Ensure we're getting the raw, unmodified text
-    console.log(`Raw selected text: "${selectedText}"`);
-    console.log(`Character codes: ${Array.from(selectedText).map(c => c.charCodeAt(0))}`);
-    
-    if (selectedText.length > 0) {
-      // Store the unmodified text
-      setSelectedSentence(selectedText);
-      
-      // Only proceed with translation if we have enough text
-      if (selectedText.length >= 1) {
-        // Show the translation popup
-        setShowTranslationPopup(true);
-        setIsFullTextTranslating(true);
-        setFullTextTranslation('');
-        
-        // Use the full text translation API with the selected text
-        translateSelectedTextInPopup(selectedText);
-      }
+  // Add this function for sentence selection
+  const handleSentenceClick = (sentence) => {
+    if (sentence.trim() === selectedSentence) {
+      // If clicking the same sentence, deselect it
+      setSelectedSentence('');
+      setSentenceTranslation('');
+    } else {
+      // Select the new sentence
+      setSelectedSentence(sentence.trim());
+      setSentenceTranslation('');
     }
   };
 
@@ -458,7 +501,7 @@ const TextDisplay = () => {
         const selected = window.getSelection().toString();
         if (selected && selected.length > 0) {
           console.log(`Selection detected: "${selected}" (${selected.length} chars)`);
-          handleSentenceSelection();
+          handleSentenceClick(selected);
         }
       }, 100);
     };
@@ -473,8 +516,97 @@ const TextDisplay = () => {
     };
   }, [text]); // Only re-attach when text changes
 
+  // Update the renderTextContent function
   const renderTextContent = () => {
     if (!text || !text.content) return null;
+    
+    // Get font family based on user settings
+    const getFontFamily = () => {
+      switch (userSettings.textFont) {
+        case 'serif':
+          return "'Georgia', serif";
+        case 'sans-serif':
+          return "'Arial', sans-serif";
+        case 'monospace':
+          return "'Courier New', monospace";
+        case 'dyslexic':
+          return "'OpenDyslexic', sans-serif";
+        default:
+          return "inherit";
+      }
+    };
+    
+    // Split the content into paragraphs
+    const processParagraphs = (content) => {
+      // Split by common paragraph breaks (multiple spaces, newlines, etc.)
+      // This improved regex better handles various paragraph formats
+      const paragraphs = content.split(/(\n\s*\n|\r\n\s*\r\n|\r\s*\r)/g)
+        .filter(p => p.trim().length > 0);
+      
+      return paragraphs.map((paragraph, index) => {
+        if (paragraph.trim().length === 0) return null;
+        
+        return (
+          <p key={`para-${index}`} className="mb-2" style={{ textIndent: '1.5em' }}>
+            {processTextContent(paragraph)}
+          </p>
+        );
+      }).filter(p => p !== null);
+    };
+    
+    // Function to highlight the selected sentence
+    const highlightSelectedSentence = (content) => {
+      if (!selectedSentence || selectedSentence.length === 0) {
+        return processParagraphs(content);
+      }
+      
+      // Escape special characters for use in regex
+      const escapedSentence = selectedSentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
+      // Check if the selected sentence contains paragraph breaks
+      if (selectedSentence.includes('\n')) {
+        // If it does, process paragraphs normally but highlight the whole selection
+        return processParagraphs(content);
+      }
+      
+      // For the paragraph containing the selected sentence, highlight just that part
+      const paragraphs = content.split(/\n+/);
+      
+      return paragraphs.map((paragraph, index) => {
+        if (paragraph.trim().length === 0) return <br key={`para-empty-${index}`} />;
+        
+        if (paragraph.includes(selectedSentence)) {
+          // This paragraph contains the selected sentence
+          const parts = paragraph.split(new RegExp(`(${escapedSentence})`, 'g'));
+          
+          return (
+            <p key={`para-${index}`} className="mb-3" style={{ textIndent: '1.5em' }}>
+              {parts.map((part, partIndex) => {
+                if (part === selectedSentence) {
+                  return (
+                    <span 
+                      key={`sentence-${partIndex}`} 
+                      style={styles.selectedSentence}
+                      onClick={() => handleSentenceClick(part)}
+                    >
+                      {processTextContent(part)}
+                    </span>
+                  );
+                }
+                return processTextContent(part);
+              })}
+            </p>
+          );
+        }
+        
+        // Paragraph doesn't contain the selection, process normally
+        return (
+          <p key={`para-${index}`} className="mb-3" style={{ textIndent: '1.5em' }}>
+            {processTextContent(paragraph)}
+          </p>
+        );
+      });
+    };
     
     // Process the content to create formatted text
     const processTextContent = (content) => {
@@ -482,8 +614,6 @@ const TextDisplay = () => {
       // This regex splits by spaces and punctuation except apostrophes and hyphens,
       // but preserves all Unicode letter characters including accented letters
       const words = content.split(/([^\p{L}''\-]+)/gu);
-      
-      console.log('Split words:', words);
       
       return words.map((segment, index) => {
         const trimmed = segment.trim();
@@ -504,10 +634,14 @@ const TextDisplay = () => {
           
           return (
             <span
-              key={index}
-              style={getWordStyle(wordStatus)}
-              className="clickable-word"
-              onClick={() => {
+              key={`word-${index}-${wordOnly}`}
+              style={{
+                ...styles.highlightedWord,
+                ...getWordStyle(wordStatus)
+              }}
+              className={`clickable-word word-status-${wordStatus}`}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent triggering sentence click
                 console.log(`Clicked on word: "${wordOnly}" (${Array.from(wordOnly).map(c => c.charCodeAt(0))})`);
                 handleWordClick(wordOnly);
               }}
@@ -522,14 +656,25 @@ const TextDisplay = () => {
       });
     };
     
+    const detectSentences = (content) => {
+      return processParagraphs(content);
+    };
+    
     return (
-      <div>
+      <div className="text-content-wrapper">
         <div 
           ref={textContentRef}
           className="text-content" 
-          style={{ fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '70px' }}
+          style={{ 
+            fontSize: `${userSettings.textSize}px`, 
+            lineHeight: '1.6', 
+            textAlign: 'left',
+            fontFamily: getFontFamily(),
+            maxWidth: '100%',
+            padding: '0'
+          }}
         >
-          {processTextContent(text.content)}
+          {selectedSentence ? highlightSelectedSentence(text.content) : detectSentences(text.content)}
         </div>
       </div>
     );
@@ -567,23 +712,17 @@ const TextDisplay = () => {
 
     return (
       <div>
-        <h3>{displayedWord.term}</h3>
+        <h5 className="fw-bold mb-2">{displayedWord.term}</h5>
         
         {saveSuccess && (
-          <Alert variant="success" className="mt-2 mb-3">
+          <Alert variant="success" className="py-1 px-2 mb-2">
             Word saved successfully!
           </Alert>
         )}
         
         {displayedWord.status > 0 ? (
-          <div className="mb-3">
-            <div 
-              className="p-2 rounded mb-2" 
-              style={{
-                backgroundColor: styles[`wordStatus${displayedWord.status}`]?.backgroundColor || '#f8f9fa',
-                color: styles[`wordStatus${displayedWord.status}`]?.color || '#333',
-              }}
-            >
+          <div className="mb-2">
+            <div className="py-1 px-2 mb-1 small border-start border-3 border-primary">
               Status: {
                 displayedWord.status === 1 ? 'New' :
                 displayedWord.status === 2 ? 'Learning' :
@@ -593,81 +732,94 @@ const TextDisplay = () => {
             </div>
           </div>
         ) : (
-          <div className="mb-3">
-            <div className="p-2 rounded mb-2 bg-info text-white">
+          <div className="mb-2">
+            <div className="py-1 px-2 mb-1 small border-start border-3 border-info">
               Status: Not tracked yet
             </div>
           </div>
         )}
         
         <Form>
-          <Form.Group className="mb-3">
-            <Form.Label>Translation</Form.Label>
+          <Form.Group className="mb-2">
+            <Form.Label className="mb-1 small">Translation</Form.Label>
             <div className="position-relative">
               <Form.Control
                 as="textarea"
-                rows={3}
+                rows={2}
                 value={translation}
                 onChange={(e) => setTranslation(e.target.value)}
                 placeholder="Enter translation or notes"
                 disabled={isTranslating}
+                className="py-1"
+                size="sm"
               />
               {isTranslating && (
                 <div className="position-absolute top-50 end-0 translate-middle-y me-3">
                   <Spinner animation="border" size="sm" />
-                  <span className="ms-2">Translating...</span>
+                  <span className="ms-2 small">Translating...</span>
                 </div>
               )}
             </div>
           </Form.Group>
         </Form>
         
-        <div className="d-flex flex-wrap gap-2 mt-3">
+        <div className="d-flex flex-wrap gap-1 mt-2">
           <Button 
             variant="danger" 
             onClick={() => handleSaveWord(1)}
             disabled={processingWord || isTranslating || !selectedWord}
-            style={{ backgroundColor: styles.wordStatus1.backgroundColor, color: 'white' }}
+            style={{ backgroundColor: styles.wordStatus1.backgroundColor, color: 'black' }}
+            size="sm"
+            className="py-0 px-2"
           >
-            {processingWord ? 'Saving...' : 'New (1)'}
+            New (1)
           </Button>
           <Button 
             variant="warning" 
             onClick={() => handleSaveWord(2)}
             disabled={processingWord || isTranslating || !selectedWord}
             style={{ backgroundColor: styles.wordStatus2.backgroundColor, color: 'black' }}
+            size="sm"
+            className="py-0 px-2"
           >
-            {processingWord ? 'Saving...' : 'Learning (2)'}
+            Learning (2)
           </Button>
           <Button 
             variant="info" 
             onClick={() => handleSaveWord(3)}
             disabled={processingWord || isTranslating || !selectedWord}
             style={{ backgroundColor: styles.wordStatus3.backgroundColor, color: 'black' }}
+            size="sm"
+            className="py-0 px-2"
           >
-            {processingWord ? 'Saving...' : 'Familiar (3)'}
+            Familiar (3)
           </Button>
           <Button 
             variant="info" 
             onClick={() => handleSaveWord(4)}
             disabled={processingWord || isTranslating || !selectedWord}
             style={{ backgroundColor: styles.wordStatus4.backgroundColor, color: 'black' }}
+            size="sm"
+            className="py-0 px-2"
           >
-            {processingWord ? 'Saving...' : 'Advanced (4)'}
+            Advanced (4)
           </Button>
           <Button 
             variant="success" 
             onClick={() => handleSaveWord(5)}
             disabled={processingWord || isTranslating || !selectedWord}
-            style={{ backgroundColor: styles.wordStatus5.backgroundColor, color: 'black' }}
+            style={{ backgroundColor: styles.wordStatus5.backgroundColor, border: '1px solid #ccc', color: 'black' }}
+            size="sm"
+            className="py-0 px-2"
           >
-            {processingWord ? 'Saving...' : 'Known (5)'}
+            Known (5)
           </Button>
         </div>
       </div>
     );
   };
 
+  // Update handleCompleteLesson to respect auto-advance setting
   const handleCompleteLesson = async () => {
     if (!text?.bookId) return;
     
@@ -675,8 +827,18 @@ const TextDisplay = () => {
     
     try {
       const bookStats = await completeLesson(text.bookId, text.textId);
-      setStats(bookStats);
-      setShowStatsModal(true);
+      
+      // Only show stats if the setting is enabled
+      if (userSettings.showProgressStats) {
+        setStats(bookStats);
+        setShowStatsModal(true);
+      } else if (userSettings.autoAdvanceToNextLesson && nextTextId) {
+        // Auto advance to next lesson if setting is enabled
+        navigate(`/texts/${nextTextId}`);
+      } else {
+        // Just navigate back to the book
+        navigate(`/books/${text.bookId}`);
+      }
     } catch (error) {
       console.error('Error completing lesson:', error);
       alert(`Failed to complete lesson: ${error.message}`);
@@ -685,9 +847,49 @@ const TextDisplay = () => {
     }
   };
 
-  // Get style based on word status
-  const getWordStyle = (status) => {
-    return styles[`wordStatus${status}`] || styles.wordStatus0;
+  // Update the getWordStyle function to respect highlighting setting
+  const getWordStyle = (word) => {
+    // Base style with hover effect
+    const baseStyle = {
+      cursor: 'pointer',
+      padding: '2px 0',
+      margin: '0 2px',
+      borderRadius: '3px',
+      transition: 'all 0.2s'
+    };
+
+    // If highlighting is disabled in settings, show only hover effect
+    if (!userSettings?.highlightKnownWords) {
+      return {
+        ...baseStyle,
+        backgroundColor: 'transparent'
+      };
+    }
+
+    // Known words (status 5) have no highlighting
+    if (word === 5) {
+      return {
+        ...baseStyle,
+        backgroundColor: 'transparent',
+        color: 'inherit'
+      };
+    }
+
+    // Status-based styling
+    const statusStyles = {
+      0: { backgroundColor: 'var(--status-0-color)', color: '#000' },
+      1: { backgroundColor: 'var(--status-1-color)', color: '#000' },
+      2: { backgroundColor: 'var(--status-2-color)', color: '#000' },
+      3: { backgroundColor: 'var(--status-3-color)', color: '#000' },
+      4: { backgroundColor: 'var(--status-4-color)', color: '#000' },
+      5: { backgroundColor: 'transparent', color: 'inherit' },
+    };
+
+    // Return style based on word status
+    return {
+      ...baseStyle,
+      ...(statusStyles[word] || {})
+    };
   };
 
   // Helper function to get the status of a word
@@ -745,36 +947,106 @@ const TextDisplay = () => {
   }
 
   return (
-    <Container fluid className="py-3">
-      <Card className="shadow-sm mb-3">
-        <Card.Body>
-          <div className="d-flex justify-content-between align-items-start">
+    <div className="text-display-wrapper px-0 mx-0 w-100">
+      <Card className="shadow-sm mb-1 border-0 rounded-0">
+        <Card.Body className="py-1 px-2">
+          <div className="d-flex justify-content-between align-items-center flex-wrap">
             <div>
-              <h2>{text.title}</h2>
-              <p className="text-muted">
+              <h2 className="mb-1">{text.title}</h2>
+              <p className="text-muted mb-0 small">
                 Language: {text.languageName || 'Unknown'} | 
                 Words: {words.length} | 
                 Learning: {words.filter(w => w.status <= 2).length} | 
                 Known: {words.filter(w => w.status >= 4).length}
               </p>
             </div>
-            <div className="d-flex gap-2">
-              {/* If text is part of a book, show complete lesson button and navigation */}
-              {text?.bookId && (
-                <>
-                  <Button 
-                    variant="outline-primary" 
-                    onClick={() => navigate(`/books/${text.bookId}`)}
-                  >
-                    Back to Book
-                  </Button>
-                </>
+            <div className="d-flex gap-2 flex-wrap mt-2 mt-sm-0">
+              {/* Text size controls */}
+              <div className="btn-group me-1">
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => setUserSettings(prev => ({
+                    ...prev,
+                    textSize: Math.max(12, prev.textSize - 2)
+                  }))}
+                  title="Decrease text size"
+                >
+                  A-
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={() => setUserSettings(prev => ({
+                    ...prev,
+                    textSize: Math.min(32, prev.textSize + 2)
+                  }))}
+                  title="Increase text size"
+                >
+                  A+
+                </Button>
+              </div>
+              
+              {/* Panel size controls */}
+              <div className="btn-group me-1">
+                <Button 
+                  variant="outline-secondary" 
+                  size="sm"
+                  onClick={() => setLeftPanelWidth(Math.min(leftPanelWidth + 5, 95))}
+                  title="Increase reading area"
+                >
+                  ◀
+                </Button>
+                <Button 
+                  variant="outline-secondary" 
+                  size="sm"
+                  onClick={() => setLeftPanelWidth(Math.max(leftPanelWidth - 5, 25))}
+                  title="Decrease reading area"
+                >
+                  ▶
+                </Button>
+              </div>
+              
+              {/* Translation buttons moved to header */}
+              {text && !loading && (
+                <Button 
+                  variant="info" 
+                  size="sm"
+                  onClick={handleFullTextTranslation}
+                  data-testid="translate-full-text-btn"
+                  className="me-1"
+                >
+                  Translate Text
+                </Button>
               )}
               
-              {/* If text is standalone (not part of a book) */}
+              {selectedSentence && (
+                <Button 
+                  variant="outline-primary" 
+                  size="sm"
+                  onClick={handleManualTranslation}
+                  data-testid="translate-selected-text-btn"
+                  className="me-1"
+                >
+                  Translate Selection
+                </Button>
+              )}
+              
+              {/* Navigation buttons */}
+              {text?.bookId && (
+                <Button 
+                  variant="outline-primary" 
+                  size="sm"
+                  onClick={() => navigate(`/books/${text.bookId}`)}
+                >
+                  Back to Book
+                </Button>
+              )}
+              
               {!text?.bookId && (
                 <Button 
                   variant="outline-secondary" 
+                  size="sm"
                   onClick={() => navigate('/texts')}
                 >
                   Back to Texts
@@ -785,17 +1057,26 @@ const TextDisplay = () => {
         </Card.Body>
       </Card>
 
-      <Row>
+      <div className="resizable-container">
         {/* Text reading panel (left side) */}
-        <Col md={7} style={styles.textContainer}>
-          <div className="d-flex flex-column" style={{ minHeight: 'calc(100vh - 140px)' }}>
+        <div 
+          className="left-panel" 
+          style={{ 
+            width: `${leftPanelWidth}%`,
+            height: 'calc(100vh - 90px)',
+            overflowY: 'auto',
+            padding: '0',
+            position: 'relative'
+          }}
+        >
+          <div className="d-flex flex-column" style={{ minHeight: '100%' }}>
             <div className="flex-grow-1">
               {renderTextContent()}
             </div>
             
             {/* Complete Lesson button below the text */}
             {text?.bookId && (
-              <div className="mt-3 mb-3 pt-2 border-top text-end">
+              <div className="mt-2 pt-2 border-top text-end px-2">
                 <Button 
                   variant="success" 
                   onClick={handleCompleteLesson}
@@ -809,18 +1090,34 @@ const TextDisplay = () => {
               </div>
             )}
           </div>
-        </Col>
+        </div>
+
+        {/* Resize divider */}
+        <div 
+          ref={resizeDividerRef}
+          className="resize-divider"
+          title="Drag to resize panels"
+        ></div>
 
         {/* Translation panel (right side) */}
-        <Col md={5} style={styles.translationPanel}>
-          <Card>
-            <Card.Body>
-              <h4>Word Information</h4>
+        <div 
+          className="right-panel" 
+          style={{ 
+            width: `${100 - leftPanelWidth}%`,
+            height: 'calc(100vh - 90px)',
+            overflowY: 'auto',
+            padding: '6px',
+            position: 'relative'
+          }}
+        >
+          <Card className="border-0">
+            <Card.Body className="p-2">
+              <h5 className="mb-2">Word Info</h5>
               {renderSidePanel()}
             </Card.Body>
           </Card>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       {/* Statistics Modal */}
       <Modal 
@@ -895,32 +1192,6 @@ const TextDisplay = () => {
           )}
         </Modal.Footer>
       </Modal>
-
-      {/* Add the Translate Full Text button */}
-      {text && !loading && (
-        <div className="mb-3">
-          <Button 
-            variant="info" 
-            onClick={handleFullTextTranslation}
-            data-testid="translate-full-text-btn"
-          >
-            Translate Full Text
-          </Button>
-        </div>
-      )}
-      
-      {/* Add button to translate selected text manually */}
-      {selectedSentence && (
-        <div className="mb-3 mt-3">
-          <Button 
-            variant="outline-primary" 
-            onClick={handleManualTranslation}
-            data-testid="translate-selected-text-btn"
-          >
-            Translate Selected Text: "{selectedSentence.length > 20 ? selectedSentence.substring(0, 20) + '...' : selectedSentence}"
-          </Button>
-        </div>
-      )}
       
       {/* Add the sentence translation panel */}
       {renderSentenceTranslationPanel()}
@@ -935,7 +1206,7 @@ const TextDisplay = () => {
         sourceLanguage={text?.languageCode || ''}
         targetLanguage="en"
       />
-    </Container>
+    </div>
   );
 };
 

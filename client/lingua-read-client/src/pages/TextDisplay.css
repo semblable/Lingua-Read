@@ -1,0 +1,139 @@
+/* Full width layout container */
+.text-display-wrapper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Resizable container layout */
+.resizable-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* Resize divider styling */
+.resize-divider {
+  width: 4px;
+  background-color: #e9ecef;
+  cursor: col-resize;
+  position: relative;
+  z-index: 10;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.resize-divider:hover,
+.resize-divider:active {
+  background-color: var(--status-1-color-light);
+}
+
+.resize-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 30px;
+  background-color: #adb5bd;
+  border-radius: 2px;
+}
+
+/* Panel styling */
+.left-panel, .right-panel {
+  transition: width 0.05s ease-out;
+}
+
+/* Make the scroll behavior smoother */
+.left-panel, .right-panel {
+  scrollbar-width: thin;
+  scrollbar-color: #adb5bd #f8f9fa;
+}
+
+/* Text content wrapper */
+.text-content-wrapper {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+/* Text content styling */
+.text-content {
+  margin: 0;
+  max-width: 100%;
+  padding: 0;
+  width: 100%;
+}
+
+/* Paragraph styling */
+.text-content p {
+  margin-bottom: 1em;
+  text-indent: 1.5em;
+  line-height: 1.6;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  text-align: left;
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.text-content p:last-child {
+  margin-bottom: 2em;
+}
+
+/* Dark theme adjustments */
+.dark-theme .resize-divider {
+  background-color: #333333;
+}
+
+.dark-theme .resize-divider:hover,
+.dark-theme .resize-divider:active {
+  background-color: var(--status-1-color-dark);
+}
+
+.dark-theme .resize-divider::after {
+  background-color: #555555;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  .resizable-container {
+    flex-direction: column;
+  }
+  
+  .resize-divider {
+    width: 100%;
+    height: 6px;
+    cursor: row-resize;
+  }
+  
+  .resize-divider::after {
+    width: 30px;
+    height: 2px;
+  }
+  
+  .left-panel, .right-panel {
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  .left-panel {
+    height: 60vh !important;
+  }
+  
+  .right-panel {
+    height: 40vh !important;
+  }
+} 

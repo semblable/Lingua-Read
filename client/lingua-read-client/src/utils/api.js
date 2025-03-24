@@ -372,6 +372,25 @@ export const translateText = async (text, sourceLanguageCode, targetLanguageCode
   }
 };
 
+// Story Generation API
+export const generateStory = async (prompt, language, level, maxLength) => {
+  try {
+    const payload = {
+      prompt,
+      language,
+      level,
+      maxLength
+    };
+    return await fetchApi('/api/storygeneration', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  } catch (error) {
+    console.error('Story generation failed:', error);
+    throw error;
+  }
+};
+
 export const translateSentence = async (text, sourceLanguageCode, targetLanguageCode) => {
   try {
     console.log('Initiating sentence translation request');
@@ -429,4 +448,26 @@ export const getSupportedLanguages = () => {
 // Get next lesson from a book
 export const getNextLesson = (bookId, currentTextId) => {
   return fetchApi(`/api/books/${bookId}/next-lesson?currentTextId=${currentTextId}`);
+};
+
+// User Settings API
+export const getUserSettings = async () => {
+  try {
+    return await fetchApi('/api/usersettings');
+  } catch (error) {
+    console.error('Failed to get user settings:', error);
+    throw error;
+  }
+};
+
+export const updateUserSettings = async (settings) => {
+  try {
+    return await fetchApi('/api/usersettings', {
+      method: 'PUT',
+      body: JSON.stringify(settings)
+    });
+  } catch (error) {
+    console.error('Failed to update user settings:', error);
+    throw error;
+  }
 };

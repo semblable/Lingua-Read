@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
 import { useAuthStore } from './utils/store';
 import { jwtDecode } from 'jwt-decode';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './App.css';
 
 // Components
 import Navigation from './components/Navigation';
@@ -18,6 +20,7 @@ import BookList from './pages/BookList';
 import BookCreate from './pages/BookCreate';
 import BookDetail from './pages/BookDetail';
 import Statistics from './pages/Statistics';
+import UserSettings from './pages/UserSettings';
 
 function App() {
   const { token, setToken, clearToken } = useAuthStore();
@@ -37,17 +40,28 @@ function App() {
           // Token is valid
           setToken(storedToken);
         }
-      } catch (error) {
+      }
+      catch (error) {
         // Invalid token
         clearToken();
       }
     }
   }, [setToken, clearToken]);
 
+  // Check for theme in localStorage and apply on initial load
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark-theme');
+    } else {
+      document.body.classList.remove('dark-theme');
+    }
+  }, []);
+
   return (
     <div className="App">
       <Navigation />
-      <Container className="py-4">
+      <div className="container-fluid p-0 m-0">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={!token ? <Login /> : <Navigate to="/books" />} />
@@ -65,8 +79,11 @@ function App() {
           
           {/* Statistics route */}
           <Route path="/statistics" element={token ? <Statistics /> : <Navigate to="/login" />} />
+          
+          {/* Settings route */}
+          <Route path="/settings" element={token ? <UserSettings /> : <Navigate to="/login" />} />
         </Routes>
-      </Container>
+      </div>
     </div>
   );
 }

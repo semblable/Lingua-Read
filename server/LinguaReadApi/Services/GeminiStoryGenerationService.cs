@@ -8,43 +8,49 @@ using Microsoft.Extensions.Logging;
 
 namespace LinguaReadApi.Services
 {
-    public interface ISentenceTranslationService
+    public interface IStoryGenerationService
     {
-        Task<string> TranslateSentenceAsync(string text, string sourceLanguage, string targetLanguage);
+        Task<string> GenerateStoryAsync(string prompt, string language, string level, int maxLength);
     }
 
-    public class GeminiTranslationService : ISentenceTranslationService
+    public class GeminiStoryGenerationService : IStoryGenerationService
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
         private readonly string _baseUrl;
-        private readonly ILogger<GeminiTranslationService> _logger;
+        private readonly ILogger<GeminiStoryGenerationService> _logger;
 
-        public GeminiTranslationService(IConfiguration configuration, ILogger<GeminiTranslationService> logger)
+        public GeminiStoryGenerationService(IConfiguration configuration, ILogger<GeminiStoryGenerationService> logger)
         {
             _httpClient = new HttpClient();
             _apiKey = configuration["Gemini:ApiKey"] ?? throw new ArgumentNullException("Gemini:ApiKey is missing in configuration");
             _baseUrl = configuration["Gemini:BaseUrl"] ?? "https://generativelanguage.googleapis.com/v1beta";
             _logger = logger;
             
-            _logger.LogInformation("GeminiTranslationService initialized");
+            _logger.LogInformation("GeminiStoryGenerationService initialized");
             _logger.LogDebug($"Using base URL: {_baseUrl}");
         }
 
-        public async Task<string> TranslateSentenceAsync(string text, string sourceLanguage, string targetLanguage)
+        public async Task<string> GenerateStoryAsync(string prompt, string language, string level, int maxLength)
         {
-            if (string.IsNullOrWhiteSpace(text))
+            if (string.IsNullOrWhiteSpace(prompt))
             {
-                _logger.LogWarning("Empty text provided for translation");
+                _logger.LogWarning("Empty prompt provided for story generation");
                 return string.Empty;
             }
 
             try
             {
-                _logger.LogInformation($"Translating text ({text.Length} chars) from {sourceLanguage} to {targetLanguage}");
+                _logger.LogInformation($"Generating story with prompt: '{prompt}', language: {language}, level: {level}");
                 
-                // Prepare a clear prompt specifically for translation
-                string prompt = $"Translate the following text from {sourceLanguage} to {targetLanguage}. Maintain all formatting, punctuation, and special characters. Return ONLY the translated text with no additional text.\n\nText to translate: {text}";
+                // Create a well-structured prompt for story generation
+                string fullPrompt = $"Write a {level} level story in {language} about: {prompt}\n\n" +
+                                    $"Requirements:\n" +
+                                    $"- Write approximately {maxLength} words\n" +
+                                    $"- Use vocabulary and grammar appropriate for {level} level learners\n" +
+                                    $"- Include diverse sentence structures\n" +
+                                    $"- Use everyday vocabulary with occasional new words for learning\n" +
+                                    $"- Return ONLY the story with no additional text or explanations";
 
                 // Create request payload according to Gemini API specs
                 var requestPayload = new GeminiRequest
@@ -55,16 +61,16 @@ namespace LinguaReadApi.Services
                         {
                             Parts = new[]
                             {
-                                new Part { Text = prompt }
+                                new Part { Text = fullPrompt }
                             }
                         }
                     },
                     GenerationConfig = new GenerationConfig
                     {
-                        Temperature = 0.1,
-                        TopK = 32,
-                        TopP = 1.0,
-                        MaxOutputTokens = 8192,
+                        Temperature = 0.7,
+                        TopK = 40,
+                        TopP = 0.95,
+                        MaxOutputTokens = 4096,
                         ResponseMimeType = "text/plain"
                     }
                 };
@@ -91,12 +97,12 @@ namespace LinguaReadApi.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogError($"Gemini API error: {response.StatusCode}, {responseContent}");
-                    return $"Translation error: {response.StatusCode}";
+                    return $"Story generation error: {response.StatusCode}";
                 }
 
                 _logger.LogDebug($"Gemini API response: {responseContent}");
                 
-                // Parse using proper models
+                // Parse the response to extract the generated story
                 var geminiResponse = JsonSerializer.Deserialize<GeminiResponse>(responseContent, options);
                 
                 if (geminiResponse?.Candidates != null && 
@@ -104,18 +110,18 @@ namespace LinguaReadApi.Services
                     geminiResponse.Candidates[0].Content?.Parts != null &&
                     geminiResponse.Candidates[0].Content.Parts.Length > 0)
                 {
-                    var translatedText = geminiResponse.Candidates[0].Content.Parts[0].Text;
-                    _logger.LogInformation($"Translation successful, length: {translatedText?.Length ?? 0}");
-                    return translatedText ?? string.Empty;
+                    var generatedStory = geminiResponse.Candidates[0].Content.Parts[0].Text;
+                    _logger.LogInformation($"Story generation successful, length: {generatedStory?.Length ?? 0}");
+                    return generatedStory ?? string.Empty;
                 }
                 
-                _logger.LogWarning("Could not extract translation from response");
-                return "Translation failed: Could not extract result";
+                _logger.LogWarning("Could not extract story from response");
+                return "Story generation failed: Could not extract result";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during translation");
-                return $"Translation error: {ex.Message}";
+                _logger.LogError(ex, "Error during story generation");
+                return $"Story generation error: {ex.Message}";
             }
         }
     }

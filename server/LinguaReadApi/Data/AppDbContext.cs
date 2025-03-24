@@ -17,6 +17,7 @@ namespace LinguaReadApi.Data
         public DbSet<TextWord> TextWords { get; set; }
         public DbSet<Book> Books { get; set; }
         public DbSet<UserActivity> UserActivities { get; set; }
+        public DbSet<UserSettings> UserSettings { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -70,7 +71,7 @@ namespace LinguaReadApi.Data
             // Word - User: Many-to-One
             modelBuilder.Entity<Word>()
                 .HasOne(w => w.User)
-                .WithMany()
+                .WithMany(u => u.Words)
                 .HasForeignKey(w => w.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
                 
@@ -116,6 +117,13 @@ namespace LinguaReadApi.Data
                 .WithMany()
                 .HasForeignKey(ua => ua.LanguageId)
                 .OnDelete(DeleteBehavior.Restrict);
+                
+            // User - UserSettings: One-to-One
+            modelBuilder.Entity<UserSettings>()
+                .HasOne(us => us.User)
+                .WithOne(u => u.Settings)
+                .HasForeignKey<UserSettings>(us => us.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 } 

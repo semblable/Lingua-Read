@@ -26,6 +26,9 @@ builder.Services.AddScoped<ITranslationService, DeepLTranslationService>();
 // Register Gemini Translation Service for sentences
 builder.Services.AddScoped<ISentenceTranslationService, GeminiTranslationService>();
 
+// Register Gemini Story Generation Service
+builder.Services.AddScoped<IStoryGenerationService, GeminiStoryGenerationService>();
+
 // Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
 {

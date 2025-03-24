@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Afb/1z8/UvY=",
+  "dgSpecHash": "oZdBHDY+EUg=",
   "success": true,
-  "projectFilePath": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj",
+  "projectFilePath": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\LinguaReadApi.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\kamil\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\kamil\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
