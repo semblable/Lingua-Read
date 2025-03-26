@@ -471,3 +471,44 @@ export const updateUserSettings = async (settings) => {
     throw error;
   }
 };
+
+// Add near other translation functions
+
+export const batchTranslateWords = async (words, targetLanguageCode, sourceLanguageCode = null) => {
+  try {
+    const payload = {
+      words,
+      targetLanguageCode,
+      sourceLanguageCode // Optional
+    };
+    console.log(`[API] Sending batch translation request for ${words.length} words to ${targetLanguageCode}`);
+    // Assuming the endpoint is /api/translation/batch based on backend changes
+    return await fetchApi('/api/translation/batch', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  } catch (error) {
+    console.error('Batch translation failed:', error);
+    throw error;
+  }
+};
+
+// Add near other word functions
+
+export const addTermsBatch = async (languageId, terms) => {
+  try {
+    const payload = {
+      languageId,
+      terms // Array of { term: string, translation: string }
+    };
+     console.log(`[API] Sending batch add terms request for ${terms.length} terms for language ${languageId}`);
+    // Assuming the endpoint is /api/words/batch based on backend changes
+    return await fetchApi('/api/words/batch', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  } catch (error) {
+    console.error('Batch add terms failed:', error);
+    throw error;
+  }
+};

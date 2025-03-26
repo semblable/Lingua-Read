@@ -1,6 +1,6 @@
 /* Full width layout container */
 .text-display-wrapper {
-  position: absolute;
+  /* position: absolute; /* Removed to prevent overlapping nav dropdown */
   left: 0;
   right: 0;
   width: 100%;

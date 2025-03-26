@@ -248,7 +248,149 @@ namespace LinguaReadApi.Controllers
             
             return Guid.Parse(userIdClaim);
         }
+
+        // POST: api/words/batch
+        [HttpPost("batch")]
+        public async Task<IActionResult> AddTermsBatch([FromBody] AddTermBatchDto batchDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = GetUserId();
+            var languageId = batchDto.LanguageId;
+            var termsToAdd = batchDto.Terms;
+
+            if (termsToAdd == null || !termsToAdd.Any())
+            {
+                return BadRequest("Term list cannot be empty.");
+            }
+
+            // Basic check if language exists (adjust based on your Language entity)
+            var languageExists = await _context.Languages.AnyAsync(l => l.LanguageId == languageId);
+            if (!languageExists)
+            {
+                return BadRequest($"Language with ID {languageId} not found.");
+            }
+
+            var termStrings = termsToAdd.Select(t => t.Term).Distinct().ToList();
+
+            // Fetch existing words for this user and language efficiently
+            var existingWords = await _context.Words
+                .Include(w => w.Translation)
+                .Where(w => w.UserId == userId && w.LanguageId == languageId && termStrings.Contains(w.Term))
+                .ToDictionaryAsync(w => w.Term, w => w);
+
+            var wordsToCreate = new List<Word>();
+            var translationsToCreate = new List<WordTranslation>();
+            // EF Core tracks changes to existingWords automatically
+
+            foreach (var termDto in termsToAdd)
+            {
+                // Skip if term is empty or whitespace
+                 if (string.IsNullOrWhiteSpace(termDto.Term)) continue;
+
+                if (existingWords.TryGetValue(termDto.Term, out var existingWord))
+                {
+                    // Word exists - Update status (only if lower) and translation (if different)
+                    bool needsSave = false;
+                    if (existingWord.Status < 5)
+                    {
+                        existingWord.Status = 5;
+                        needsSave = true; // Mark that this entity needs saving (though EF tracks it)
+                    }
+                    
+                    if (existingWord.Translation == null)
+                    {
+                         // Add new translation if missing
+                         translationsToCreate.Add(new WordTranslation
+                         {
+                             Word = existingWord, // Link for EF Core relationship fixup
+                             Translation = termDto.Translation,
+                             CreatedAt = DateTime.UtcNow
+                         });
+                         needsSave = true;
+                    }
+                    else if (existingWord.Translation.Translation != termDto.Translation && !string.IsNullOrEmpty(termDto.Translation))
+                    {
+                        // Update existing translation only if different and not empty
+                        existingWord.Translation.Translation = termDto.Translation;
+                        existingWord.Translation.UpdatedAt = DateTime.UtcNow;
+                        needsSave = true;
+                    }
+                    // If needsSave is true, EF Core's change tracker will handle the update on SaveChangesAsync
+                }
+                else
+                {
+                    // Word doesn't exist - Create new Word and Translation
+                    var newWord = new Word
+                    {
+                        Term = termDto.Term,
+                        Status = 5, // Set status to 5 as requested
+                        UserId = userId,
+                        LanguageId = languageId,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    wordsToCreate.Add(newWord);
+
+                    translationsToCreate.Add(new WordTranslation
+                    {
+                        Word = newWord, // Link navigation property
+                        Translation = termDto.Translation,
+                        CreatedAt = DateTime.UtcNow
+                    });
+
+                    // Add to dictionary to handle potential duplicates in the input list affecting future checks in this loop
+                    existingWords[newWord.Term] = newWord;
+                }
+            }
+
+            if (wordsToCreate.Any())
+            {
+                _context.Words.AddRange(wordsToCreate);
+            }
+            if (translationsToCreate.Any())
+            {
+                 _context.WordTranslations.AddRange(translationsToCreate);
+            }
+            
+            try
+            {
+                var changedCount = await _context.SaveChangesAsync();
+                // Return a summary of actions or just success
+                return Ok(new { Message = $"Batch processed. {changedCount} database changes saved." });
+            }
+            catch (DbUpdateException ex)
+            {
+                 // Log the detailed exception (replace Console.WriteLine with proper logging)
+                 Console.WriteLine($"Error saving batch terms: {ex.InnerException?.Message ?? ex.Message}");
+                 return StatusCode(500, "An error occurred while saving the terms. Check logs for details.");
+            }
+        }
+    } // End of Controller class
+
+    // DTO for the batch request
+    public class AddTermBatchDto
+    {
+        [Required]
+        public int LanguageId { get; set; }
+
+        [Required]
+        public List<NewTermDto> Terms { get; set; } = new List<NewTermDto>();
     }
+
+    // DTO for each term in the batch
+    public class NewTermDto
+    {
+        [Required]
+        [StringLength(100)]
+        public string Term { get; set; } = string.Empty;
+
+        [Required] // Translation is required for new terms via this route
+        public string Translation { get; set; } = string.Empty;
+    }
+
 
     public class CreateWordDto
     {

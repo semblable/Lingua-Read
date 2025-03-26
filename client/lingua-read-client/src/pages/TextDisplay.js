@@ -1,7 +1,11 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Container, Card, Spinner, Alert, Button, Modal, Form, Row, Col, Badge, ProgressBar } from 'react-bootstrap';
+import { Container, Card, Spinner, Alert, Button, Modal, Form, Row, Col, Badge, ProgressBar, OverlayTrigger, Tooltip } from 'react-bootstrap'; // Added OverlayTrigger, Tooltip
 import { useParams, useNavigate } from 'react-router-dom';
-import { getText, createWord, updateWord, updateLastRead, completeLesson, getBook, translateText, translateSentence, translateFullText, getUserSettings } from '../utils/api';
+import {
+  getText, createWord, updateWord, updateLastRead, completeLesson, getBook,
+  translateText, translateSentence, translateFullText, getUserSettings,
+  batchTranslateWords, addTermsBatch // Added batch functions
+} from '../utils/api';
 import TranslationPopup from '../components/TranslationPopup';
 import './TextDisplay.css';
 
@@ -84,8 +88,7 @@ const TextDisplay = () => {
 
   // States for sentence translation
   const [selectedSentence, setSelectedSentence] = useState('');
-  const [sentenceTranslation, setSentenceTranslation] = useState('');
-  const [isSentenceTranslating, setIsSentenceTranslating] = useState(false);
+  // Removed sentenceTranslation and isSentenceTranslating states
   
   // States for full text translation popup
   const [showTranslationPopup, setShowTranslationPopup] = useState(false);
@@ -106,6 +109,11 @@ const TextDisplay = () => {
   const [leftPanelWidth, setLeftPanelWidth] = useState(85); // Default 85% of width for reading panel
   const [isDragging, setIsDragging] = useState(false);
   const resizeDividerRef = useRef(null);
+
+  // State for translating unknown words
+  const [translatingUnknown, setTranslatingUnknown] = useState(false);
+  const [translateUnknownError, setTranslateUnknownError] = useState('');
+  const [wordTranslationError, setWordTranslationError] = useState(''); // Add state for single word translation error
 
   // Add this useEffect for the resizable functionality
   useEffect(() => {
@@ -258,6 +266,7 @@ const TextDisplay = () => {
   const handleWordClick = useCallback(async (word) => {
     setSelectedWord(word);
     setProcessingWord(true);
+    setWordTranslationError(''); // Clear previous error on new click
     
     // Find if the word already exists in our state
     const existingWord = words.find(w => 
@@ -272,25 +281,9 @@ const TextDisplay = () => {
       // Set the translation
       setTranslation(existingWord.translation || '');
       
-      // Auto-translate if needed
-      if (!existingWord.translation && userSettings.autoTranslateWords) {
-        try {
-          setIsTranslating(true);
-          const result = await translateText(word, text.languageCode || 'FR', 'EN');
-          
-          if (result?.translatedText) {
-            setTranslation(result.translatedText);
-            // Update the displayed word with translation
-            setDisplayedWord(prev => ({
-              ...prev,
-              translation: result.translatedText
-            }));
-          }
-        } catch (err) {
-          console.error('Translation failed:', err);
-        } finally {
-          setIsTranslating(false);
-        }
+      // Trigger auto-translation if needed (respects user setting)
+      if (!existingWord.translation) {
+         triggerAutoTranslation(word);
       }
     } else {
       // Create a new word object
@@ -303,28 +296,10 @@ const TextDisplay = () => {
       setDisplayedWord(newWord);
       setTranslation('');
       
-      // Auto-translate if setting is enabled
-      if (userSettings.autoTranslateWords) {
-        try {
-          setIsTranslating(true);
-          const result = await translateText(word, text.languageCode || 'FR', 'EN');
-          
-          if (result?.translatedText) {
-            setTranslation(result.translatedText);
-            // Update the displayed word with translation
-            setDisplayedWord(prev => ({
-              ...prev,
-              translation: result.translatedText
-            }));
-          }
-        } catch (err) {
-          console.error('Translation failed:', err);
-        } finally {
-          setIsTranslating(false);
-        }
-      }
+      
+      // Trigger auto-translation (respects user setting)
+      triggerAutoTranslation(word);
     }
-    
     setProcessingWord(false);
   }, [words, text, userSettings.autoTranslateWords]);
 
@@ -397,50 +372,81 @@ const TextDisplay = () => {
     }
   };
 
-  // Add this function for sentence selection
-  const handleSentenceClick = (sentence) => {
-    if (sentence.trim() === selectedSentence) {
-      // If clicking the same sentence, deselect it
-      setSelectedSentence('');
-      setSentenceTranslation('');
+  // Renamed function to handle any text selection (single word or phrase)
+  const handleTextSelection = (text) => {
+    const selectedText = text.trim();
+    if (!selectedText) return;
+
+    // Reuse selectedWord state for the selected phrase/word
+    setSelectedWord(selectedText);
+    // Clear previous translation and error
+    setTranslation('');
+    setWordTranslationError('');
+
+    // Find if this exact phrase/word exists
+    const existingWord = words.find(w => w.term && w.term.toLowerCase() === selectedText.toLowerCase());
+
+    if (existingWord) {
+      // Phrase/word exists, display its data
+      console.log('Found existing term:', existingWord);
+      setDisplayedWord(existingWord);
+      setTranslation(existingWord.translation || '');
+      // Trigger translation if existing but untranslated (respects user setting)
+      if (!existingWord.translation) {
+         triggerAutoTranslation(selectedText);
+      }
     } else {
-      // Select the new sentence
-      setSelectedSentence(sentence.trim());
-      setSentenceTranslation('');
+      // New phrase/word selected
+      console.log('New term selected:', selectedText);
+      setDisplayedWord({
+        term: selectedText,
+        status: 0, // Treat as untracked initially
+        translation: '',
+        isNew: true
+      });
+      // Trigger auto-translation (respects user setting)
+      triggerAutoTranslation(selectedText);
     }
   };
 
-  // Function to translate selected text in popup
-  const translateSelectedTextInPopup = async (selectedText) => {
-    if (!selectedText) {
-      console.error("Missing text for translation");
+  // Helper function to trigger auto-translation
+  const triggerAutoTranslation = async (termToTranslate) => {
+    console.log(`[triggerAutoTranslation] Called for: "${termToTranslate}"`); // Log call
+    console.log(`[triggerAutoTranslation] autoTranslateWords setting: ${userSettings.autoTranslateWords}`); // Log setting
+    
+    if (!termToTranslate || !userSettings.autoTranslateWords || !text?.languageCode) {
+      console.log('[triggerAutoTranslation] Condition not met, exiting.'); // Log exit condition
       return;
     }
-    
-    const sourceLanguageCode = text?.languageCode || 'auto';
-    console.log(`Attempting to translate selected text from ${sourceLanguageCode} to en`);
-    console.log(`Text to translate: "${selectedText}"`);
-    
+
+    setIsTranslating(true);
+    setWordTranslationError(''); // Clear previous error
+
     try {
-      // Use full text translation for consistent experience
-      const response = await translateFullText(selectedText, sourceLanguageCode, 'en');
-      console.log('Translation response:', response);
+      console.log(`[triggerAutoTranslation] Calling API: translateText("${termToTranslate}", "${text.languageCode}", "EN")`); // Log API call
+      const result = await translateText(termToTranslate, text.languageCode, 'EN'); // Assuming EN target
+      console.log('[triggerAutoTranslation] API Result:', result); // Log the raw result
       
-      if (response && response.translatedText) {
-        setFullTextTranslation(response.translatedText);
-        console.log(`Translation result: "${response.translatedText}"`);
+      if (result?.translatedText) {
+        console.log(`[triggerAutoTranslation] Translation found: "${result.translatedText}"`); // Log success
+        setTranslation(result.translatedText);
+        // Update the displayed word/phrase with translation
+        setDisplayedWord(prev => ({
+          ...prev,
+          translation: result.translatedText
+        }));
       } else {
-        console.error('Translation response missing translatedText:', response);
-        setFullTextTranslation('Translation failed: Invalid response');
+        console.warn('Translation successful but result is empty for:', termToTranslate);
+        setWordTranslationError('Translation not found.');
       }
-    } catch (error) {
-      console.error('Error translating text:', error);
-      setFullTextTranslation(`Translation failed: ${error.message || 'Unknown error'}`);
+    } catch (err) {
+      console.error('Auto-translation failed for:', termToTranslate, err);
+      setWordTranslationError(`Translation failed: ${err.message}`);
     } finally {
-      setIsFullTextTranslating(false);
+      setIsTranslating(false);
     }
   };
-
+  
   // Function to request full text translation
   const handleFullTextTranslation = async () => {
     if (!text || !text.content) {
@@ -477,16 +483,101 @@ const TextDisplay = () => {
     }
   };
 
-  // Add manual translation for selected text button in the UI
-  const handleManualTranslation = () => {
-    if (selectedSentence && selectedSentence.length > 0) {
-      console.log(`Manually translating selected text: "${selectedSentence}"`);
-      setShowTranslationPopup(true);
-      setIsFullTextTranslating(true);
-      setFullTextTranslation('');
-      translateSelectedTextInPopup(selectedSentence);
-    } else {
-      console.log("No text selected for manual translation");
+  // Function to handle translating all unknown words
+  const handleTranslateUnknownWords = async () => {
+    if (!text || !text.content || !text.languageId) {
+      setTranslateUnknownError("Text content or language information is missing.");
+      return;
+    }
+
+    setTranslatingUnknown(true);
+    setTranslateUnknownError('');
+
+    try {
+      // 1. Identify unknown words
+      // Simple word splitting (adjust regex as needed for the language)
+      // Consider using a more robust tokenizer if available
+      const textWords = text.content.match(/[\w'-]+/g) || [];
+      const uniqueWordsInText = [...new Set(textWords.map(w => w.toLowerCase()))];
+
+      const wordsMap = new Map(words.map(w => [w.term.toLowerCase(), w]));
+      
+      const unknownWords = uniqueWordsInText.filter(word => {
+        const existing = wordsMap.get(word);
+        // Consider unknown if:
+        // 1. Not present in the words list at all
+        // 2. Present but status is New (1) or Learning (2) AND has no translation yet
+        return !existing || (existing.status <= 2 && !existing.translation);
+      });
+
+      if (unknownWords.length === 0) {
+        alert("No unknown words found to translate.");
+        setTranslatingUnknown(false);
+        return;
+      }
+
+      console.log(`Found ${unknownWords.length} unique unknown words to translate.`);
+
+      // 2. Call Batch Translation API (Need to create this function in api.js)
+      // Assuming target language is English ('EN') - make this configurable if needed
+      const targetLang = 'EN';
+      const sourceLang = text.languageCode; // e.g., 'FR'
+
+      // Create batchTranslateWords in api.js similar to translateText
+      const translations = await batchTranslateWords(unknownWords, targetLang, sourceLang);
+
+      if (!translations || Object.keys(translations).length === 0) {
+          throw new Error("Batch translation returned no results.");
+      }
+
+      console.log(`Received ${Object.keys(translations).length} translations.`);
+      
+      // 3. Prepare data for Batch Add Terms API
+      const termsToAdd = unknownWords
+        .map(word => ({
+          term: word, // Use the original case? DeepL might return lower. Let's stick to lower for consistency? Or find original case.
+                      // Let's find the original case from the first occurrence in textWords for better display
+          translation: translations[word.toLowerCase()] || '' // Match translation using lowercase key
+        }))
+        .filter(term => term.translation); // Only include terms that got a translation
+
+      // Find original casing (could be improved for performance)
+      const originalCaseMap = new Map();
+      textWords.forEach(w => {
+          const lower = w.toLowerCase();
+          if (!originalCaseMap.has(lower)) {
+              originalCaseMap.set(lower, w);
+          }
+      });
+      
+      const termsToAddWithOriginalCase = termsToAdd.map(t => ({
+          ...t,
+          term: originalCaseMap.get(t.term.toLowerCase()) || t.term // Fallback if not found
+      }));
+
+
+      if (termsToAddWithOriginalCase.length === 0) {
+          throw new Error("No valid translations received to add as terms.");
+      }
+
+      console.log(`Prepared ${termsToAddWithOriginalCase.length} terms to add/update.`);
+
+      // 4. Call Batch Add Terms API (Need to create this function in api.js)
+      // Create addTermsBatch in api.js
+      await addTermsBatch(text.languageId, termsToAddWithOriginalCase);
+
+      // 5. Update local state (Refetch or merge)
+      // Easiest is to refetch all words for the language to ensure consistency
+      await fetchAllLanguageWords(text.languageId);
+      
+      alert(`Successfully translated and updated ${termsToAddWithOriginalCase.length} unknown words.`);
+
+    } catch (err) {
+      console.error("Error translating unknown words:", err);
+      setTranslateUnknownError(`Failed: ${err.message}`);
+      alert(`Error: ${err.message}`); // Show error to user
+    } finally {
+      setTranslatingUnknown(false);
     }
   };
 
@@ -499,9 +590,11 @@ const TextDisplay = () => {
       // Give a small delay to ensure selection is complete
       setTimeout(() => {
         const selected = window.getSelection().toString();
-        if (selected && selected.length > 0) {
+        // Only trigger if selection is not just whitespace and is likely more than a single word click
+        // (handleWordClick handles single words)
+        if (selected && selected.trim().length > 0 && selected.includes(' ')) {
           console.log(`Selection detected: "${selected}" (${selected.length} chars)`);
-          handleSentenceClick(selected);
+          handleTextSelection(selected); // Call the renamed function
         }
       }, 100);
     };
@@ -585,9 +678,9 @@ const TextDisplay = () => {
                 if (part === selectedSentence) {
                   return (
                     <span 
-                      key={`sentence-${partIndex}`} 
+                      key={`sentence-${partIndex}`}
                       style={styles.selectedSentence}
-                      onClick={() => handleSentenceClick(part)}
+                      // Removed onClick={() => handleSentenceClick(part)} as selection is handled by mouseup
                     >
                       {processTextContent(part)}
                     </span>
@@ -630,25 +723,47 @@ const TextDisplay = () => {
             return segment;
           }
           
-          const wordStatus = getWordStatus(wordOnly);
-          
-          return (
+          const wordData = getWordData(wordOnly); // Use the updated function
+          const wordStatus = wordData ? wordData.status : 0;
+          const wordTranslation = wordData ? wordData.translation : null;
+
+          const wordSpan = (
             <span
               key={`word-${index}-${wordOnly}`}
               style={{
                 ...styles.highlightedWord,
-                ...getWordStyle(wordStatus)
+                ...getWordStyle(wordStatus) // getWordStyle still uses status number
               }}
               className={`clickable-word word-status-${wordStatus}`}
               onClick={(e) => {
                 e.stopPropagation(); // Prevent triggering sentence click
-                console.log(`Clicked on word: "${wordOnly}" (${Array.from(wordOnly).map(c => c.charCodeAt(0))})`);
+                console.log(`Clicked on word: "${wordOnly}"`);
                 handleWordClick(wordOnly);
               }}
             >
               {segment}
             </span>
           );
+
+          // Wrap with OverlayTrigger if translation exists
+          if (wordTranslation) {
+            return (
+              <OverlayTrigger
+                key={`tooltip-${index}-${wordOnly}`}
+                placement="top" // Show tooltip above the word
+                overlay={
+                  <Tooltip id={`tooltip-${index}-${wordOnly}`}>
+                    {wordTranslation}
+                  </Tooltip>
+                }
+              >
+                {wordSpan}
+              </OverlayTrigger>
+            );
+          } else {
+            // Return just the span if no translation
+            return wordSpan;
+          }
         }
         
         // Return non-word segments as is
@@ -676,30 +791,6 @@ const TextDisplay = () => {
         >
           {selectedSentence ? highlightSelectedSentence(text.content) : detectSentences(text.content)}
         </div>
-      </div>
-    );
-  };
-
-  // Render the sentence translation panel
-  const renderSentenceTranslationPanel = () => {
-    if (!selectedSentence) {
-      return null;
-    }
-
-    return (
-      <div className="mt-4 p-3 border rounded">
-        <h5>Selected Text:</h5>
-        <p>{selectedSentence}</p>
-        
-        <h5 className="mt-3">Translation:</h5>
-        {isSentenceTranslating ? (
-          <div className="d-flex align-items-center">
-            <Spinner animation="border" size="sm" className="me-2" />
-            <span>Translating...</span>
-          </div>
-        ) : (
-          <p>{sentenceTranslation || 'No translation available'}</p>
-        )}
       </div>
     );
   };
@@ -737,6 +828,13 @@ const TextDisplay = () => {
               Status: Not tracked yet
             </div>
           </div>
+        )}
+
+        {/* Display translation error if any */}
+        {wordTranslationError && (
+          <Alert variant="danger" className="py-1 px-2 mb-2 small">
+            {wordTranslationError}
+          </Alert>
         )}
         
         <Form>
@@ -892,18 +990,19 @@ const TextDisplay = () => {
     };
   };
 
-  // Helper function to get the status of a word
-  const getWordStatus = (word) => {
-    if (!word) return 0;
+  // Helper function to get the data (status, translation) of a word
+  const getWordData = (word) => {
+    if (!word) return null; // Return null if no word provided
     
-    // Make case-insensitive search without normalization that could alter special characters
+    // Make case-insensitive search
     const wordLower = word.toLowerCase();
-    const foundWord = words.find(w => 
-      w.term && 
+    const foundWord = words.find(w =>
+      w.term &&
       w.term.toLowerCase() === wordLower
     );
     
-    return foundWord ? foundWord.status : 0;
+    // Return the full word object if found, otherwise null
+    return foundWord || null;
   };
 
   if (loading) {
@@ -1019,20 +1118,22 @@ const TextDisplay = () => {
                   Translate Text
                 </Button>
               )}
-              
-              {selectedSentence && (
-                <Button 
-                  variant="outline-primary" 
-                  size="sm"
-                  onClick={handleManualTranslation}
-                  data-testid="translate-selected-text-btn"
-                  className="me-1"
-                >
-                  Translate Selection
-                </Button>
-              )}
-              
-              {/* Navigation buttons */}
+              {/* Add Translate Unknown Button Here */}
+               {text && !loading && (
+                  <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleTranslateUnknownWords}
+                      disabled={translatingUnknown}
+                      className="ms-1" // Use ms-1 for spacing
+                      title="Translate all unknown/learning words in this lesson using DeepL"
+                  >
+                      {translatingUnknown ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : 'Translate Unknown'}
+                  </Button>
+               )}
+               {translateUnknownError && <Alert variant="danger" className="mt-2 p-1 small">{translateUnknownError}</Alert>} {/* Display error */}
+             
+             {/* Navigation buttons */}
               {text?.bookId && (
                 <Button 
                   variant="outline-primary" 
@@ -1077,15 +1178,15 @@ const TextDisplay = () => {
             {/* Complete Lesson button below the text */}
             {text?.bookId && (
               <div className="mt-2 pt-2 border-top text-end px-2">
-                <Button 
-                  variant="success" 
+                <Button
+                  variant="success"
                   onClick={handleCompleteLesson}
                   disabled={completing}
                   size="sm"
                 >
                   {completing ? <Spinner animation="border" size="sm" /> : null}
                   {' '}
-                  Complete Lesson
+                  {nextTextId === null ? 'Finish Book' : 'Complete Lesson'}
                 </Button>
               </div>
             )}
@@ -1192,9 +1293,6 @@ const TextDisplay = () => {
           )}
         </Modal.Footer>
       </Modal>
-      
-      {/* Add the sentence translation panel */}
-      {renderSentenceTranslationPanel()}
       
       {/* Add the full text translation popup */}
       <TranslationPopup

@@ -695,12 +695,14 @@ const Statistics = () => {
               onChange={(e) => setActivityPeriod(e.target.value)}
             >
               <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">Last 7 Days</option>
-              <option value="month">Last 30 Days</option>
+              <option value="last_day">Today</option>
+              <option value="last_week">Last 7 Days</option>
+              <option value="last_month">Last 30 Days</option>
+              {/* Removed unsupported options for now
               <option value="3months">Last 3 Months</option>
               <option value="6months">Last 6 Months</option>
               <option value="year">Last Year</option>
+              */}
             </Form.Select>
           </div>
         </Card.Header>

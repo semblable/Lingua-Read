@@ -70,6 +70,7 @@ namespace LinguaReadApi.Controllers
                 Title = text.Title,
                 Content = text.Content,
                 LanguageName = text.Language.Name,
+                LanguageCode = text.Language.Code, // Populate LanguageCode
                 LanguageId = text.LanguageId,
                 BookId = text.BookId,
                 CreatedAt = text.CreatedAt,
@@ -155,6 +156,7 @@ namespace LinguaReadApi.Controllers
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public string LanguageName { get; set; } = string.Empty;
+        public string LanguageCode { get; set; } = string.Empty; // Add LanguageCode
         public int LanguageId { get; set; }
         public int? BookId { get; set; }
         public DateTime CreatedAt { get; set; }

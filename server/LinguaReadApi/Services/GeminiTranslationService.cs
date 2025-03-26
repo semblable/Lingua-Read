@@ -64,7 +64,7 @@ namespace LinguaReadApi.Services
                         Temperature = 0.1,
                         TopK = 32,
                         TopP = 1.0,
-                        MaxOutputTokens = 8192,
+                        MaxOutputTokens = 20000,
                         ResponseMimeType = "text/plain"
                     }
                 };

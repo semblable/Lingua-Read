@@ -404,16 +404,28 @@ namespace LinguaReadApi.Controllers
             
             await _context.SaveChangesAsync();
             
-            // Calculate completion percentage based on text position, not word knowledge
+            // Calculate completion percentage based on text position
             // Get total number of texts/parts in this book
             int totalTexts = await _context.Texts
                 .Where(t => t.BookId == id)
                 .CountAsync();
-                
-            // Calculate progress based on current part number and format to 2 decimal places
-            double completionPercentage = totalTexts > 0 
-                ? Math.Round(((double)text.PartNumber / totalTexts) * 100, 2) 
-                : 0;
+
+            double completionPercentage;
+            // Check if this is the last lesson
+            if (totalTexts > 0 && text.PartNumber == totalTexts)
+            {
+                book.IsFinished = true;
+                completionPercentage = 100.0;
+            }
+            else
+            {
+                // Calculate progress based on current part number and format to 2 decimal places
+                completionPercentage = totalTexts > 0
+                    ? Math.Round(((double)text.PartNumber / totalTexts) * 100, 2)
+                    : 0;
+            }
+            // Save changes again to persist IsFinished if updated
+            await _context.SaveChangesAsync();
             
             return new BookStatsDto
             {
