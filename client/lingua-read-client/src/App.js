@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Container } from 'react-bootstrap';
+import { /*Container*/ } from 'react-bootstrap'; // Removed unused Container
 import { useAuthStore } from './utils/store';
 import { jwtDecode } from 'jwt-decode';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -21,6 +21,7 @@ import BookCreate from './pages/BookCreate';
 import BookDetail from './pages/BookDetail';
 import Statistics from './pages/Statistics';
 import UserSettings from './pages/UserSettings';
+import CreateAudioLesson from './pages/CreateAudioLesson'; // Import the new page
 
 function App() {
   const { token, setToken, clearToken } = useAuthStore();
@@ -76,6 +77,7 @@ function App() {
           <Route path="/texts" element={token ? <TextList /> : <Navigate to="/login" />} />
           <Route path="/texts/create" element={token ? <TextCreate /> : <Navigate to="/login" />} />
           <Route path="/texts/:textId" element={token ? <TextDisplay /> : <Navigate to="/login" />} />
+          <Route path="/texts/create-audio" element={token ? <CreateAudioLesson /> : <Navigate to="/login" />} /> {/* Add route for audio lesson creation */}
           
           {/* Statistics route */}
           <Route path="/statistics" element={token ? <Statistics /> : <Navigate to="/login" />} />

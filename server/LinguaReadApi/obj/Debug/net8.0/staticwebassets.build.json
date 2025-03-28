@@ -1,11 +1,58 @@
 {
   "Version": 1,
-  "Hash": "aTSp867m+SvMD9M+VTZeL8PT3YVTxEjwDxZkOSnsY2M=",
+  "Hash": "gyGkq03m2DbBokdWFS8mQXhuBRUGvGPV0dvWFfS52M4=",
   "Source": "LinguaReadApi",
   "BasePath": "_content/LinguaReadApi",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": []
+  "DiscoveryPatterns": [
+    {
+      "Name": "LinguaReadApi\\wwwroot",
+      "Source": "LinguaReadApi",
+      "ContentRoot": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\",
+      "BasePath": "_content/LinguaReadApi",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\a84974fa-4906-4dd6-b899-cc5cba381f15_La vie en grand.mp3",
+      "SourceId": "LinguaReadApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\",
+      "BasePath": "_content/LinguaReadApi",
+      "RelativePath": "audio_lessons/3d2a097a-0ec2-408e-861d-b528cd267a42/a84974fa-4906-4dd6-b899-cc5cba381f15_La vie en grand.mp3",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\a84974fa-4906-4dd6-b899-cc5cba381f15_La vie en grand.mp3"
+    },
+    {
+      "Identity": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\d7611675-adf2-47bd-8f5a-d49a91a1750e_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3",
+      "SourceId": "LinguaReadApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\",
+      "BasePath": "_content/LinguaReadApi",
+      "RelativePath": "audio_lessons/3d2a097a-0ec2-408e-861d-b528cd267a42/d7611675-adf2-47bd-8f5a-d49a91a1750e_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\d7611675-adf2-47bd-8f5a-d49a91a1750e_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3"
+    }
+  ]
 }

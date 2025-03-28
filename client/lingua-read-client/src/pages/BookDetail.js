@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Spinner, ListGroup, Badge, ProgressBar, Modal } from 'react-bootstrap';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getBook, finishBook } from '../utils/api';
-import { formatDate, calculateReadingTime } from '../utils/helpers';
+import { formatDate, /*calculateReadingTime*/ } from '../utils/helpers'; // Removed unused calculateReadingTime
 
 const BookDetail = () => {
   const { bookId } = useParams();

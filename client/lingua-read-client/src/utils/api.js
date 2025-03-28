@@ -1,11 +1,11 @@
 // Import Platform from react-native
 import { Platform } from 'react-native';
-import storage from './storage';
+// import storage from './storage'; // Removed unused storage
 
 // Dynamically set API URL based on platform
 // For web development use localhost, for mobile use your computer's IP address
-const API_URL = Platform.OS === 'web' 
-  ? 'http://localhost:5000' 
+export const API_URL = Platform.OS === 'web' // Export the constant
+  ? 'http://localhost:5000'
   : 'http://192.168.0.48:5000'; // Your Ethernet adapter IP address
 
 // Helper function to get token from storage
@@ -21,68 +21,6 @@ const getToken = () => {
   } catch (error) {
     console.error('Error retrieving token:', error);
     return null;
-  }
-};
-
-// Helper function to store token
-const storeToken = (token) => {
-  try {
-    if (!token || typeof token !== 'string') {
-      console.error('Invalid token provided');
-      return false;
-    }
-    const cleanToken = token.trim();
-    localStorage.setItem('token', cleanToken);
-    console.log('Token stored successfully:', cleanToken.length + ' chars');
-    return true;
-  } catch (error) {
-    console.error('Error storing token:', error);
-    return false;
-  }
-};
-
-// Enhanced fetch function with debugging
-const fetchWithDebug = async (url, options = {}) => {
-  console.log(`[API Debug] Fetching from: ${url}`);
-  console.log(`[API Debug] Options:`, options);
-  
-  try {
-    // Create the URL object to ensure proper URL construction
-    let fullUrl;
-    try {
-      // Check if the URL is already absolute
-      if (url.startsWith('http://') || url.startsWith('https://')) {
-        fullUrl = new URL(url);
-      } else {
-        // Handle relative URLs by joining with API_URL
-        fullUrl = new URL(url, API_URL);
-      }
-      console.log(`[API Debug] Constructed URL: ${fullUrl.toString()}`);
-    } catch (urlError) {
-      console.error(`[API Error] Invalid URL construction: ${urlError.message}`);
-      throw new Error(`Invalid URL: ${url} - ${urlError.message}`);
-    }
-    
-    const response = await fetch(fullUrl.toString(), options);
-    console.log(`[API Debug] Response status: ${response.status}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    // Check if response has content
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      console.log(`[API Debug] Response data:`, data);
-      return data;
-    } else {
-      console.log(`[API Debug] Response is not JSON or empty. Content-Type: ${contentType}`);
-      return null;
-    }
-  } catch (error) {
-    console.error(`[API Error] Fetch failed: ${error.message}`);
-    throw error;
   }
 };
 
@@ -239,6 +177,88 @@ export const createText = (title, content, languageId) => {
     body: JSON.stringify({ title, content, languageId })
   });
 };
+
+export const createAudioLesson = async (title, languageId, audioFile, srtFile) => {
+  const endpoint = '/api/texts/audio';
+  console.log(`[API] Creating audio lesson: "${title}"`);
+
+  try {
+    const token = getToken();
+    const headers = {
+      'Accept': 'application/json',
+      // DO NOT set Content-Type for FormData, browser does it with boundary
+    };
+
+    if (token && typeof token === 'string' && token.trim() !== '') {
+      headers.Authorization = `Bearer ${token.trim()}`;
+      console.log('[API Debug] Authorization header added for audio lesson upload');
+    } else {
+       console.log('[API Debug] No token available for audio lesson upload');
+       // Decide if auth is strictly required for this endpoint based on backend
+       throw new Error('Authentication required to create audio lesson');
+    }
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('languageId', languageId);
+    formData.append('audioFile', audioFile); // The File object
+    formData.append('srtFile', srtFile);     // The File object
+
+    const requestConfig = {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include', // Keep consistent with fetchApi
+      mode: 'cors'           // Keep consistent with fetchApi
+    };
+
+    const fullUrl = new URL(endpoint, API_URL);
+    console.log('[API Debug] Full URL for audio lesson:', fullUrl.toString());
+    console.log('[API Debug] Request config for audio lesson:', {
+        method: requestConfig.method,
+        headers: requestConfig.headers, // Log headers (excluding Content-Type)
+        credentials: requestConfig.credentials,
+        mode: requestConfig.mode
+    });
+
+    const response = await fetch(fullUrl.toString(), requestConfig);
+    console.log('[API Debug] Audio lesson creation response status:', response.status);
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! Status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+         // If response is not JSON, try to get text
+         try {
+            const text = await response.text();
+            errorMessage = text || errorMessage;
+         } catch (textError) {
+            // Keep the original status code error
+         }
+      }
+      console.error('[API Error] Audio lesson creation failed:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    // Parse successful response (assuming backend returns JSON like other create endpoints)
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      console.log('[API Debug] Audio lesson creation response data:', data);
+      return data;
+    } else {
+      console.log('[API Debug] Non-JSON response for audio lesson creation.');
+      return { message: response.statusText }; // Or handle as appropriate
+    }
+
+  } catch (error) {
+    console.error('[API Error] Failed to create audio lesson:', error);
+    throw error;
+  }
+};
+
 
 // Books API
 export const getBooks = () => {

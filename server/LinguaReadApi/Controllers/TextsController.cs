@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using LinguaReadApi.Data;
 using LinguaReadApi.Models;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Logging; // Add this
 
 namespace LinguaReadApi.Controllers
 {
@@ -18,10 +19,12 @@ namespace LinguaReadApi.Controllers
     public class TextsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<TextsController> _logger; // Add logger field
 
-        public TextsController(AppDbContext context)
+        public TextsController(AppDbContext context, ILogger<TextsController> logger) // Inject logger
         {
             _context = context;
+            _logger = logger; // Assign logger
         }
 
         // GET: api/texts
@@ -74,6 +77,9 @@ namespace LinguaReadApi.Controllers
                 LanguageId = text.LanguageId,
                 BookId = text.BookId,
                 CreatedAt = text.CreatedAt,
+                IsAudioLesson = text.IsAudioLesson, // Add IsAudioLesson
+                AudioFilePath = text.AudioFilePath, // Add AudioFilePath
+                SrtContent = text.SrtContent,       // Add SrtContent
                 Words = text.TextWords.Select(tw => new WordDto
                 {
                     WordId = tw.Word.WordId,
@@ -130,6 +136,148 @@ namespace LinguaReadApi.Controllers
             return CreatedAtAction(nameof(GetText), new { id = text.TextId }, textDto);
         }
 
+        // POST: api/texts/audio
+        [HttpPost("audio")]
+        [Consumes("multipart/form-data")] // Specify content type
+        [RequestSizeLimit(100 * 1024 * 1024)] // 100 MB limit, match Program.cs
+        [RequestFormLimits(MultipartBodyLengthLimit = 100 * 1024 * 1024, ValueLengthLimit = int.MaxValue)] // Match Program.cs
+        public async Task<ActionResult<TextDto>> CreateAudioLesson([FromForm] CreateAudioLessonDto createAudioLessonDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (createAudioLessonDto.AudioFile == null || createAudioLessonDto.AudioFile.Length == 0)
+            {
+                return BadRequest("Audio file is required.");
+            }
+
+            if (createAudioLessonDto.SrtFile == null || createAudioLessonDto.SrtFile.Length == 0)
+            {
+                return BadRequest("SRT file is required.");
+            }
+
+            // Basic validation for file types (can be improved)
+            if (!createAudioLessonDto.AudioFile.ContentType.StartsWith("audio/"))
+            {
+                return BadRequest("Invalid audio file type.");
+            }
+            // SRT files often don't have a standard MIME type, check extension
+            if (!createAudioLessonDto.SrtFile.FileName.EndsWith(".srt", StringComparison.OrdinalIgnoreCase))
+            {
+                 return BadRequest("Invalid SRT file type. Must be .srt");
+            }
+
+
+            var userId = GetUserId();
+
+            // Check if language exists
+            var languageExists = await _context.Languages.AnyAsync(l => l.LanguageId == createAudioLessonDto.LanguageId);
+            if (!languageExists)
+            {
+                return BadRequest("Invalid language ID");
+            }
+
+            string audioFilePath = null;
+            string srtContent = null;
+            string transcript = null;
+
+            try
+            {
+                // --- 1. Save Audio File ---
+                // TODO: Implement robust file saving logic
+                // Example: Save to wwwroot/audio_lessons/{userId}/{guid}_{filename}
+                // Ensure the directory exists
+                var audioFileName = $"{Guid.NewGuid()}_{Path.GetFileName(createAudioLessonDto.AudioFile.FileName)}";
+                var userAudioDir = Path.Combine("wwwroot", "audio_lessons", userId.ToString()); // Consider configuration for base path
+                Directory.CreateDirectory(userAudioDir); // Ensure directory exists
+                var fullAudioPath = Path.Combine(userAudioDir, audioFileName);
+
+                using (var stream = new FileStream(fullAudioPath, FileMode.Create))
+                {
+                    await createAudioLessonDto.AudioFile.CopyToAsync(stream);
+                }
+                // Store relative path for access via web server
+                audioFilePath = Path.Combine("audio_lessons", userId.ToString(), audioFileName).Replace("\\", "/");
+
+
+                // --- 2. Read and Parse SRT File ---
+                using (var reader = new StreamReader(createAudioLessonDto.SrtFile.OpenReadStream()))
+                {
+                    srtContent = await reader.ReadToEndAsync();
+                }
+                // TODO: Implement SRT parsing logic to extract transcript
+                transcript = ParseSrt(srtContent); // Placeholder for SRT parsing function
+
+                if (string.IsNullOrWhiteSpace(transcript))
+                {
+                    return BadRequest("Could not parse transcript from SRT file.");
+                }
+
+                // --- 3. Create Text Entity ---
+                var text = new Text
+                {
+                    Title = createAudioLessonDto.Title,
+                    Content = transcript, // Use parsed transcript as main content
+                    LanguageId = createAudioLessonDto.LanguageId,
+                    UserId = userId,
+                    CreatedAt = DateTime.UtcNow,
+                    IsAudioLesson = true,
+                    AudioFilePath = audioFilePath,
+                    SrtContent = srtContent
+                };
+
+                _context.Texts.Add(text);
+                await _context.SaveChangesAsync();
+
+                // --- 4. Return Response ---
+                var language = await _context.Languages.FindAsync(text.LanguageId);
+                var textDto = new TextDto
+                {
+                    TextId = text.TextId,
+                    Title = text.Title,
+                    LanguageName = language?.Name ?? "Unknown", // Handle potential null language
+                    CreatedAt = text.CreatedAt
+                    // Add IsAudioLesson? Maybe in TextDetailDto
+                };
+
+                return CreatedAtAction(nameof(GetText), new { id = text.TextId }, textDto);
+            }
+            catch (Exception ex) // Basic error handling
+            {
+                // Log the exception (implementation needed)
+                _logger.LogError(ex, "Error creating audio lesson for user {UserId}", userId); // Use structured logging
+                // Consider cleanup: delete saved audio file if creation fails halfway
+                if (!string.IsNullOrEmpty(audioFilePath))
+                {
+                     // Attempt to delete saved file on error
+                    var fullPathToDelete = Path.Combine("wwwroot", audioFilePath.Replace("/", "\\"));
+                     if(System.IO.File.Exists(fullPathToDelete)) {
+                         System.IO.File.Delete(fullPathToDelete);
+                     }
+                }
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        // Placeholder for SRT parsing logic
+        private string ParseSrt(string srtContent)
+        {
+            // Simple SRT parser: Extracts lines that don't contain '-->' and aren't sequence numbers
+            var lines = srtContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            var transcriptLines = new List<string>();
+            foreach (var line in lines)
+            {
+                if (!string.IsNullOrWhiteSpace(line) && !line.Contains("-->") && !int.TryParse(line, out _))
+                {
+                    transcriptLines.Add(line.Trim());
+                }
+            }
+            return string.Join(" ", transcriptLines); // Join lines into a single transcript string
+        }
+
+
         private Guid GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -160,6 +308,9 @@ namespace LinguaReadApi.Controllers
         public int LanguageId { get; set; }
         public int? BookId { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsAudioLesson { get; set; } // Add IsAudioLesson
+        public string? AudioFilePath { get; set; } // Add AudioFilePath (nullable)
+        public string? SrtContent { get; set; }    // Add SrtContent (nullable)
         public List<WordDto> Words { get; set; } = new List<WordDto>();
     }
 
@@ -184,4 +335,20 @@ namespace LinguaReadApi.Controllers
         [Required]
         public int LanguageId { get; set; }
     }
-} 
+
+    public class CreateAudioLessonDto
+    {
+        [Required]
+        [StringLength(200)]
+        public string Title { get; set; } = string.Empty;
+
+        [Required]
+        public int LanguageId { get; set; }
+
+        [Required]
+        public IFormFile AudioFile { get; set; } = null!;
+
+        [Required]
+        public IFormFile SrtFile { get; set; } = null!;
+    }
+}

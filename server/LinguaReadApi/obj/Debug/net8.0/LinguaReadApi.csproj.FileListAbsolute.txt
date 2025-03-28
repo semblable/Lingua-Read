@@ -146,3 +146,4 @@ C:\Users\kamil\Dropbox\Lingua_Read\server\LinguaReadApi\obj\Debug\net8.0\ref\Lin
 C:\Users\kamil\Dropbox\Lingua_Read\server\LinguaReadApi\bin\Debug\net8.0\package-lock.json
 C:\Users\kamil\Dropbox\Lingua_Read\server\LinguaReadApi\bin\Debug\net8.0\package.json
 C:\Users\kamil\Dropbox\Lingua_Read\server\LinguaReadApi\obj\Debug\net8.0\LinguaReadApi.sourcelink.json
+C:\Users\kamil\Dropbox\Lingua_Read\server\linguareadapi\bin\Debug\net8.0\LinguaReadApi.staticwebassets.runtime.json

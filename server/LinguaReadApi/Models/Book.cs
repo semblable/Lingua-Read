@@ -37,7 +37,7 @@ namespace LinguaReadApi.Models
         [ForeignKey("User")]
         public Guid UserId { get; set; }
         
-        [ForeignKey("Language")]
+        // [ForeignKey("Language")] // Removed redundant attribute, configured via Fluent API in AppDbContext
         public int LanguageId { get; set; }
         
         [ForeignKey("LastReadText")]

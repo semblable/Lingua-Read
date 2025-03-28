@@ -38,5 +38,10 @@ namespace LinguaReadApi.Models
         public virtual Language Language { get; set; } = null!;
         public virtual Book Book { get; set; } = null!;
         public virtual ICollection<TextWord> TextWords { get; set; } = new List<TextWord>();
+
+        // Properties for Audio Lessons
+        public bool IsAudioLesson { get; set; } = false;
+        public string? AudioFilePath { get; set; } // Path to the associated audio file
+        public string? SrtContent { get; set; } // Raw content of the SRT file
     }
-} 
+}

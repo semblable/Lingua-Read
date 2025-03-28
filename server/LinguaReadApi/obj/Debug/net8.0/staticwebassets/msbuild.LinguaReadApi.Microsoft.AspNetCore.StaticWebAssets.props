@@ -1,0 +1,36 @@
+﻿<Project>
+  <ItemGroup>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\audio_lessons\3d2a097a-0ec2-408e-861d-b528cd267a42\a84974fa-4906-4dd6-b899-cc5cba381f15_La vie en grand.mp3))">
+      <SourceType>Package</SourceType>
+      <SourceId>LinguaReadApi</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/LinguaReadApi</BasePath>
+      <RelativePath>audio_lessons/3d2a097a-0ec2-408e-861d-b528cd267a42/a84974fa-4906-4dd6-b899-cc5cba381f15_La vie en grand.mp3</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\audio_lessons\3d2a097a-0ec2-408e-861d-b528cd267a42\a84974fa-4906-4dd6-b899-cc5cba381f15_La vie en grand.mp3))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\audio_lessons\3d2a097a-0ec2-408e-861d-b528cd267a42\d7611675-adf2-47bd-8f5a-d49a91a1750e_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3))">
+      <SourceType>Package</SourceType>
+      <SourceId>LinguaReadApi</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/LinguaReadApi</BasePath>
+      <RelativePath>audio_lessons/3d2a097a-0ec2-408e-861d-b528cd267a42/d7611675-adf2-47bd-8f5a-d49a91a1750e_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\audio_lessons\3d2a097a-0ec2-408e-861d-b528cd267a42\d7611675-adf2-47bd-8f5a-d49a91a1750e_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3))</OriginalItemSpec>
+    </StaticWebAsset>
+  </ItemGroup>
+</Project>

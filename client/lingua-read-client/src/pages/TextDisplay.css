@@ -93,6 +93,14 @@
   margin-bottom: 2em;
 }
 
+/* Style for the currently active SRT line */
+.srt-line.active-srt-line {
+  /* background-color: var(--active-srt-line-bg, rgba(255, 223, 186, 0.7)); /* Replaced with border */
+  border-left: 4px solid var(--active-srt-line-border, #fd7e14); /* Use a distinct left border (orange) */
+  padding-left: calc(0.5rem - 4px); /* Adjust padding to account for border width */
+  font-weight: 500; /* Slightly bolder */
+}
+
 /* Dark theme adjustments */
 .dark-theme .resize-divider {
   background-color: #333333;

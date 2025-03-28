@@ -1,10 +1,11 @@
 import React from 'react';
-import { Navbar, Nav, Container, Button, NavDropdown } from 'react-bootstrap';
+import { Navbar, Nav, Container, /*Button,*/ NavDropdown } from 'react-bootstrap'; // Removed unused Button
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../utils/store';
 
+
 const Navigation = () => {
-  const { token, user, clearToken } = useAuthStore();
+  const { token, /*user,*/ clearToken } = useAuthStore(); // Removed unused user
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -30,6 +31,7 @@ const Navigation = () => {
                 <NavDropdown title="Texts" id="texts-dropdown">
                   <NavDropdown.Item as={Link} to="/texts">My Texts</NavDropdown.Item>
                   <NavDropdown.Item as={Link} to="/texts/create">Add Individual Text</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/texts/create-audio">Add Audio Lesson</NavDropdown.Item> {/* Add link for audio lesson */}
                 </NavDropdown>
                 
                 <Nav.Link as={Link} to="/statistics">Statistics</Nav.Link>

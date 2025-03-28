@@ -1,13 +1,94 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Container, Card, Spinner, Alert, Button, Modal, Form, Row, Col, Badge, ProgressBar, OverlayTrigger, Tooltip } from 'react-bootstrap'; // Added OverlayTrigger, Tooltip
 import { useParams, useNavigate } from 'react-router-dom';
+import { FixedSizeList as List } from 'react-window'; // Import react-window
 import {
   getText, createWord, updateWord, updateLastRead, completeLesson, getBook,
-  translateText, translateSentence, translateFullText, getUserSettings,
-  batchTranslateWords, addTermsBatch // Added batch functions
+  translateText, /*translateSentence,*/ translateFullText, getUserSettings, // Removed translateSentence
+  batchTranslateWords, addTermsBatch, // Added batch functions
+  API_URL // Import the base URL
 } from '../utils/api';
 import TranslationPopup from '../components/TranslationPopup';
 import './TextDisplay.css';
+
+// --- SRT Parsing Utilities ---
+
+// Helper function to parse SRT time format (HH:MM:SS,ms) into seconds
+const parseSrtTime = (timeString) => {
+  if (!timeString) return 0;
+  const parts = timeString.split(':');
+  const secondsParts = parts[2]?.split(',');
+  if (!secondsParts || secondsParts.length < 2) return 0;
+
+  const hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+  const seconds = parseInt(secondsParts[0], 10);
+  const milliseconds = parseInt(secondsParts[1], 10);
+
+  if (isNaN(hours) || isNaN(minutes) || isNaN(seconds) || isNaN(milliseconds)) {
+    return 0;
+  }
+
+  return hours * 3600 + minutes * 60 + seconds + milliseconds / 1000;
+};
+
+// Parses SRT content into a structured array
+const parseSrtContent = (srtContent) => {
+  if (!srtContent) return [];
+
+  const lines = srtContent.trim().split(/\r?\n/);
+  const entries = [];
+  let currentEntry = null;
+  let textBuffer = [];
+
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+
+    if (currentEntry === null) {
+      // Expecting sequence number
+      if (/^\d+$/.test(trimmedLine)) {
+        currentEntry = { id: parseInt(trimmedLine, 10), startTime: 0, endTime: 0, text: '' };
+        textBuffer = []; // Reset text buffer for new entry
+      }
+    } else if (currentEntry.startTime === 0 && trimmedLine.includes('-->')) {
+      // Expecting timecodes
+      const timeParts = trimmedLine.split(' --> ');
+      if (timeParts.length === 2) {
+        currentEntry.startTime = parseSrtTime(timeParts[0]);
+        currentEntry.endTime = parseSrtTime(timeParts[1]);
+      }
+    } else if (trimmedLine === '') {
+       // Blank line signifies end of current entry's text
+       if (currentEntry && currentEntry.startTime > 0 && textBuffer.length > 0) {
+           currentEntry.text = textBuffer.join(' ').trim(); // Join multi-line text with spaces
+           entries.push(currentEntry);
+           currentEntry = null; // Reset for next entry
+           textBuffer = [];
+       } else if (currentEntry && currentEntry.startTime > 0) {
+           // Handle case where text might be missing but times are present (less common)
+           currentEntry.text = '';
+           entries.push(currentEntry);
+           currentEntry = null;
+           textBuffer = [];
+       }
+    } else if (currentEntry) {
+      // Expecting text line(s)
+      textBuffer.push(trimmedLine);
+    }
+  }
+
+  // Add the last entry if it wasn't followed by a blank line
+  if (currentEntry && currentEntry.startTime > 0 && textBuffer.length > 0) {
+    currentEntry.text = textBuffer.join(' ').trim();
+    entries.push(currentEntry);
+  }
+
+  console.log(`[SRT Parser] Parsed ${entries.length} entries.`);
+  return entries;
+};
+
+// --- End SRT Parsing Utilities ---
+
 
 // CSS for word highlighting
 const styles = {
@@ -66,7 +147,7 @@ const TextDisplay = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [text, setText] = useState(null);
-  const [book, setBook] = useState(null);
+  const [book, setBook] = useState(null); // Restored state for setBook usage
   const [words, setWords] = useState([]);
   
   // Word editing state
@@ -86,11 +167,11 @@ const TextDisplay = () => {
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [nextTextId, setNextTextId] = useState(null);
 
-  // States for sentence translation
-  const [selectedSentence, setSelectedSentence] = useState('');
-  // Removed sentenceTranslation and isSentenceTranslating states
   
-  // States for full text translation popup
+    // States for sentence translation
+    const [selectedSentence, /*setSelectedSentence*/] = useState(''); // Removed unused setter
+    // Removed sentenceTranslation and isSentenceTranslating states
+    
   const [showTranslationPopup, setShowTranslationPopup] = useState(false);
   const [fullTextTranslation, setFullTextTranslation] = useState('');
   const [isFullTextTranslating, setIsFullTextTranslating] = useState(false);
@@ -115,6 +196,262 @@ const TextDisplay = () => {
   const [translateUnknownError, setTranslateUnknownError] = useState('');
   const [wordTranslationError, setWordTranslationError] = useState(''); // Add state for single word translation error
 
+  // State for Audio Lessons
+  const [isAudioLesson, setIsAudioLesson] = useState(false);
+  const [audioSrc, setAudioSrc] = useState(null);
+  const [srtLines, setSrtLines] = useState([]); // Parsed SRT lines: { id, startTime, endTime, text }
+  const [currentSrtLineId, setCurrentSrtLineId] = useState(null); // ID of the currently active SRT line
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0); // Current playback time
+  const audioRef = useRef(null); // Ref for the audio element
+  const listRef = useRef(null); // Ref for the react-window List
+  
+    // Helper function to get the data (status, translation) of a word
+    // Moved here and wrapped in useCallback
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const getWordData = useCallback((word) => {
+      if (!word) return null; // Return null if no word provided
+  
+      // Make case-insensitive search
+      const wordLower = word.toLowerCase();
+      const foundWord = words.find(w =>
+        w.term &&
+        w.term.toLowerCase() === wordLower
+      );
+  
+      // Return the full word object if found, otherwise null
+      return foundWord || null;
+    }, [words]); // Dependency: words state
+  
+    // Function to get word styling based on status and settings
+    // Moved here and wrapped in useCallback
+    const getWordStyle = useCallback((wordStatus) => { // Parameter is status (number)
+      const baseStyle = {
+        cursor: 'pointer',
+        padding: '2px 0',
+        margin: '0 2px',
+        borderRadius: '3px',
+        transition: 'all 0.2s'
+      };
+  
+      // If highlighting is disabled in settings, show only hover effect
+      if (!userSettings?.highlightKnownWords) {
+        return {
+          ...baseStyle,
+          backgroundColor: 'transparent'
+        };
+      }
+  
+      // Known words (status 5) have no highlighting
+      if (wordStatus === 5) {
+        return {
+          ...baseStyle,
+          backgroundColor: 'transparent',
+          color: 'inherit'
+        };
+      }
+  
+      // Status-based styling
+      const statusStyles = {
+        0: { backgroundColor: 'var(--status-0-color)', color: '#000' }, // Untracked (if needed)
+        1: { backgroundColor: 'var(--status-1-color)', color: '#000' }, // New
+        2: { backgroundColor: 'var(--status-2-color)', color: '#000' }, // Learning
+        3: { backgroundColor: 'var(--status-3-color)', color: '#000' }, // Familiar
+        4: { backgroundColor: 'var(--status-4-color)', color: '#000' }, // Advanced
+        5: { backgroundColor: 'transparent', color: 'inherit' },      // Known
+      };
+  
+      // Return style based on word status
+      return {
+        ...baseStyle,
+        ...(statusStyles[wordStatus] || statusStyles[0]) // Default to untracked style if status is invalid
+      };
+    }, [userSettings?.highlightKnownWords]); // Dependency: userSettings
+  
+    // Helper function to trigger auto-translation
+    // Moved here and wrapped in useCallback
+    const triggerAutoTranslation = useCallback(async (termToTranslate) => {
+      console.log(`[triggerAutoTranslation] Called for: "${termToTranslate}"`);
+      console.log(`[triggerAutoTranslation] autoTranslateWords setting: ${userSettings.autoTranslateWords}`);
+  
+      if (!termToTranslate || !userSettings.autoTranslateWords || !text?.languageCode) {
+        console.log('[triggerAutoTranslation] Condition not met, exiting.');
+        return;
+      }
+  
+      setIsTranslating(true);
+      setWordTranslationError('');
+  
+      try {
+        console.log(`[triggerAutoTranslation] Calling API: translateText("${termToTranslate}", "${text.languageCode}", "EN")`);
+        const result = await translateText(termToTranslate, text.languageCode, 'EN'); // Assuming EN target
+        console.log('[triggerAutoTranslation] API Result:', result);
+  
+        if (result?.translatedText) {
+          console.log(`[triggerAutoTranslation] Translation found: "${result.translatedText}"`);
+          setTranslation(result.translatedText);
+          setDisplayedWord(prev => ({
+            ...prev,
+            translation: result.translatedText
+          }));
+        } else {
+          console.warn('Translation successful but result is empty for:', termToTranslate);
+          setWordTranslationError('Translation not found.');
+        }
+      } catch (err) {
+        console.error('Auto-translation failed for:', termToTranslate, err);
+        setWordTranslationError(`Translation failed: ${err.message}`);
+      } finally {
+        setIsTranslating(false);
+      }
+    // Dependencies: userSettings, text state, and state setters
+    }, [userSettings.autoTranslateWords, text?.languageCode, setTranslation, setDisplayedWord, setIsTranslating, setWordTranslationError]); // Removed translateText
+  
+    // Function to handle clicking on a word
+    // Moved here and kept useCallback
+    const handleWordClick = useCallback(async (word) => {
+      setSelectedWord(word);
+      setProcessingWord(true);
+      setWordTranslationError(''); // Clear previous error on new click
+  
+      // Find if the word already exists in our state
+      const existingWord = words.find(w =>
+        w.term && w.term.toLowerCase() === word.toLowerCase()
+      );
+  
+      if (existingWord) {
+        console.log('Found existing word:', existingWord);
+        setDisplayedWord(existingWord);
+        setTranslation(existingWord.translation || '');
+        // Trigger auto-translation if needed
+        if (!existingWord.translation) {
+           triggerAutoTranslation(word); // Assumes triggerAutoTranslation is defined below or stable
+        }
+      } else {
+        // Create a new word object
+        const newWord = {
+          term: word,
+          status: 0,
+          translation: '',
+          isNew: true
+        };
+        setDisplayedWord(newWord);
+        setTranslation('');
+        // Trigger auto-translation
+        triggerAutoTranslation(word); // Assumes triggerAutoTranslation is defined below or stable
+      }
+      setProcessingWord(false);
+    // Dependencies: words state and the trigger function
+    }, [words, triggerAutoTranslation]); // Removed text, userSettings.autoTranslateWords
+  
+    // Process the content to create formatted text
+    // Moved here to be defined before itemData uses it
+    const processTextContent = useCallback((content) => {
+      // Use Unicode-aware regex that includes all letters from any language
+      const words = content.split(/([^\p{L}''-]+)/gu); // Removed \ before -
+  
+      return words.map((segment, index) => {
+        const trimmed = segment.trim();
+        if (trimmed.length === 0) {
+          return segment; // Return spaces and punctuation as is
+        }
+  
+        // If this is a word
+        if (/[\p{L}''-]/u.test(segment)) { // Removed \ before -
+          const wordOnly = segment;
+  
+          // Skip very short segments
+          if (wordOnly.length <= 1 && !/[\p{L}]/u.test(wordOnly)) {
+            return segment;
+          }
+  
+          const wordData = getWordData(wordOnly); // Assumes getWordData is defined below
+          const wordStatus = wordData ? wordData.status : 0;
+          const wordTranslation = wordData ? wordData.translation : null;
+  
+          const wordSpan = (
+            <span
+              key={`word-${index}-${wordOnly}`}
+              style={{
+                ...styles.highlightedWord,
+                ...getWordStyle(wordStatus) // Assumes getWordStyle is defined below
+              }}
+              className={`clickable-word word-status-${wordStatus}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleWordClick(wordOnly); // Assumes handleWordClick is defined below
+              }}
+            >
+              {segment}
+            </span>
+          );
+  
+          // Wrap with OverlayTrigger if translation exists
+          if (wordTranslation) {
+            return (
+              <OverlayTrigger
+                key={`tooltip-${index}-${wordOnly}`}
+                placement="top"
+                overlay={
+                  <Tooltip id={`tooltip-${index}-${wordOnly}`}>
+                    {wordTranslation}
+                  </Tooltip>
+                }
+              >
+                {wordSpan}
+              </OverlayTrigger>
+            );
+          } else {
+            return wordSpan;
+          }
+        }
+  
+        // Return non-word segments as is
+        return segment;
+      });
+    // Add dependencies for useCallback. These functions need to be defined before this point too.
+    // Or, ensure they are stable (defined outside component or memoized themselves).
+    // For now, assuming they are stable or defined above.
+    }, [words, getWordData, getWordStyle, handleWordClick]); // Added dependencies
+  
+    // --- Functions and Data for Virtualized List ---
+  
+    // Function to get font family based on user settings (needed by getFontStyling)
+    // Note: This is duplicated from renderAudioTranscript, consider refactoring later
+    const getFontFamilyForList = useCallback(() => {
+      switch (userSettings.textFont) {
+        case 'serif': return "'Georgia', serif";
+        case 'sans-serif': return "'Arial', sans-serif";
+        case 'monospace': return "'Courier New', monospace";
+        case 'dyslexic': return "'OpenDyslexic', sans-serif";
+        default: return "inherit";
+      }
+    }, [userSettings.textFont]);
+  
+    // Function to pass font styling to TranscriptLine
+    const getFontStyling = useCallback(() => ({
+        fontSize: `${userSettings.textSize}px`,
+        fontFamily: getFontFamilyForList(), // Use the specific getter
+    }), [userSettings.textSize, getFontFamilyForList]);
+  
+    // Function to handle clicking on a line - seek audio
+    const handleLineClick = useCallback((startTime) => {
+        if (audioRef.current) {
+            audioRef.current.currentTime = startTime;
+        }
+    }, []); // audioRef is stable
+  
+    // Prepare itemData for FixedSizeList
+    const itemData = React.useMemo(() => ({
+        lines: srtLines,
+        currentLineId: currentSrtLineId,
+        // Make sure processTextContent is stable or memoized if it causes issues
+        processLineContent: processTextContent,
+        handleLineClick: handleLineClick,
+        getFontStyling: getFontStyling
+    }), [srtLines, currentSrtLineId, handleLineClick, getFontStyling, processTextContent]);
+  
+    // --- End Functions and Data for Virtualized List ---
+    
   // Add this useEffect for the resizable functionality
   useEffect(() => {
     const handleMouseDown = (e) => {
@@ -185,8 +522,31 @@ const TextDisplay = () => {
       try {
         const data = await getText(textId);
         setText(data);
-        setBook(data.book);
-        
+        setBook(data.book); // Note: data.book might not exist, handle potential null
+
+        // --- Handle Audio Lesson Data ---
+        if (data.isAudioLesson && data.audioFilePath && data.srtContent) {
+          console.log("[Audio Lesson] Detected. Processing audio/SRT data.");
+          setIsAudioLesson(true);
+          // Construct the full URL for the audio file
+          // Assuming API_URL base is where static files are served relative to wwwroot
+          // Use the imported API_URL
+          setAudioSrc(`${API_URL}/${data.audioFilePath}`);
+          
+          const parsedSrt = parseSrtContent(data.srtContent);
+          setSrtLines(parsedSrt);
+          setCurrentSrtLineId(null); // Reset active line
+          setAudioCurrentTime(0); // Reset time
+        } else {
+           // Ensure audio states are reset if it's not an audio lesson
+           setIsAudioLesson(false);
+           setAudioSrc(null);
+           setSrtLines([]);
+           setCurrentSrtLineId(null);
+           setAudioCurrentTime(0);
+        }
+        // --- End Audio Lesson Handling ---
+
         // Initialize with words from the text
         setWords(data.words || []);
         
@@ -231,7 +591,45 @@ const TextDisplay = () => {
       setNextTextId(null);
     };
   }, [textId]);
-  
+
+  // --- Audio Synchronization Effect ---
+  useEffect(() => {
+    if (!isAudioLesson || srtLines.length === 0) {
+      setCurrentSrtLineId(null); // Ensure it's null if not applicable
+      return;
+    }
+
+    // Find the *index* of the current SRT line
+    const currentLineIndex = srtLines.findIndex(line =>
+        audioCurrentTime >= line.startTime && audioCurrentTime < line.endTime
+    );
+    const currentLine = currentLineIndex !== -1 ? srtLines[currentLineIndex] : null;
+
+    if (currentLine) {
+      if (currentLine.id !== currentSrtLineId) {
+        setCurrentSrtLineId(currentLine.id);
+        // Scroll the virtualized list to the active line's index
+        if (listRef.current && currentLineIndex !== -1) {
+          // Add a slight delay to ensure the state update has rendered before scrolling
+          setTimeout(() => {
+              if (listRef.current) { // Check ref again inside timeout
+                 listRef.current.scrollToItem(currentLineIndex, 'center'); // 'center' alignment
+              }
+          }, 50); // Small delay (e.g., 50ms)
+        }
+      }
+    } else {
+      // If no line matches (e.g., between lines or before the first one)
+      if (currentSrtLineId !== null) {
+         // Uncomment below if you want highlighting to disappear between lines
+         // setCurrentSrtLineId(null);
+      }
+    }
+    // Dependencies: Include listRef.current? No, refs don't trigger re-renders.
+    // audioCurrentTime, srtLines, isAudioLesson, currentSrtLineId are correct.
+  }, [audioCurrentTime, srtLines, isAudioLesson, currentSrtLineId]);
+
+
   // Fetch all words for the current language
   const fetchAllLanguageWords = async (languageId) => {
     try {
@@ -262,46 +660,6 @@ const TextDisplay = () => {
     }
   };
 
-  // Update the handleWordClick function to respect auto-translate setting
-  const handleWordClick = useCallback(async (word) => {
-    setSelectedWord(word);
-    setProcessingWord(true);
-    setWordTranslationError(''); // Clear previous error on new click
-    
-    // Find if the word already exists in our state
-    const existingWord = words.find(w => 
-      w.term && w.term.toLowerCase() === word.toLowerCase()
-    );
-    
-    if (existingWord) {
-      console.log('Found existing word:', existingWord);
-      // Set the currentWord for the side panel
-      setDisplayedWord(existingWord);
-      
-      // Set the translation
-      setTranslation(existingWord.translation || '');
-      
-      // Trigger auto-translation if needed (respects user setting)
-      if (!existingWord.translation) {
-         triggerAutoTranslation(word);
-      }
-    } else {
-      // Create a new word object
-      const newWord = {
-        term: word,
-        status: 0,
-        translation: '',
-        isNew: true
-      };
-      setDisplayedWord(newWord);
-      setTranslation('');
-      
-      
-      // Trigger auto-translation (respects user setting)
-      triggerAutoTranslation(word);
-    }
-    setProcessingWord(false);
-  }, [words, text, userSettings.autoTranslateWords]);
 
   const handleSaveWord = async (status) => {
     if (!selectedWord || processingWord || isTranslating) return;
@@ -326,7 +684,7 @@ const TextDisplay = () => {
       
       if (existingWord) {
         // Update existing word
-        const updatedWord = await updateWord(existingWord.wordId, numericStatus, translation);
+        await updateWord(existingWord.wordId, numericStatus, translation); // Remove unused assignment
         
         // Update the words list
         setWords(prevWords => 
@@ -373,7 +731,7 @@ const TextDisplay = () => {
   };
 
   // Renamed function to handle any text selection (single word or phrase)
-  const handleTextSelection = (text) => {
+  const handleTextSelection = useCallback((text) => {
     const selectedText = text.trim();
     if (!selectedText) return;
 
@@ -407,45 +765,8 @@ const TextDisplay = () => {
       // Trigger auto-translation (respects user setting)
       triggerAutoTranslation(selectedText);
     }
-  };
-
-  // Helper function to trigger auto-translation
-  const triggerAutoTranslation = async (termToTranslate) => {
-    console.log(`[triggerAutoTranslation] Called for: "${termToTranslate}"`); // Log call
-    console.log(`[triggerAutoTranslation] autoTranslateWords setting: ${userSettings.autoTranslateWords}`); // Log setting
-    
-    if (!termToTranslate || !userSettings.autoTranslateWords || !text?.languageCode) {
-      console.log('[triggerAutoTranslation] Condition not met, exiting.'); // Log exit condition
-      return;
-    }
-
-    setIsTranslating(true);
-    setWordTranslationError(''); // Clear previous error
-
-    try {
-      console.log(`[triggerAutoTranslation] Calling API: translateText("${termToTranslate}", "${text.languageCode}", "EN")`); // Log API call
-      const result = await translateText(termToTranslate, text.languageCode, 'EN'); // Assuming EN target
-      console.log('[triggerAutoTranslation] API Result:', result); // Log the raw result
-      
-      if (result?.translatedText) {
-        console.log(`[triggerAutoTranslation] Translation found: "${result.translatedText}"`); // Log success
-        setTranslation(result.translatedText);
-        // Update the displayed word/phrase with translation
-        setDisplayedWord(prev => ({
-          ...prev,
-          translation: result.translatedText
-        }));
-      } else {
-        console.warn('Translation successful but result is empty for:', termToTranslate);
-        setWordTranslationError('Translation not found.');
-      }
-    } catch (err) {
-      console.error('Auto-translation failed for:', termToTranslate, err);
-      setWordTranslationError(`Translation failed: ${err.message}`);
-    } finally {
-      setIsTranslating(false);
-    }
-  };
+  // Dependencies: words state, trigger function, and relevant setters
+  }, [words, triggerAutoTranslation, setSelectedWord, setTranslation, setWordTranslationError, setDisplayedWord]);
   
   // Function to request full text translation
   const handleFullTextTranslation = async () => {
@@ -607,10 +928,114 @@ const TextDisplay = () => {
       console.log("Removing text selection event listener");
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [text]); // Only re-attach when text changes
+  }, [text, handleTextSelection]); // Added handleTextSelection
+
+
+    // Process the content to create formatted text
+    // Moved here to be in scope for both renderTextContent and renderAudioTranscript
+
+
+  // --- End Shared Content Processing Logic ---
+  
+  
+ // --- Transcript Line Component for React Window ---
+ // Memoized component to render each line efficiently
+ const TranscriptLine = React.memo(({ index, style, data }) => {
+   // Destructure data passed from the List component
+   const {
+     lines,             // Array of all SRT lines
+     currentLineId,     // ID of the currently active line
+     processLineContent,// Function to process text into highlighted spans
+     handleLineClick,   // Function to handle clicking on a line
+     getFontStyling     // Function to get current font styles
+   } = data;
+ 
+   // Get the specific line data for this row
+   const line = lines[index];
+ 
+   // Safety check in case line data is missing
+   if (!line) return null;
+ 
+   // Render the row content inside the div provided by react-window
+   return (
+     <div style={style}> {/* Apply positioning styles from react-window */}
+       <p
+         id={`srt-line-${line.id}`} // ID for potential scrolling
+         className={`srt-line ${line.id === currentLineId ? 'active-srt-line' : ''}`} // Apply active class
+         style={{
+           ...getFontStyling(), // Apply dynamic font size/family
+           marginBottom: '0.8rem', // Consistent margin
+           padding: '0.3rem 0.5rem', // Padding
+           borderRadius: '4px',      // Rounded corners
+           transition: 'background-color 0.3s ease', // Smooth background transition
+           // Highlight background if active
+           backgroundColor: line.id === currentLineId ? 'var(--active-srt-line-bg, rgba(255, 223, 186, 0.7))' : 'transparent',
+           cursor: 'pointer', // Indicate clickable
+           margin: 0 // Remove default paragraph margin to fit within react-window's div
+         }}
+         // Seek audio to the start time of this line when clicked
+         onClick={() => handleLineClick(line.startTime)}
+       >
+         {/* Process the line's text content for word highlighting */}
+         {processLineContent(line.text)}
+       </p>
+     </div>
+   );
+ });
+ // --- End Transcript Line Component ---
+ 
+ 
+  // --- Audio Transcript Rendering ---
+  const renderAudioTranscript = () => {
+    if (!srtLines || srtLines.length === 0) return <p className="p-3">Loading transcript...</p>;
+
+    // Define estimated item size (adjust based on typical line height + margin)
+    // Consider making this dynamic based on font size if needed, but fixed is simpler
+    const ITEM_SIZE = 45; // Increased estimate for padding/margins
+
+    // Define container height (adjust as needed, e.g., calculate based on viewport)
+    // Placeholder - calculation might be complex, start fixed
+    // TODO: Calculate LIST_HEIGHT dynamically based on available space
+    const LIST_HEIGHT = 600;
+
+    return (
+      <div
+        className="audio-transcript-container"
+        style={{
+          // Container style remains simple, List handles scrolling
+          padding: '15px', // Keep padding outside the List for spacing
+          height: `${LIST_HEIGHT}px`, // Set explicit height for List
+          overflow: 'hidden' // List component handles internal scrolling
+        }}
+      >
+        <List
+            height={LIST_HEIGHT} // Height of the list container
+            itemCount={srtLines.length} // Number of items
+            itemSize={ITEM_SIZE} // Height of each item
+            width="100%" // Width of the list
+            itemData={itemData} // Pass data to the Row component
+            overscanCount={5} // Render a few extra items for smoother scrolling
+            ref={listRef} // Attach the ref here
+        >
+            {TranscriptLine}
+        </List>
+      </div>
+    );
+  };
+  // --- End Audio Transcript Rendering ---
+
 
   // Update the renderTextContent function
   const renderTextContent = () => {
+     // --- Add check for Audio Lesson ---
+     // Note: This relies on processTextContent being defined below, which might need refactoring
+     // if renderAudioTranscript was moved *completely* outside TextDisplay component scope.
+     // Since it's defined within TextDisplay, it should be fine.
+     if (isAudioLesson) {
+       return renderAudioTranscript();
+     }
+     // --- End check ---
+
     if (!text || !text.content) return null;
     
     // Get font family based on user settings
@@ -701,76 +1126,8 @@ const TextDisplay = () => {
       });
     };
     
-    // Process the content to create formatted text
-    const processTextContent = (content) => {
-      // Use Unicode-aware regex that includes all letters from any language
-      // This regex splits by spaces and punctuation except apostrophes and hyphens,
-      // but preserves all Unicode letter characters including accented letters
-      const words = content.split(/([^\p{L}''\-]+)/gu);
-      
-      return words.map((segment, index) => {
-        const trimmed = segment.trim();
-        if (trimmed.length === 0) {
-          return segment; // Return spaces and punctuation as is
-        }
-        
-        // If this is a word (contains letters from any language, apostrophes or hyphens)
-        if (/[\p{L}''\-]/u.test(segment)) {
-          const wordOnly = segment;
-          
-          // Skip very short segments that don't contain at least one letter
-          if (wordOnly.length <= 1 && !/[\p{L}]/u.test(wordOnly)) {
-            return segment;
-          }
-          
-          const wordData = getWordData(wordOnly); // Use the updated function
-          const wordStatus = wordData ? wordData.status : 0;
-          const wordTranslation = wordData ? wordData.translation : null;
+    // NOTE: processTextContent moved before renderAudioTranscript to fix scope issue
 
-          const wordSpan = (
-            <span
-              key={`word-${index}-${wordOnly}`}
-              style={{
-                ...styles.highlightedWord,
-                ...getWordStyle(wordStatus) // getWordStyle still uses status number
-              }}
-              className={`clickable-word word-status-${wordStatus}`}
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent triggering sentence click
-                console.log(`Clicked on word: "${wordOnly}"`);
-                handleWordClick(wordOnly);
-              }}
-            >
-              {segment}
-            </span>
-          );
-
-          // Wrap with OverlayTrigger if translation exists
-          if (wordTranslation) {
-            return (
-              <OverlayTrigger
-                key={`tooltip-${index}-${wordOnly}`}
-                placement="top" // Show tooltip above the word
-                overlay={
-                  <Tooltip id={`tooltip-${index}-${wordOnly}`}>
-                    {wordTranslation}
-                  </Tooltip>
-                }
-              >
-                {wordSpan}
-              </OverlayTrigger>
-            );
-          } else {
-            // Return just the span if no translation
-            return wordSpan;
-          }
-        }
-        
-        // Return non-word segments as is
-        return segment;
-      });
-    };
-    
     const detectSentences = (content) => {
       return processParagraphs(content);
     };
@@ -945,65 +1302,6 @@ const TextDisplay = () => {
     }
   };
 
-  // Update the getWordStyle function to respect highlighting setting
-  const getWordStyle = (word) => {
-    // Base style with hover effect
-    const baseStyle = {
-      cursor: 'pointer',
-      padding: '2px 0',
-      margin: '0 2px',
-      borderRadius: '3px',
-      transition: 'all 0.2s'
-    };
-
-    // If highlighting is disabled in settings, show only hover effect
-    if (!userSettings?.highlightKnownWords) {
-      return {
-        ...baseStyle,
-        backgroundColor: 'transparent'
-      };
-    }
-
-    // Known words (status 5) have no highlighting
-    if (word === 5) {
-      return {
-        ...baseStyle,
-        backgroundColor: 'transparent',
-        color: 'inherit'
-      };
-    }
-
-    // Status-based styling
-    const statusStyles = {
-      0: { backgroundColor: 'var(--status-0-color)', color: '#000' },
-      1: { backgroundColor: 'var(--status-1-color)', color: '#000' },
-      2: { backgroundColor: 'var(--status-2-color)', color: '#000' },
-      3: { backgroundColor: 'var(--status-3-color)', color: '#000' },
-      4: { backgroundColor: 'var(--status-4-color)', color: '#000' },
-      5: { backgroundColor: 'transparent', color: 'inherit' },
-    };
-
-    // Return style based on word status
-    return {
-      ...baseStyle,
-      ...(statusStyles[word] || {})
-    };
-  };
-
-  // Helper function to get the data (status, translation) of a word
-  const getWordData = (word) => {
-    if (!word) return null; // Return null if no word provided
-    
-    // Make case-insensitive search
-    const wordLower = word.toLowerCase();
-    const foundWord = words.find(w =>
-      w.term &&
-      w.term.toLowerCase() === wordLower
-    );
-    
-    // Return the full word object if found, otherwise null
-    return foundWord || null;
-  };
 
   if (loading) {
     return (
@@ -1157,6 +1455,21 @@ const TextDisplay = () => {
           </div>
         </Card.Body>
       </Card>
+
+      {/* Audio Player for Audio Lessons */}
+      {isAudioLesson && audioSrc && (
+        <div className="audio-player-container p-2 bg-light border-bottom">
+          <audio
+            ref={audioRef}
+            controls
+            src={audioSrc}
+            onTimeUpdate={(e) => setAudioCurrentTime(e.target.currentTime)}
+            style={{ width: '100%' }}
+          >
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      )}
 
       <div className="resizable-container">
         {/* Text reading panel (left side) */}

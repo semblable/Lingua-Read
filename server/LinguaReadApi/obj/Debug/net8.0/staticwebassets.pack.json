@@ -1,0 +1,29 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\a84974fa-4906-4dd6-b899-cc5cba381f15_La vie en grand.mp3",
+      "PackagePath": "staticwebassets\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\a84974fa-4906-4dd6-b899-cc5cba381f15_La vie en grand.mp3"
+    },
+    {
+      "Id": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\d7611675-adf2-47bd-8f5a-d49a91a1750e_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3",
+      "PackagePath": "staticwebassets\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\d7611675-adf2-47bd-8f5a-d49a91a1750e_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.LinguaReadApi.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.LinguaReadApi.props",
+      "PackagePath": "build\\LinguaReadApi.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.LinguaReadApi.props",
+      "PackagePath": "buildMultiTargeting\\LinguaReadApi.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.LinguaReadApi.props",
+      "PackagePath": "buildTransitive\\LinguaReadApi.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

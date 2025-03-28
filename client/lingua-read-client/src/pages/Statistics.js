@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Alert, Spinner, ProgressBar, Table, Badge, Form, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Alert, Spinner, ProgressBar, Table, /*Badge,*/ Form, Button } from 'react-bootstrap'; // Removed unused Badge
 import { useNavigate } from 'react-router-dom';
 import { getUserStatistics, getReadingActivity } from '../utils/api';
 import { formatDate } from '../utils/helpers';
@@ -22,7 +22,7 @@ const Statistics = () => {
   const [loadingActivity, setLoadingActivity] = useState(false);
   const [usingFallbackData, setUsingFallbackData] = useState(false);
   const [networkStatus, setNetworkStatus] = useState('connecting');
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // Removed unused navigate
 
   // Check API connectivity
   useEffect(() => {
