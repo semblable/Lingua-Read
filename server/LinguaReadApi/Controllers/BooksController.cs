@@ -550,6 +550,87 @@ namespace LinguaReadApi.Controllers
             return Ok(new NextLessonDto { TextId = nextText.TextId });
         }
 
+        // PUT: api/books/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateBook(int id, [FromBody] UpdateBookDto updateBookDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = GetUserId();
+            var book = await _context.Books
+                .Where(b => b.BookId == id && b.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            // Update only the title as requested
+            book.Title = updateBookDto.Title;
+            // Optionally update Description if needed in the future:
+            // book.Description = updateBookDto.Description ?? book.Description;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Handle potential concurrency issues if necessary
+                if (!await BookExists(id, userId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // DELETE: api/books/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteBook(int id)
+        {
+            var userId = GetUserId();
+            var book = await _context.Books
+                .Where(b => b.BookId == id && b.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            _context.Books.Remove(book);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) // Catches errors like constraint violations
+            {
+                // Check if the error is due to the Restrict constraint
+                // This check might need refinement based on the specific database provider (e.g., PostgreSQL error codes)
+                if (ex.InnerException?.Message.Contains("constraint") ?? false)
+                {
+                     return BadRequest("Cannot delete book. Ensure all associated texts/lessons are removed first.");
+                }
+                // Log the exception details for debugging
+                // logger.LogError(ex, "Error deleting book with ID {BookId}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error deleting book.");
+            }
+
+
+            return NoContent();
+        }
+
         private Guid GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -559,6 +640,11 @@ namespace LinguaReadApi.Controllers
             }
             
             return Guid.Parse(userIdClaim);
+        }
+
+        private async Task<bool> BookExists(int id, Guid userId)
+        {
+            return await _context.Books.AnyAsync(e => e.BookId == id && e.UserId == userId);
         }
     }
 
@@ -646,4 +732,15 @@ namespace LinguaReadApi.Controllers
     {
         public int? TextId { get; set; }
     }
-} 
+
+    public class UpdateBookDto
+    {
+        [Required]
+        [StringLength(200)]
+        public string Title { get; set; } = string.Empty;
+
+        // Add other fields if they should be updatable, e.g.:
+        // [StringLength(1000)]
+        // public string? Description { get; set; }
+    }
+}

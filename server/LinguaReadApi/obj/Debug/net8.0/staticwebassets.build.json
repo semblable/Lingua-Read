@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "gyGkq03m2DbBokdWFS8mQXhuBRUGvGPV0dvWFfS52M4=",
+  "Hash": "C795U+WqnNNjgqecpOUDQW2rfFoK5OgxoDt895R5q9I=",
   "Source": "LinguaReadApi",
   "BasePath": "_content/LinguaReadApi",
   "Mode": "Default",
@@ -16,6 +16,63 @@
     }
   ],
   "Assets": [
+    {
+      "Identity": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\19919124-befd-4cb0-8ac5-2488c5989e66_Et ils vécurent heureux… (Louise et 1.mp3",
+      "SourceId": "LinguaReadApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\",
+      "BasePath": "_content/LinguaReadApi",
+      "RelativePath": "audio_lessons/3d2a097a-0ec2-408e-861d-b528cd267a42/19919124-befd-4cb0-8ac5-2488c5989e66_Et ils vécurent heureux… (Louise et 1.mp3",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\19919124-befd-4cb0-8ac5-2488c5989e66_Et ils vécurent heureux… (Louise et 1.mp3"
+    },
+    {
+      "Identity": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\2b8019b8-f209-4746-9f0f-71b2982704f2_La vie en grand.mp3",
+      "SourceId": "LinguaReadApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\",
+      "BasePath": "_content/LinguaReadApi",
+      "RelativePath": "audio_lessons/3d2a097a-0ec2-408e-861d-b528cd267a42/2b8019b8-f209-4746-9f0f-71b2982704f2_La vie en grand.mp3",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\2b8019b8-f209-4746-9f0f-71b2982704f2_La vie en grand.mp3"
+    },
+    {
+      "Identity": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\45d64f21-d545-4321-9851-84108974eacf_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3",
+      "SourceId": "LinguaReadApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\",
+      "BasePath": "_content/LinguaReadApi",
+      "RelativePath": "audio_lessons/3d2a097a-0ec2-408e-861d-b528cd267a42/45d64f21-d545-4321-9851-84108974eacf_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\45d64f21-d545-4321-9851-84108974eacf_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3"
+    },
     {
       "Identity": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\a84974fa-4906-4dd6-b899-cc5cba381f15_La vie en grand.mp3",
       "SourceId": "LinguaReadApi",
@@ -36,6 +93,25 @@
       "OriginalItemSpec": "wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\a84974fa-4906-4dd6-b899-cc5cba381f15_La vie en grand.mp3"
     },
     {
+      "Identity": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\b9973a21-bd73-4f70-bc03-9817c9964751_Pourquoi prend-on du plaisir à détes.mp3",
+      "SourceId": "LinguaReadApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\",
+      "BasePath": "_content/LinguaReadApi",
+      "RelativePath": "audio_lessons/3d2a097a-0ec2-408e-861d-b528cd267a42/b9973a21-bd73-4f70-bc03-9817c9964751_Pourquoi prend-on du plaisir à détes.mp3",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\b9973a21-bd73-4f70-bc03-9817c9964751_Pourquoi prend-on du plaisir à détes.mp3"
+    },
+    {
       "Identity": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\d7611675-adf2-47bd-8f5a-d49a91a1750e_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3",
       "SourceId": "LinguaReadApi",
       "SourceType": "Discovered",
@@ -53,6 +129,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\d7611675-adf2-47bd-8f5a-d49a91a1750e_journal_francais_facile_16h00_-_16h10_gmt_20250326.mp3"
+    },
+    {
+      "Identity": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\f194dcee-973d-4182-b64e-e9f40eabacd6_La vie en grand.mp3",
+      "SourceId": "LinguaReadApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\",
+      "BasePath": "_content/LinguaReadApi",
+      "RelativePath": "audio_lessons/3d2a097a-0ec2-408e-861d-b528cd267a42/f194dcee-973d-4182-b64e-e9f40eabacd6_La vie en grand.mp3",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\f194dcee-973d-4182-b64e-e9f40eabacd6_La vie en grand.mp3"
     }
   ]
 }

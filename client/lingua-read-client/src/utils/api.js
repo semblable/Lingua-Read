@@ -171,16 +171,22 @@ export const getText = (textId) => {
   return fetchApi(`/api/texts/${textId}`);
 };
 
-export const createText = (title, content, languageId) => {
+// Modified to include optional tag
+export const createText = (title, content, languageId, tag = null) => {
+  const payload = { title, content, languageId };
+  if (tag) {
+    payload.tag = tag;
+  }
   return fetchApi('/api/texts', {
     method: 'POST',
-    body: JSON.stringify({ title, content, languageId })
+    body: JSON.stringify(payload)
   });
 };
 
-export const createAudioLesson = async (title, languageId, audioFile, srtFile) => {
+// Modified to include optional tag
+export const createAudioLesson = async (title, languageId, audioFile, srtFile, tag = null) => {
   const endpoint = '/api/texts/audio';
-  console.log(`[API] Creating audio lesson: "${title}"`);
+  console.log(`[API] Creating audio lesson: "${title}" with tag: ${tag || 'none'}`);
 
   try {
     const token = getToken();
@@ -203,6 +209,9 @@ export const createAudioLesson = async (title, languageId, audioFile, srtFile) =
     formData.append('languageId', languageId);
     formData.append('audioFile', audioFile); // The File object
     formData.append('srtFile', srtFile);     // The File object
+    if (tag) {
+      formData.append('tag', tag); // Add tag if provided
+    }
 
     const requestConfig = {
       method: 'POST',
@@ -259,6 +268,22 @@ export const createAudioLesson = async (title, languageId, audioFile, srtFile) =
   }
 };
 
+// Add updateText function
+export const updateText = (textId, { title, content, tag }) => {
+  const payload = { title, content, tag }; // Include tag in payload
+  return fetchApi(`/api/texts/${textId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+};
+
+// Add deleteText function
+export const deleteText = (textId) => {
+  return fetchApi(`/api/texts/${textId}`, {
+    method: 'DELETE'
+  });
+};
+
 
 // Books API
 export const getBooks = () => {
@@ -280,6 +305,23 @@ export const createBook = (title, description, languageId, content, splitMethod 
       splitMethod,
       maxSegmentSize
     })
+  });
+};
+
+// Add updateBook function
+export const updateBook = (bookId, { title }) => {
+  // Only updating title as per backend implementation
+  const payload = { title };
+  return fetchApi(`/api/books/${bookId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+};
+
+// Add deleteBook function
+export const deleteBook = (bookId) => {
+  return fetchApi(`/api/books/${bookId}`, {
+    method: 'DELETE'
   });
 };
 

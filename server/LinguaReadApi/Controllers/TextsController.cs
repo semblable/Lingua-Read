@@ -41,7 +41,9 @@ namespace LinguaReadApi.Controllers
                     TextId = t.TextId,
                     Title = t.Title,
                     LanguageName = t.Language.Name,
-                    CreatedAt = t.CreatedAt
+                    CreatedAt = t.CreatedAt,
+                    Tag = t.Tag, // Include Tag
+                    IsAudioLesson = t.IsAudioLesson // Include IsAudioLesson
                 })
                 .ToListAsync();
                 
@@ -117,6 +119,7 @@ namespace LinguaReadApi.Controllers
                 Content = createTextDto.Content,
                 LanguageId = createTextDto.LanguageId,
                 UserId = userId,
+                Tag = createTextDto.Tag, // Assign the tag
                 CreatedAt = DateTime.UtcNow
             };
             
@@ -225,7 +228,8 @@ namespace LinguaReadApi.Controllers
                     CreatedAt = DateTime.UtcNow,
                     IsAudioLesson = true,
                     AudioFilePath = audioFilePath,
-                    SrtContent = srtContent
+                    SrtContent = srtContent,
+                    Tag = createAudioLessonDto.Tag // Assign the tag
                 };
 
                 _context.Texts.Add(text);
@@ -277,6 +281,72 @@ namespace LinguaReadApi.Controllers
             return string.Join(" ", transcriptLines); // Join lines into a single transcript string
         }
 
+        // PUT: api/texts/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateText(int id, [FromBody] UpdateTextDto updateTextDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = GetUserId();
+            var text = await _context.Texts
+                .Where(t => t.TextId == id && t.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            if (text == null)
+            {
+                return NotFound();
+            }
+
+            // Update allowed fields
+            text.Title = updateTextDto.Title;
+            text.Content = updateTextDto.Content;
+            text.Tag = updateTextDto.Tag; // Allow updating the tag
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await TextExists(id, userId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // DELETE: api/texts/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteText(int id)
+        {
+            var userId = GetUserId();
+            var text = await _context.Texts
+                .Where(t => t.TextId == id && t.UserId == userId)
+                // Include related TextWords if cascade delete isn't automatic or needs verification
+                // .Include(t => t.TextWords)
+                .FirstOrDefaultAsync();
+
+            if (text == null)
+            {
+                return NotFound();
+            }
+
+            // Note: TextWords associated with this Text should be handled by cascade delete
+            // configured in AppDbContext. If not, they would need manual removal here.
+            _context.Texts.Remove(text);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
 
         private Guid GetUserId()
         {
@@ -285,10 +355,15 @@ namespace LinguaReadApi.Controllers
             {
                 throw new UnauthorizedAccessException("User ID not found in token");
             }
-            
             return Guid.Parse(userIdClaim);
         }
+
+        private async Task<bool> TextExists(int id, Guid userId)
+        {
+            return await _context.Texts.AnyAsync(e => e.TextId == id && e.UserId == userId);
+        }
     }
+    // Removed extra closing brace here
 
     public class TextDto
     {
@@ -296,6 +371,8 @@ namespace LinguaReadApi.Controllers
         public string Title { get; set; } = string.Empty;
         public string LanguageName { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public string? Tag { get; set; } // Add Tag property
+        public bool IsAudioLesson { get; set; } // Add IsAudioLesson property
     }
 
     public class TextDetailDto
@@ -334,6 +411,9 @@ namespace LinguaReadApi.Controllers
         
         [Required]
         public int LanguageId { get; set; }
+
+        [StringLength(100)] // Match the model's constraint
+        public string? Tag { get; set; } // Optional tag
     }
 
     public class CreateAudioLessonDto
@@ -350,5 +430,21 @@ namespace LinguaReadApi.Controllers
 
         [Required]
         public IFormFile SrtFile { get; set; } = null!;
+
+        [StringLength(100)] // Match the model's constraint
+        public string? Tag { get; set; } // Optional tag
+    }
+
+    public class UpdateTextDto
+    {
+        [Required]
+        [StringLength(200)]
+        public string Title { get; set; } = string.Empty;
+
+        [Required]
+        public string Content { get; set; } = string.Empty;
+
+        [StringLength(100)] // Match the model's constraint
+        public string? Tag { get; set; } // Allow updating the tag
     }
 }

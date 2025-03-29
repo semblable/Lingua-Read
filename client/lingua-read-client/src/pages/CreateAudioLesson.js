@@ -8,6 +8,7 @@ function CreateAudioLesson() {
     const [languageId, setLanguageId] = useState('');
     const [audioFile, setAudioFile] = useState(null);
     const [srtFile, setSrtFile] = useState(null);
+    const [tag, setTag] = useState(''); // Add state for tag
     const [languages, setLanguages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -61,9 +62,9 @@ function CreateAudioLesson() {
 
 
         setIsLoading(true);
-
         try {
-            const result = await createAudioLesson(title, languageId, audioFile, srtFile);
+            // Pass the tag to the API function
+            const result = await createAudioLesson(title, languageId, audioFile, srtFile, tag);
             setSuccessMessage(`Audio lesson "${result.title}" created successfully!`);
             // Optionally, navigate to the new lesson or library page
             // navigate(`/texts/${result.textId}`); // Example navigation
@@ -71,6 +72,7 @@ function CreateAudioLesson() {
             setLanguageId(languages.length > 0 ? languages[0].languageId : '');
             setAudioFile(null);
             setSrtFile(null);
+            setTag(''); // Reset tag input
             // Clear file inputs (requires handling refs or resetting form)
             event.target.reset();
 
@@ -115,6 +117,17 @@ function CreateAudioLesson() {
                             </option>
                         ))}
                     </select>
+                </div>
+                <div className="form-group">
+                    <label htmlFor="tag">Tag (Optional):</label>
+                    <input
+                        type="text"
+                        id="tag"
+                        value={tag}
+                        onChange={(e) => setTag(e.target.value)}
+                        maxLength="100" // Match backend constraint
+                        disabled={isLoading}
+                    />
                 </div>
                 <div className="form-group">
                     <label htmlFor="audioFile">Audio File:</label>

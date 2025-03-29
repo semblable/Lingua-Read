@@ -21,7 +21,11 @@ namespace LinguaReadApi.Models
         
         // Position within a book (if part of a book)
         public int? PartNumber { get; set; }
-        
+
+        // Optional tag for categorization
+        [StringLength(100)] // Optional: Add a reasonable length limit
+        public string? Tag { get; set; }
+
         // Foreign keys
         [ForeignKey("User")]
         public Guid UserId { get; set; }

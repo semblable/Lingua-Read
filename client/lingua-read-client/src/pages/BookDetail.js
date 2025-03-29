@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Alert, Spinner, ListGroup, Badge, ProgressBar, Modal } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback
+import { Container, Row, Col, Card, Button, Alert, Spinner, ListGroup, Badge, ProgressBar, Modal, Form, InputGroup } from 'react-bootstrap'; // Add Form, InputGroup
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getBook, finishBook } from '../utils/api';
+import { getBook, finishBook, updateBook, deleteBook, getText, updateText, deleteText } from '../utils/api'; // Import new API functions
 import { formatDate, /*calculateReadingTime*/ } from '../utils/helpers'; // Removed unused calculateReadingTime
 
 const BookDetail = () => {
@@ -14,8 +14,17 @@ const BookDetail = () => {
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [stats, setStats] = useState(null);
 
-  useEffect(() => {
-    const fetchBook = async () => {
+  // State for Edit/Delete Modals and Data
+  const [showEditBookModal, setShowEditBookModal] = useState(false);
+  const [showEditTextModal, setShowEditTextModal] = useState(false);
+  const [editingBook, setEditingBook] = useState(null); // Holds { bookId, title }
+  const [editingText, setEditingText] = useState(null); // Holds { textId, title, content, tag }
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState('');
+
+
+  const fetchBook = useCallback(async () => { // Wrap in useCallback
+      setLoading(true);
       try {
         const data = await getBook(bookId);
         setBook(data);
@@ -25,10 +34,11 @@ const BookDetail = () => {
       } finally {
         setLoading(false);
       }
-    };
+    }, [bookId]); // Add bookId as dependency
 
+  useEffect(() => {
     fetchBook();
-  }, [bookId]);
+  }, [fetchBook]); // Use fetchBook as dependency
 
   const handleFinishBook = async () => {
     if (window.confirm('Are you sure you want to mark this book as finished? This will mark all words in the book as known.')) {
@@ -50,6 +60,118 @@ const BookDetail = () => {
       }
     }
   };
+
+  // --- Edit/Delete Handlers ---
+
+  const handleOpenEditBookModal = () => {
+    setEditingBook({ bookId: book.bookId, title: book.title });
+    setModalError('');
+    setShowEditBookModal(true);
+  };
+
+  const handleOpenEditTextModal = async (textId) => {
+    setModalLoading(true);
+    setModalError('');
+    try {
+      // Fetch full text details needed for editing
+      const textData = await getText(textId);
+      setEditingText({
+        textId: textData.textId,
+        title: textData.title,
+        content: textData.content,
+        tag: textData.tag || '' // Ensure tag is defined, default to empty string
+      });
+      setShowEditTextModal(true);
+    } catch (err) {
+      setModalError(`Failed to load text details: ${err.message}`);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleCloseModals = () => {
+    setShowEditBookModal(false);
+    setShowEditTextModal(false);
+    setEditingBook(null);
+    setEditingText(null);
+    setModalError('');
+  };
+
+  const handleBookUpdate = async () => {
+    if (!editingBook || !editingBook.title) {
+      setModalError('Book title cannot be empty.');
+      return;
+    }
+    setModalLoading(true);
+    setModalError('');
+    try {
+      await updateBook(editingBook.bookId, { title: editingBook.title });
+      // Refresh book data after update
+      await fetchBook();
+      handleCloseModals();
+    } catch (err) {
+      setModalError(`Failed to update book: ${err.message}`);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleTextUpdate = async () => {
+     if (!editingText || !editingText.title || !editingText.content) {
+       setModalError('Text title and content cannot be empty.');
+       return;
+     }
+     setModalLoading(true);
+     setModalError('');
+     try {
+       await updateText(editingText.textId, {
+         title: editingText.title,
+         content: editingText.content,
+         tag: editingText.tag || null // Send null if tag is empty
+       });
+       // Refresh book data to show updated text title/info in the list
+       await fetchBook();
+       handleCloseModals();
+     } catch (err) {
+       setModalError(`Failed to update text: ${err.message}`);
+     } finally {
+       setModalLoading(false);
+     }
+   };
+
+  const handleBookDelete = async () => {
+    if (window.confirm(`Are you sure you want to delete the book "${book.title}"? This cannot be undone.`)) {
+      setLoading(true); // Use main loading indicator
+      setError('');
+      try {
+        await deleteBook(bookId);
+        navigate('/books'); // Navigate back to book list after deletion
+      } catch (err) {
+        setError(`Failed to delete book: ${err.message}. Ensure all parts are deleted first if necessary.`);
+        setLoading(false);
+      }
+      // No finally setLoading(false) because we navigate away on success
+    }
+  };
+
+   const handleTextDelete = async (textId, textTitle) => {
+     if (window.confirm(`Are you sure you want to delete the text part "${textTitle}"? This cannot be undone.`)) {
+       setLoading(true); // Use main loading indicator for simplicity
+       setError('');
+       try {
+         await deleteText(textId);
+         // Refresh book data to remove the text from the list
+         await fetchBook();
+       } catch (err) {
+         setError(`Failed to delete text part: ${err.message}`);
+       } finally {
+         setLoading(false);
+       }
+     }
+   };
+
+  // --- End Edit/Delete Handlers ---
+
 
   if (loading) {
     return (
@@ -132,6 +254,9 @@ const BookDetail = () => {
           >
             Back to Books
           </Button>
+           {/* Add Edit/Delete Book Buttons */}
+           <Button variant="outline-warning" size="sm" onClick={handleOpenEditBookModal} className="ms-2">Edit Book</Button>
+           <Button variant="outline-danger" size="sm" onClick={handleBookDelete} className="ms-2">Delete Book</Button>
         </div>
       </div>
 
@@ -151,9 +276,33 @@ const BookDetail = () => {
                 <small className="text-muted">Added: {formatDate(part.createdAt)}</small>
               </div>
               <div>
-                <Badge bg="primary" pill>
+                <Badge bg="primary" pill className="me-2">
                   Part {part.partNumber}
                 </Badge>
+                 {/* Add Edit/Delete Text Buttons */}
+                 <Button
+                   variant="outline-secondary"
+                   size="sm"
+                   className="me-1"
+                   onClick={(e) => {
+                     e.preventDefault(); // Prevent navigation
+                     e.stopPropagation(); // Prevent ListGroup item click
+                     handleOpenEditTextModal(part.textId);
+                   }}
+                 >
+                   Edit
+                 </Button>
+                 <Button
+                   variant="outline-danger"
+                   size="sm"
+                   onClick={(e) => {
+                     e.preventDefault(); // Prevent navigation
+                     e.stopPropagation(); // Prevent ListGroup item click
+                     handleTextDelete(part.textId, part.title);
+                   }}
+                 >
+                   Delete
+                 </Button>
               </div>
             </ListGroup.Item>
           ))}
@@ -217,6 +366,90 @@ const BookDetail = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Edit Book Modal */}
+      <Modal show={showEditBookModal} onHide={handleCloseModals}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Book Title</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {modalError && <Alert variant="danger">{modalError}</Alert>}
+          <Form>
+            <Form.Group className="mb-3" controlId="editBookTitle">
+              <Form.Label>Title</Form.Label>
+              <Form.Control
+                type="text"
+                value={editingBook?.title || ''}
+                onChange={(e) => setEditingBook(prev => ({ ...prev, title: e.target.value }))}
+                required
+                disabled={modalLoading}
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModals} disabled={modalLoading}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleBookUpdate} disabled={modalLoading}>
+            {modalLoading ? <Spinner size="sm" animation="border" /> : 'Save Changes'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Edit Text Modal */}
+      <Modal show={showEditTextModal} onHide={handleCloseModals} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Text Part</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {modalError && <Alert variant="danger">{modalError}</Alert>}
+          {editingText && (
+            <Form>
+              <Form.Group className="mb-3" controlId="editTextTitle">
+                <Form.Label>Title</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editingText.title}
+                  onChange={(e) => setEditingText(prev => ({ ...prev, title: e.target.value }))}
+                  required
+                  disabled={modalLoading}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="editTextContent">
+                <Form.Label>Content</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={10}
+                  value={editingText.content}
+                  onChange={(e) => setEditingText(prev => ({ ...prev, content: e.target.value }))}
+                  required
+                  disabled={modalLoading}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3" controlId="editTextTag">
+                <Form.Label>Tag (Optional)</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editingText.tag}
+                  onChange={(e) => setEditingText(prev => ({ ...prev, tag: e.target.value }))}
+                  maxLength="100"
+                  disabled={modalLoading}
+                />
+              </Form.Group>
+            </Form>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModals} disabled={modalLoading}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleTextUpdate} disabled={modalLoading}>
+            {modalLoading ? <Spinner size="sm" animation="border" /> : 'Save Changes'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
     </Container>
   );
 };

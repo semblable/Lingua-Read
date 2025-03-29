@@ -7,6 +7,7 @@ const TextCreate = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [languageId, setLanguageId] = useState('');
+  const [tag, setTag] = useState(''); // Add state for tag
   const [languages, setLanguages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -61,7 +62,8 @@ const TextCreate = () => {
     setError('');
     
     try {
-      const newText = await createText(title, content, parseInt(languageId, 10));
+      // Pass the tag (or null if empty) to the createText function
+      const newText = await createText(title, content, parseInt(languageId, 10), tag || null);
       navigate(`/texts/${newText.textId}`);
     } catch (err) {
       setError(err.message || 'Failed to create text. Please try again.');
@@ -161,6 +163,17 @@ const TextCreate = () => {
                 ))
               )}
             </Form.Select>
+          </Form.Group>
+
+          <Form.Group className="mb-3" controlId="tag">
+            <Form.Label>Tag (Optional)</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter a tag (e.g., news, fiction, chapter 1)"
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
+              maxLength="100" // Match backend constraint
+            />
           </Form.Group>
           
           <Tabs
