@@ -128,6 +128,8 @@ const TextDisplay = () => {
   const audioRef = useRef(null);
   const listRef = useRef(null);
   const resizeDividerRef = useRef(null);
+  const lastSaveTimeRef = useRef(Date.now()); // Ref for throttling saves
+  const saveInterval = 5000; // Save every 5 seconds
 
   // --- State Declarations ---
   const [loading, setLoading] = useState(true);
@@ -165,6 +167,8 @@ const TextDisplay = () => {
   const [currentSrtLineId, setCurrentSrtLineId] = useState(null);
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
   const [displayMode, setDisplayMode] = useState('audio');
+  const [initialAudioTime, setInitialAudioTime] = useState(null); // State for restored time
+  const [playbackRate, setPlaybackRate] = useState(1.0); // State for playback speed
   // --- End State Declarations ---
 
   // --- Helper Functions & Memoized Values (Define BEFORE useEffects that use them) ---
@@ -332,6 +336,7 @@ const TextDisplay = () => {
 
   // --- Effect Hooks ---
 
+  // Fetch User Settings
   useEffect(() => {
     const fetchUserSettings = async () => {
       try {
@@ -342,9 +347,20 @@ const TextDisplay = () => {
     fetchUserSettings();
   }, []);
 
+  // Fetch Text Data, Restore Audio Time & Playback Rate
   useEffect(() => {
+    // --- Restore Playback Rate ---
+    const savedRate = localStorage.getItem('audioPlaybackRate');
+    if (savedRate && !isNaN(parseFloat(savedRate))) {
+        const rate = parseFloat(savedRate);
+        // Clamp rate between 0.5 and 2.0 on load
+        setPlaybackRate(Math.max(0.5, Math.min(rate, 2.0)));
+        console.log(`[Playback Rate Restore] Restored rate: ${rate}`);
+    }
+    // --- End Restore Playback Rate ---
+
     const fetchText = async () => {
-      setLoading(true); setError(''); setBook(null); setNextTextId(null);
+      setLoading(true); setError(''); setBook(null); setNextTextId(null); setInitialAudioTime(null); // Reset initial time
       try {
         const data = await getText(textId);
         setText(data);
@@ -354,6 +370,17 @@ const TextDisplay = () => {
           setAudioSrc(`${API_URL}/${data.audioFilePath}`);
           setSrtLines(parseSrtContent(data.srtContent));
           setDisplayMode('audio');
+
+          // --- Restore Audio Time ---
+          const savedTime = localStorage.getItem(`audioTime-${textId}`);
+          if (savedTime && !isNaN(parseFloat(savedTime))) {
+             console.log(`[Audio Restore] Found saved time: ${savedTime}`);
+             setInitialAudioTime(parseFloat(savedTime));
+          } else {
+             console.log(`[Audio Restore] No valid saved time found for textId: ${textId}`);
+          }
+          // --- End Restore Audio Time ---
+
         } else {
           setIsAudioLesson(false); setAudioSrc(null); setSrtLines([]); setDisplayMode('text');
         }
@@ -373,10 +400,21 @@ const TextDisplay = () => {
       finally { setLoading(false); }
     };
     fetchText();
-    return () => { /* Cleanup */ };
-  }, [textId, fetchAllLanguageWords]); // Added fetchAllLanguageWords dependency
+    // Cleanup function to save time on immediate unmount before timeupdate fires
+    return () => {
+        if (audioRef.current && isAudioLesson) { // Check isAudioLesson here too
+            const currentTime = audioRef.current.currentTime;
+            if (currentTime > 0) { // Only save if there's actual progress
+                 console.log(`[Audio Save - Unmount] Saving time: ${currentTime} for textId: ${textId}`);
+                 localStorage.setItem(`audioTime-${textId}`, currentTime.toString());
+            }
+        }
+    };
+  }, [textId, fetchAllLanguageWords, isAudioLesson]); // Added isAudioLesson dependency
 
-  useEffect(() => { // Audio sync
+
+  // Audio Sync & Scroll
+  useEffect(() => {
     if (!isAudioLesson || srtLines.length === 0 || displayMode !== 'audio') { setCurrentSrtLineId(null); return; }
     const currentLineIndex = srtLines.findIndex(line => audioCurrentTime >= line.startTime && audioCurrentTime < line.endTime);
     const currentLine = currentLineIndex !== -1 ? srtLines[currentLineIndex] : null;
@@ -388,7 +426,8 @@ const TextDisplay = () => {
     }
   }, [audioCurrentTime, srtLines, isAudioLesson, currentSrtLineId, displayMode]);
 
-  useEffect(() => { // Resizable panel
+  // Resizable Panel
+  useEffect(() => {
     const handleMouseDown = (e) => { setIsDragging(true); document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none'; };
     const handleMouseMove = (e) => {
         if (!isDragging) return;
@@ -411,12 +450,51 @@ const TextDisplay = () => {
     };
   }, [isDragging]);
 
+  // --- Apply Playback Rate ---
+  useEffect(() => {
+      if (audioRef.current) {
+          audioRef.current.playbackRate = playbackRate;
+          console.log(`[Playback Rate Apply] Set audio playbackRate to: ${playbackRate}`);
+      }
+  }, [playbackRate]); // Apply whenever playbackRate state changes
+  // --- End Apply Playback Rate ---
+
+  // --- Save Audio Time Periodically ---
+  useEffect(() => {
+      if (isAudioLesson && audioCurrentTime > 0) { // Only save if playing and valid time
+          const now = Date.now();
+          if (now - lastSaveTimeRef.current > saveInterval) {
+              console.log(`[Audio Save - Throttled] Saving time: ${audioCurrentTime} for textId: ${textId}`);
+              localStorage.setItem(`audioTime-${textId}`, audioCurrentTime.toString());
+              lastSaveTimeRef.current = now;
+          }
+      }
+  }, [audioCurrentTime, isAudioLesson, textId]); // Depend on time, lesson status, and textId
+  // --- End Save Audio Time ---
+
+
   // --- Keyboard Shortcuts ---
   useEffect(() => { // Spacebar
-    const handleKeyDown = (event) => { /* ... */ };
+    const handleKeyDown = (event) => {
+        // Ignore if typing in an input or textarea
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+            return;
+        }
+        // Toggle play/pause for audio lessons when space is pressed
+        if (isAudioLesson && displayMode === 'audio' && event.code === 'Space') {
+            event.preventDefault(); // Prevent default space behavior (like scrolling)
+            if (audioRef.current) {
+                if (audioRef.current.paused) {
+                    audioRef.current.play();
+                } else {
+                    audioRef.current.pause();
+                }
+            }
+        }
+    };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAudioLesson, displayMode]);
+  }, [isAudioLesson, displayMode]); // Add dependencies
 
   useEffect(() => { // 1-5 keys
     const handleKeyDown = (event) => {
@@ -549,6 +627,34 @@ const TextDisplay = () => {
       } catch (error) { alert(`Failed to complete lesson: ${error.message}`); }
       finally { setCompleting(false); }
     };
+
+  // --- New Handler for Audio Metadata Load ---
+  const handleAudioMetadataLoaded = () => {
+      console.log(`[Audio Metadata] Loaded. Initial time from state: ${initialAudioTime}`);
+      // Apply initial playback rate when metadata loads
+      if (audioRef.current) {
+          audioRef.current.playbackRate = playbackRate;
+      }
+      if (audioRef.current && initialAudioTime !== null && initialAudioTime > 0) {
+          console.log(`[Audio Metadata] Setting current time to: ${initialAudioTime}`);
+          audioRef.current.currentTime = initialAudioTime;
+          // Reset initial time state after applying it once
+          setInitialAudioTime(null);
+      } else if (audioRef.current) {
+          console.log(`[Audio Metadata] No initial time to set or initial time is 0. Current time: ${audioRef.current.currentTime}`);
+      }
+  };
+
+  // --- Handlers for Playback Speed ---
+  const changePlaybackRate = (delta) => {
+      setPlaybackRate(prevRate => {
+          const newRate = parseFloat((prevRate + delta).toFixed(2));
+          const clampedRate = Math.max(0.5, Math.min(newRate, 2.0)); // Clamp between 0.5x and 2.0x
+          localStorage.setItem('audioPlaybackRate', clampedRate.toString()); // Save preference
+          console.log(`[Playback Rate Change] New rate: ${clampedRate}`);
+          return clampedRate;
+      });
+  };
   // --- End Event Handlers ---
 
 
@@ -609,7 +715,7 @@ const TextDisplay = () => {
   // --- Main Return JSX ---
   return (
     <div className="text-display-wrapper px-0 mx-0 w-100">
-      {/* Header Card */}
+      {/* Header Card - Add Playback Speed Controls */}
       <Card className="shadow-sm mb-1 border-0 rounded-0">
         <Card.Body className="py-1 px-2">
            <div className="d-flex justify-content-between align-items-center flex-wrap">
@@ -618,6 +724,15 @@ const TextDisplay = () => {
                <p className="text-muted mb-0 small">Lang: {text.languageName || 'N/A'} | Words: {words.length}</p>
              </div>
              <div className="d-flex gap-2 flex-wrap mt-2 mt-md-0 align-items-center">
+               {/* Playback Speed Controls */}
+               {isAudioLesson && displayMode === 'audio' && (
+                 <ButtonGroup size="sm" className="me-1" title={`Playback Speed: ${playbackRate.toFixed(2)}x`}>
+                   <Button variant="outline-secondary" onClick={() => changePlaybackRate(-0.05)} disabled={playbackRate <= 0.5}>-</Button>
+                   <Button variant="outline-secondary" disabled style={{ minWidth: '45px', textAlign: 'center' }}>{playbackRate.toFixed(2)}x</Button>
+                   <Button variant="outline-secondary" onClick={() => changePlaybackRate(0.05)} disabled={playbackRate >= 2.0}>+</Button>
+                 </ButtonGroup>
+               )}
+               {/* Existing Controls */}
                <ButtonGroup size="sm" className="me-1">
                  <Button variant="outline-secondary" onClick={() => setUserSettings(p => ({...p, textSize: Math.max(12, p.textSize - 2)}))} title="Decrease text size">A-</Button>
                  <Button variant="outline-secondary" onClick={() => setUserSettings(p => ({...p, textSize: Math.min(32, p.textSize + 2)}))} title="Increase text size">A+</Button>
@@ -641,7 +756,14 @@ const TextDisplay = () => {
       {/* Audio Player */}
       {isAudioLesson && audioSrc && displayMode === 'audio' && (
         <div className="audio-player-container p-2 bg-light border-bottom">
-          <audio ref={audioRef} controls src={audioSrc} onTimeUpdate={(e) => setAudioCurrentTime(e.target.currentTime)} style={{ width: '100%' }}>
+          <audio
+            ref={audioRef}
+            controls
+            src={audioSrc}
+            onTimeUpdate={(e) => setAudioCurrentTime(e.target.currentTime)}
+            onLoadedMetadata={handleAudioMetadataLoaded} // Add this handler
+            style={{ width: '100%' }}
+          >
             Your browser does not support the audio element.
           </audio>
         </div>

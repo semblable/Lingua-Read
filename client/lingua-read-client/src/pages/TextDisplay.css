@@ -115,33 +115,39 @@
   background-color: #555555;
 }
 
+/* Dark theme adjustments for active SRT line */
+.dark-theme .srt-line.active-srt-line {
+  border-left-color: #61dafb; /* Brighter blue border */
+  background-color: rgba(60, 130, 160, 0.2); /* Darker, less saturated blue background */
+}
+
 /* Media queries for responsive design */
 @media (max-width: 768px) {
   .resizable-container {
     flex-direction: column;
   }
-  
+
   .resize-divider {
     width: 100%;
     height: 6px;
     cursor: row-resize;
   }
-  
+
   .resize-divider::after {
     width: 30px;
     height: 2px;
   }
-  
+
   .left-panel, .right-panel {
     width: 100% !important;
     height: auto !important;
   }
-  
+
   .left-panel {
     height: 60vh !important;
   }
-  
+
   .right-panel {
     height: 40vh !important;
   }
-} 
+}

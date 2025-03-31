@@ -74,6 +74,20 @@ const UserSettings = () => {
     
     try {
       await updateUserSettings(settings);
+
+      // Apply theme change immediately and save to localStorage
+      localStorage.setItem('theme', settings.theme);
+      if (settings.theme === 'dark') {
+        document.body.classList.add('dark-theme');
+        document.body.classList.remove('light-theme'); // Ensure light theme is removed
+      } else if (settings.theme === 'light') {
+        document.body.classList.remove('dark-theme');
+        document.body.classList.add('light-theme'); // Ensure light theme is added/kept
+      } else { // System theme
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.body.classList.toggle('dark-theme', prefersDark);
+        document.body.classList.toggle('light-theme', !prefersDark);
+      }
       setSuccess(true);
       
       // Hide success message after 3 seconds

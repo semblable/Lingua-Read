@@ -30,12 +30,12 @@ const fetchApi = async (endpoint, options = {}) => {
   if (!endpoint.startsWith('/')) {
     endpoint = '/' + endpoint;
   }
-  
+
   try {
     const token = getToken();
     console.log('[API Debug] Endpoint:', endpoint);
     console.log('[API Debug] Base URL:', API_URL);
-    
+
     const headers = {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
@@ -74,7 +74,7 @@ const fetchApi = async (endpoint, options = {}) => {
       credentials: requestConfig.credentials,
       mode: requestConfig.mode
     });
-    
+
     const response = await fetch(fullUrl.toString(), requestConfig);
     console.log('[API Debug] Response status:', response.status);
     console.log('[API Debug] Response headers:', Object.fromEntries(response.headers.entries()));
@@ -83,7 +83,7 @@ const fetchApi = async (endpoint, options = {}) => {
     if (!response.ok) {
       const contentType = response.headers.get('content-type');
       let errorMessage;
-      
+
       if (contentType && contentType.includes('application/json')) {
         const errorData = await response.json();
         errorMessage = errorData.message || `HTTP error! Status: ${response.status}`;
@@ -91,14 +91,14 @@ const fetchApi = async (endpoint, options = {}) => {
         const text = await response.text();
         errorMessage = text || `HTTP error! Status: ${response.status}`;
       }
-      
+
       console.error('[API Error] Request failed:', {
         status: response.status,
         statusText: response.statusText,
         url: fullUrl.toString(),
         error: errorMessage
       });
-      
+
       throw new Error(errorMessage);
     }
 
@@ -169,6 +169,11 @@ export const getTexts = () => {
 
 export const getText = (textId) => {
   return fetchApi(`/api/texts/${textId}`);
+};
+
+// Add getRecentTexts function
+export const getRecentTexts = () => {
+  return fetchApi('/api/texts/recent');
 };
 
 // Modified to include optional tag
@@ -297,10 +302,10 @@ export const getBook = (bookId) => {
 export const createBook = (title, description, languageId, content, splitMethod = 'paragraph', maxSegmentSize = 3000) => {
   return fetchApi('/api/books', {
     method: 'POST',
-    body: JSON.stringify({ 
-      title, 
-      description, 
-      languageId, 
+    body: JSON.stringify({
+      title,
+      description,
+      languageId,
       content,
       splitMethod,
       maxSegmentSize
@@ -317,6 +322,84 @@ export const updateBook = (bookId, { title }) => {
     body: JSON.stringify(payload)
   });
 };
+
+// Add createAudioLessonsBatch function
+export const createAudioLessonsBatch = async (languageId, tag, files) => {
+  const endpoint = '/api/texts/audio/batch';
+  console.log(`[API] Creating batch audio lessons for language ${languageId} with tag: ${tag || 'none'}`);
+
+  try {
+    const token = getToken();
+    const headers = {
+      'Accept': 'application/json',
+      // Content-Type is set automatically by browser for FormData
+    };
+
+    if (token && typeof token === 'string' && token.trim() !== '') {
+      headers.Authorization = `Bearer ${token.trim()}`;
+    } else {
+       throw new Error('Authentication required for batch upload');
+    }
+
+    const formData = new FormData();
+    formData.append('languageId', languageId);
+    if (tag) {
+      formData.append('tag', tag);
+    }
+    // Append all files under the same key 'files'
+    // Note: The backend expects List<IFormFile> files, so the key should match the parameter name.
+    for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+    }
+
+
+    const requestConfig = {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include',
+      mode: 'cors'
+    };
+
+    const fullUrl = new URL(endpoint, API_URL);
+    console.log('[API Debug] Full URL for batch audio lesson:', fullUrl.toString());
+
+    const response = await fetch(fullUrl.toString(), requestConfig);
+    console.log('[API Debug] Batch audio lesson creation response status:', response.status);
+
+    // Handle response (similar to single audio lesson upload)
+    if (!response.ok) {
+      let errorMessage = `HTTP error! Status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        // Include skipped files info if available in error response
+        errorMessage = errorData.message || errorData.title || errorMessage;
+        if (errorData.skippedFiles) {
+            errorMessage += ` Skipped: ${errorData.skippedFiles.join(', ')}`;
+        }
+      } catch (e) {
+         try { const text = await response.text(); errorMessage = text || errorMessage; } catch (textError) {}
+      }
+      console.error('[API Error] Batch audio lesson creation failed:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      console.log('[API Debug] Batch audio lesson creation response data:', data);
+      return data; // Should contain { createdCount, skippedFiles }
+    } else {
+      console.log('[API Debug] Non-JSON response for batch audio lesson creation.');
+      return { message: response.statusText };
+    }
+
+  } catch (error) {
+    console.error('[API Error] Failed to create batch audio lessons:', error);
+    throw error;
+  }
+};
+
 
 // Add deleteBook function
 export const deleteBook = (bookId) => {
@@ -368,16 +451,16 @@ export const createWord = async (textId, term, status, translation) => {
     if (!textId) throw new Error('Text ID is required');
     if (!term || term.trim() === '') throw new Error('Word term is required');
     if (!status) throw new Error('Word status is required');
-    
+
     console.log(`[API] Creating word: "${term}" with status: ${status}`);
-    
+
     const payload = {
       textId,
       term: term.trim(),
       status,
       translation: translation || null
     };
-    
+
     const response = await fetchApi('/api/words', {
       method: 'POST',
       headers: {
@@ -385,7 +468,7 @@ export const createWord = async (textId, term, status, translation) => {
       },
       body: JSON.stringify(payload)
     });
-    
+
     return response;
   } catch (error) {
     console.error('Error in createWord:', error);
@@ -398,17 +481,17 @@ export const updateWord = async (wordId, status, translation) => {
     // Validate inputs
     if (!wordId) throw new Error('Word ID is required');
     if (!status) throw new Error('Word status is required');
-    
+
     const payload = {
       status,
       translation: translation || null
     };
-    
+
     const response = await fetchApi(`/api/words/${wordId}`, {
       method: 'PUT',
       body: JSON.stringify(payload)
     });
-    
+
     return response;
   } catch (error) {
     console.error('Error in updateWord:', error);
@@ -456,13 +539,13 @@ export const generateStory = async (prompt, language, level, maxLength) => {
 export const translateSentence = async (text, sourceLanguageCode, targetLanguageCode) => {
   try {
     console.log('Initiating sentence translation request');
-    
+
     const payload = {
       text,
       sourceLanguageCode,
       targetLanguageCode
     };
-    
+
     const response = await fetchApi('/api/sentencetranslation', {
       method: 'POST',
       headers: {
@@ -470,7 +553,7 @@ export const translateSentence = async (text, sourceLanguageCode, targetLanguage
       },
       body: JSON.stringify(payload)
     });
-    
+
     return response;
   } catch (error) {
     console.error('Sentence translation failed:', error);
@@ -481,13 +564,13 @@ export const translateSentence = async (text, sourceLanguageCode, targetLanguage
 export const translateFullText = async (text, sourceLanguageCode, targetLanguageCode) => {
   try {
     console.log('Initiating full text translation request');
-    
+
     const payload = {
       text,
       sourceLanguageCode,
       targetLanguageCode
     };
-    
+
     const response = await fetchApi('/api/sentencetranslation/full-text', {
       method: 'POST',
       headers: {
@@ -495,7 +578,7 @@ export const translateFullText = async (text, sourceLanguageCode, targetLanguage
       },
       body: JSON.stringify(payload)
     });
-    
+
     return response;
   } catch (error) {
     console.error('Full text translation failed:', error);

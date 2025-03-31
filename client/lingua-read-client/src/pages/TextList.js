@@ -144,9 +144,14 @@ const TextList = () => {
              <option value="audio">Audio Lessons</option>
            </Form.Select>
         </div>
-        <Button as={Link} to="/texts/create" variant="success" className="mt-2 mt-md-0">
-          Add New Text
-        </Button>
+        <div className="d-flex gap-2 mt-2 mt-md-0"> {/* Wrap buttons in a div for grouping */}
+           <Button as={Link} to="/texts/create-batch-audio" variant="info">
+               Batch Add Audio
+           </Button>
+           <Button as={Link} to="/texts/create" variant="success">
+               Add New Text
+           </Button>
+        </div>
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
