@@ -24,6 +24,8 @@ server/LinguaReadApi/bin/
 server/LinguaReadApi/obj/
 server/LinguaReadApi/*.user
 server/LinguaReadApi/*.suo
+# Ignore server node_modules if it exists (e.g., for build tools)
+server/LinguaReadApi/node_modules/
 # Ignore entire wwwroot as nothing else needs tracking and it contains user uploads
 server/LinguaReadApi/wwwroot/
 # Development settings file (now safe to commit as secrets are in .env)
