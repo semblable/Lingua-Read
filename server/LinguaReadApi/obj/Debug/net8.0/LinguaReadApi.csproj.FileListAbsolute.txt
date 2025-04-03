@@ -147,3 +147,5 @@ C:\Users\kamil\Dropbox\Lingua_Read\server\LinguaReadApi\bin\Debug\net8.0\package
 C:\Users\kamil\Dropbox\Lingua_Read\server\LinguaReadApi\bin\Debug\net8.0\package.json
 C:\Users\kamil\Dropbox\Lingua_Read\server\LinguaReadApi\obj\Debug\net8.0\LinguaReadApi.sourcelink.json
 C:\Users\kamil\Dropbox\Lingua_Read\server\linguareadapi\bin\Debug\net8.0\LinguaReadApi.staticwebassets.runtime.json
+C:\Users\kamil\Dropbox\Lingua_Read\server\linguareadapi\bin\Debug\net8.0\DotNetEnv.dll
+C:\Users\kamil\Dropbox\Lingua_Read\server\linguareadapi\bin\Debug\net8.0\Sprache.dll

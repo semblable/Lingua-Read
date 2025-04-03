@@ -12,6 +12,8 @@ lerna-debug.log*
 client/lingua-read-client/node_modules/
 client/lingua-read-client/build/
 client/lingua-read-client/.pnp.*
+# Expo specific cache/build files
+client/lingua-read-client/.expo/
 client/lingua-read-client/.env
 client/lingua-read-client/.env.*
 !client/lingua-read-client/.env.example
