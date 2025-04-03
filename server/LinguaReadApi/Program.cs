@@ -11,7 +11,10 @@ using Microsoft.Extensions.FileProviders; // Add this for StaticFileOptions
 using System.IO; // Add this for Path.Combine
 using Microsoft.AspNetCore.Http.Features; // Needed for FormOptions
 using Microsoft.AspNetCore.Server.Kestrel.Core; // Needed for KestrelServerOptions
+using DotNetEnv; // <-- Add this using directive
 
+// --- Load .env file ---
+Env.Load(); // <-- Load environment variables from .env file
 
 var builder = WebApplication.CreateBuilder(args);
 

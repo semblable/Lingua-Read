@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\LinguaReadApi.csproj": {}
+    "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj": {}
   },
   "projects": {
-    "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\LinguaReadApi.csproj": {
+    "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\LinguaReadApi.csproj",
+        "projectUniqueName": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj",
         "projectName": "LinguaReadApi",
-        "projectPath": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\LinguaReadApi.csproj",
+        "projectPath": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj",
         "packagesPath": "C:\\Users\\kamil\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\obj\\",
+        "outputPath": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\LinguaReadApi\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\kamil\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -49,6 +49,10 @@
             "BCrypt.Net-Next": {
               "target": "Package",
               "version": "[4.0.3, )"
+            },
+            "DotNetEnv": {
+              "target": "Package",
+              "version": "[3.1.1, )"
             },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",

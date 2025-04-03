@@ -1,2 +1,41 @@
-node_modules/
-server\LinguaReadApi\wwwroot/
+# --- General ---
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Node.js / React Client (client/lingua-read-client) ---
+client/lingua-read-client/node_modules/
+client/lingua-read-client/build/
+client/lingua-read-client/.pnp.*
+client/lingua-read-client/.env
+client/lingua-read-client/.env.*
+!client/lingua-read-client/.env.example
+client/lingua-read-client/coverage/
+client/lingua-read-client/*.tsbuildinfo
+client/lingua-read-client/.eslintcache
+
+# --- .NET Core Server (server/LinguaReadApi) ---
+server/LinguaReadApi/bin/
+server/LinguaReadApi/obj/
+server/LinguaReadApi/*.user
+server/LinguaReadApi/*.suo
+# Ignore entire wwwroot as nothing else needs tracking and it contains user uploads
+server/LinguaReadApi/wwwroot/
+# Development settings file (now safe to commit as secrets are in .env)
+# server/LinguaReadApi/appsettings.Development.json
+# Ignore the .env file itself
+server/LinguaReadApi/.env
+
+# --- Editor/IDE ---
+.vscode/
+.idea/
+*.sln.DotSettings.user
+
+# --- Existing (commented out as covered above) ---
+# node_modules/
+# server\LinguaReadApi\wwwroot\
