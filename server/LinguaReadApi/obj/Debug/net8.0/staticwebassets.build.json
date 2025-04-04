@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "Gsw90/2BlI9mNqyCt8LtvT8IXpEKXem6o/2RN82r2sI=",
+  "Hash": "xb8e10NwbplmKuJ97vD4qoo4tZfC6VUBklWTp33KxAU=",
   "Source": "LinguaReadApi",
   "BasePath": "_content/LinguaReadApi",
   "Mode": "Default",
@@ -224,6 +224,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\cc33babc-0134-405a-a705-3f35da68f8d8_Qui croit encore pouvoir changer le.mp3"
+    },
+    {
+      "Identity": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\cd19cd18-63f7-47a9-9c92-4d97a78f83e9_Peut-on rompre avec sa famille _.mp3",
+      "SourceId": "LinguaReadApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\",
+      "BasePath": "_content/LinguaReadApi",
+      "RelativePath": "audio_lessons/3d2a097a-0ec2-408e-861d-b528cd267a42/cd19cd18-63f7-47a9-9c92-4d97a78f83e9_Peut-on rompre avec sa famille _.mp3",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\cd19cd18-63f7-47a9-9c92-4d97a78f83e9_Peut-on rompre avec sa famille _.mp3"
     },
     {
       "Identity": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\linguareadapi\\wwwroot\\audio_lessons\\3d2a097a-0ec2-408e-861d-b528cd267a42\\d108cbab-8341-4d64-b6ea-fcfa3168e116_Et si on vous aimait plus que vous n.mp3",

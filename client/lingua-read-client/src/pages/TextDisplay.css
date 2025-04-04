@@ -118,7 +118,7 @@
 /* Dark theme adjustments for active SRT line */
 .dark-theme .srt-line.active-srt-line {
   border-left-color: #61dafb; /* Brighter blue border */
-  background-color: rgba(60, 130, 160, 0.2); /* Darker, less saturated blue background */
+  background-color: rgba(80, 80, 80, 0.4); /* Darker grey background for better contrast */
 }
 
 /* Media queries for responsive design */

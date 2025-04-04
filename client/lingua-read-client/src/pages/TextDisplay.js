@@ -107,7 +107,7 @@ const TranscriptLine = React.memo(({ index, style, data }) => {
           padding: '0.3rem 0.5rem',
           borderRadius: '4px',
           transition: 'background-color 0.3s ease',
-          backgroundColor: line.id === currentLineId ? 'var(--active-srt-line-bg, rgba(255, 223, 186, 0.7))' : 'transparent',
+          /* backgroundColor removed to allow CSS file to control it */
           cursor: 'pointer',
           margin: 0
         }}
