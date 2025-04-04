@@ -1,34 +1,35 @@
+// File: server/LinguaReadApi/Controllers/DataManagementController.cs
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using LinguaReadApi.Services; // Assuming your service is here
-using Microsoft.AspNetCore.Http; // Required for IFormFile
+using LinguaReadApi.Services;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims; // Added for User claims
 
 namespace LinguaReadApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]")] // Route will now be /api/datamanagement
     [ApiController]
-    [Authorize] // Basic authorization, refine later for admin role
-    public class AdminController : ControllerBase
+    [Authorize] // Requires any logged-in user
+    public class DataManagementController : ControllerBase // Renamed class
     {
         private readonly IDatabaseAdminService _dbAdminService;
-        private readonly ILogger<AdminController> _logger;
+        private readonly ILogger<DataManagementController> _logger; // Updated logger type
 
-        public AdminController(IDatabaseAdminService dbAdminService, ILogger<AdminController> logger)
+        public DataManagementController(IDatabaseAdminService dbAdminService, ILogger<DataManagementController> logger) // Updated constructor
         {
             _dbAdminService = dbAdminService;
             _logger = logger;
         }
 
-        // GET: api/admin/backup
+        // GET: api/datamanagement/backup
         [HttpGet("backup")]
-        // [Authorize(Roles = "Admin")] // TODO: Add role-based authorization later
         public async Task<IActionResult> BackupDatabase()
         {
-            _logger.LogInformation("Database backup requested by user {UserId}", User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+            _logger.LogInformation("Database backup requested by user {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
             var backupFilePath = await _dbAdminService.BackupDatabaseAsync();
 
@@ -63,26 +64,19 @@ namespace LinguaReadApi.Controllers
             }
         }
 
-        // POST: api/admin/restore
+        // POST: api/datamanagement/restore
         [HttpPost("restore")]
         [Consumes("multipart/form-data")]
-        [RequestSizeLimit(200 * 1024 * 1024)] // Example: 200MB limit for restore file, adjust as needed
+        [RequestSizeLimit(200 * 1024 * 1024)]
         [RequestFormLimits(MultipartBodyLengthLimit = 200 * 1024 * 1024)]
-        // [Authorize(Roles = "Admin")] // TODO: Add role-based authorization later
         public async Task<IActionResult> RestoreDatabase(IFormFile backupFile)
         {
-             _logger.LogWarning("Database restore requested by user {UserId}. THIS IS A DESTRUCTIVE OPERATION.", User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+             _logger.LogWarning("Database restore requested by user {UserId}. THIS IS A DESTRUCTIVE OPERATION.", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
             if (backupFile == null || backupFile.Length == 0)
             {
                 return BadRequest("No backup file uploaded.");
             }
-
-            // Optional: Add more validation for file type/name if desired
-            // if (!backupFile.FileName.EndsWith(".backup", StringComparison.OrdinalIgnoreCase))
-            // {
-            //     return BadRequest("Invalid backup file type. Expected '.backup'.");
-            // }
 
             try
             {

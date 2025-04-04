@@ -123,6 +123,81 @@ const fetchApi = async (endpoint, options = {}) => {
   }
 };
 
+// Helper function for making API requests that expect a file download
+const fetchApiDownload = async (endpoint, options = {}) => {
+  if (!endpoint.startsWith('/')) {
+    endpoint = '/' + endpoint;
+  }
+
+  try {
+    const token = getToken();
+    console.log('[API Download Debug] Endpoint:', endpoint);
+    const headers = {
+      // Accept might vary depending on what the server sends, but often octet-stream for downloads
+      'Accept': 'application/octet-stream',
+      // No Content-Type needed for GET
+    };
+
+    if (token && typeof token === 'string' && token.trim() !== '') {
+      headers.Authorization = `Bearer ${token.trim()}`;
+    } else {
+      // Authentication is likely required for admin actions
+      throw new Error('Authentication required for download');
+    }
+
+    const requestConfig = {
+      ...options,
+      headers,
+      credentials: 'include',
+      mode: 'cors'
+    };
+
+    const fullUrl = new URL(endpoint, API_URL);
+    console.log('[API Download Debug] Full URL:', fullUrl.toString());
+
+    const response = await fetch(fullUrl.toString(), requestConfig);
+    console.log('[API Download Debug] Response status:', response.status);
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! Status: ${response.status}`;
+      try {
+        // Try to parse error as JSON first
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        // If not JSON, try text
+        try {
+          const text = await response.text();
+          errorMessage = text || errorMessage;
+        } catch (textError) { /* Keep original status error */ }
+      }
+      console.error('[API Download Error] Request failed:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    // Get filename from Content-Disposition header if available
+    const disposition = response.headers.get('content-disposition');
+    let filename = 'linguaread_backup.backup'; // Default filename
+    if (disposition && disposition.indexOf('attachment') !== -1) {
+        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+        const matches = filenameRegex.exec(disposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '');
+        }
+    }
+
+    // Get the blob data
+    const blob = await response.blob();
+
+    return { blob, filename };
+
+  } catch (error) {
+    console.error('[API Download Error] Request failed:', error);
+    throw error;
+  }
+};
+
+
 // Simple test function to check API connectivity
 export const testApiConnection = async () => {
   try {
@@ -655,5 +730,87 @@ export const addTermsBatch = async (languageId, terms) => {
   } catch (error) {
     console.error('Batch add terms failed:', error);
     throw error;
+  }
+};
+
+// --- Admin API ---
+// Backup Database
+export const backupDatabase = async () => {
+  console.log('[API] Requesting database backup download');
+  // Use the specialized download helper
+  const { blob, filename } = await fetchApiDownload('/api/datamanagement/backup', { // Updated route
+    method: 'GET',
+  });
+
+
+  // Trigger download in the browser
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  a.remove();
+  console.log(`[API] Backup download triggered as ${filename}`);
+  return { message: `Backup download started as ${filename}` }; // Return success message
+};
+// Restore Database
+export const restoreDatabase = async (backupFile) => {
+  const endpoint = '/api/datamanagement/restore'; // Updated route
+  console.log(`[API] Uploading database backup file: ${backupFile.name}`);
+
+
+  if (!backupFile) {
+    throw new Error('Backup file is required for restore.');
+  }
+
+  try {
+    const token = getToken();
+    const headers = {
+      'Accept': 'application/json', // Expect JSON response (success/error message)
+      // DO NOT set Content-Type for FormData
+    };
+
+    if (token && typeof token === 'string' && token.trim() !== '') {
+      headers.Authorization = `Bearer ${token.trim()}`;
+    } else {
+       throw new Error('Authentication required for database restore');
+    }
+
+    const formData = new FormData();
+    // Key 'backupFile' must match the parameter name in AdminController.RestoreDatabase
+    formData.append('backupFile', backupFile);
+
+    const requestConfig = {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include',
+      mode: 'cors'
+    };
+
+    const fullUrl = new URL(endpoint, API_URL);
+    console.log('[API Debug] Full URL for restore:', fullUrl.toString());
+
+    const response = await fetch(fullUrl.toString(), requestConfig);
+    console.log('[API Debug] Restore response status:', response.status);
+
+    // Handle response (expecting JSON success/error message)
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      const errorMessage = responseData.message || responseData.title || `HTTP error! Status: ${response.status}`;
+      console.error('[API Error] Database restore failed:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    console.log('[API Debug] Restore response data:', responseData);
+    return responseData; // Should contain { message: "..." } on success
+
+  } catch (error) {
+    console.error('[API Error] Failed to restore database:', error);
+    throw error; // Re-throw to be caught by calling component
   }
 };

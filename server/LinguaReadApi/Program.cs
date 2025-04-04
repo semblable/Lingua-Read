@@ -56,6 +56,9 @@ builder.Services.AddScoped<ISentenceTranslationService, GeminiTranslationService
 // Register Gemini Story Generation Service
 builder.Services.AddScoped<IStoryGenerationService, GeminiStoryGenerationService>();
 
+// Register Database Admin Service
+builder.Services.AddScoped<IDatabaseAdminService, DatabaseAdminService>(); // <-- Add this line
+
 // Configure JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
