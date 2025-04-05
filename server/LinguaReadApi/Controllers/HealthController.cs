@@ -107,9 +107,10 @@ namespace LinguaReadApi.Controllers
                 var headers = new Dictionary<string, string>();
                 foreach (var header in Request.Headers)
                 {
-                    headers[header.Key] = header.Value;
+                    // Convert StringValues to a single string, handling potential null/empty cases
+                    headers[header.Key] = header.Value.ToString() ?? string.Empty;
                 }
-                
+
                 var result = new
                 {
                     Timestamp = DateTime.UtcNow,

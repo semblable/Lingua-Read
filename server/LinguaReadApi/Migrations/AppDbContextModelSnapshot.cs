@@ -30,9 +30,6 @@ namespace LinguaReadApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("BookId"));
 
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -48,9 +45,6 @@ namespace LinguaReadApi.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("LanguageId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("LanguageId1")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("LastReadAt")
@@ -79,8 +73,6 @@ namespace LinguaReadApi.Migrations
                     b.HasKey("BookId");
 
                     b.HasIndex("LanguageId");
-
-                    b.HasIndex("LanguageId1");
 
                     b.HasIndex("LastReadTextId");
 
@@ -123,11 +115,11 @@ namespace LinguaReadApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TextId"));
 
+                    b.Property<string>("AudioFilePath")
+                        .HasColumnType("text");
+
                     b.Property<int?>("BookId")
                         .HasColumnType("integer");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -136,17 +128,24 @@ namespace LinguaReadApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsCompleted")
+                    b.Property<bool>("IsAudioLesson")
                         .HasColumnType("boolean");
 
                     b.Property<int>("LanguageId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime?>("LastReadAt")
+                    b.Property<DateTime?>("LastAccessedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("PartNumber")
                         .HasColumnType("integer");
+
+                    b.Property<string>("SrtContent")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Tag")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -195,31 +194,59 @@ namespace LinguaReadApi.Migrations
 
             modelBuilder.Entity("LinguaReadApi.Models.User", b =>
                 {
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastLogin")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
                         .HasColumnType("text");
 
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                    b.Property<string>("NormalizedUserName")
+                        .HasColumnType("text");
 
-                    b.HasKey("UserId");
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -241,6 +268,9 @@ namespace LinguaReadApi.Migrations
                         .HasColumnType("character varying(50)");
 
                     b.Property<int>("LanguageId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ListeningDurationSeconds")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("Timestamp")
@@ -358,14 +388,10 @@ namespace LinguaReadApi.Migrations
             modelBuilder.Entity("LinguaReadApi.Models.Book", b =>
                 {
                     b.HasOne("LinguaReadApi.Models.Language", "Language")
-                        .WithMany()
+                        .WithMany("Books")
                         .HasForeignKey("LanguageId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("LinguaReadApi.Models.Language", null)
-                        .WithMany("Books")
-                        .HasForeignKey("LanguageId1");
 
                     b.HasOne("LinguaReadApi.Models.Text", "LastReadText")
                         .WithMany()

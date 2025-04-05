@@ -1,11 +1,11 @@
 // Import Platform from react-native
 import { Platform } from 'react-native';
-import storage from './storage';
+// import storage from './storage'; // Removed unused storage
 
 // Dynamically set API URL based on platform
 // For web development use localhost, for mobile use your computer's IP address
-const API_URL = Platform.OS === 'web' 
-  ? 'http://localhost:5000' 
+export const API_URL = Platform.OS === 'web' // Export the constant
+  ? 'http://localhost:5000'
   : 'http://192.168.0.48:5000'; // Your Ethernet adapter IP address
 
 // Helper function to get token from storage
@@ -24,80 +24,18 @@ const getToken = () => {
   }
 };
 
-// Helper function to store token
-const storeToken = (token) => {
-  try {
-    if (!token || typeof token !== 'string') {
-      console.error('Invalid token provided');
-      return false;
-    }
-    const cleanToken = token.trim();
-    localStorage.setItem('token', cleanToken);
-    console.log('Token stored successfully:', cleanToken.length + ' chars');
-    return true;
-  } catch (error) {
-    console.error('Error storing token:', error);
-    return false;
-  }
-};
-
-// Enhanced fetch function with debugging
-const fetchWithDebug = async (url, options = {}) => {
-  console.log(`[API Debug] Fetching from: ${url}`);
-  console.log(`[API Debug] Options:`, options);
-  
-  try {
-    // Create the URL object to ensure proper URL construction
-    let fullUrl;
-    try {
-      // Check if the URL is already absolute
-      if (url.startsWith('http://') || url.startsWith('https://')) {
-        fullUrl = new URL(url);
-      } else {
-        // Handle relative URLs by joining with API_URL
-        fullUrl = new URL(url, API_URL);
-      }
-      console.log(`[API Debug] Constructed URL: ${fullUrl.toString()}`);
-    } catch (urlError) {
-      console.error(`[API Error] Invalid URL construction: ${urlError.message}`);
-      throw new Error(`Invalid URL: ${url} - ${urlError.message}`);
-    }
-    
-    const response = await fetch(fullUrl.toString(), options);
-    console.log(`[API Debug] Response status: ${response.status}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    // Check if response has content
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
-      console.log(`[API Debug] Response data:`, data);
-      return data;
-    } else {
-      console.log(`[API Debug] Response is not JSON or empty. Content-Type: ${contentType}`);
-      return null;
-    }
-  } catch (error) {
-    console.error(`[API Error] Fetch failed: ${error.message}`);
-    throw error;
-  }
-};
-
 // Helper function for making API requests
 const fetchApi = async (endpoint, options = {}) => {
   // Ensure endpoint starts with a slash
   if (!endpoint.startsWith('/')) {
     endpoint = '/' + endpoint;
   }
-  
+
   try {
     const token = getToken();
     console.log('[API Debug] Endpoint:', endpoint);
     console.log('[API Debug] Base URL:', API_URL);
-    
+
     const headers = {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
@@ -136,7 +74,7 @@ const fetchApi = async (endpoint, options = {}) => {
       credentials: requestConfig.credentials,
       mode: requestConfig.mode
     });
-    
+
     const response = await fetch(fullUrl.toString(), requestConfig);
     console.log('[API Debug] Response status:', response.status);
     console.log('[API Debug] Response headers:', Object.fromEntries(response.headers.entries()));
@@ -145,7 +83,7 @@ const fetchApi = async (endpoint, options = {}) => {
     if (!response.ok) {
       const contentType = response.headers.get('content-type');
       let errorMessage;
-      
+
       if (contentType && contentType.includes('application/json')) {
         const errorData = await response.json();
         errorMessage = errorData.message || `HTTP error! Status: ${response.status}`;
@@ -153,14 +91,14 @@ const fetchApi = async (endpoint, options = {}) => {
         const text = await response.text();
         errorMessage = text || `HTTP error! Status: ${response.status}`;
       }
-      
+
       console.error('[API Error] Request failed:', {
         status: response.status,
         statusText: response.statusText,
         url: fullUrl.toString(),
         error: errorMessage
       });
-      
+
       throw new Error(errorMessage);
     }
 
@@ -184,6 +122,81 @@ const fetchApi = async (endpoint, options = {}) => {
     throw error;
   }
 };
+
+// Helper function for making API requests that expect a file download
+const fetchApiDownload = async (endpoint, options = {}) => {
+  if (!endpoint.startsWith('/')) {
+    endpoint = '/' + endpoint;
+  }
+
+  try {
+    const token = getToken();
+    console.log('[API Download Debug] Endpoint:', endpoint);
+    const headers = {
+      // Accept might vary depending on what the server sends, but often octet-stream for downloads
+      'Accept': 'application/octet-stream',
+      // No Content-Type needed for GET
+    };
+
+    if (token && typeof token === 'string' && token.trim() !== '') {
+      headers.Authorization = `Bearer ${token.trim()}`;
+    } else {
+      // Authentication is likely required for admin actions
+      throw new Error('Authentication required for download');
+    }
+
+    const requestConfig = {
+      ...options,
+      headers,
+      credentials: 'include',
+      mode: 'cors'
+    };
+
+    const fullUrl = new URL(endpoint, API_URL);
+    console.log('[API Download Debug] Full URL:', fullUrl.toString());
+
+    const response = await fetch(fullUrl.toString(), requestConfig);
+    console.log('[API Download Debug] Response status:', response.status);
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! Status: ${response.status}`;
+      try {
+        // Try to parse error as JSON first
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+        // If not JSON, try text
+        try {
+          const text = await response.text();
+          errorMessage = text || errorMessage;
+        } catch (textError) { /* Keep original status error */ }
+      }
+      console.error('[API Download Error] Request failed:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    // Get filename from Content-Disposition header if available
+    const disposition = response.headers.get('content-disposition');
+    let filename = 'linguaread_backup.backup'; // Default filename
+    if (disposition && disposition.indexOf('attachment') !== -1) {
+        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+        const matches = filenameRegex.exec(disposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '');
+        }
+    }
+
+    // Get the blob data
+    const blob = await response.blob();
+
+    return { blob, filename };
+
+  } catch (error) {
+    console.error('[API Download Error] Request failed:', error);
+    throw error;
+  }
+};
+
 
 // Simple test function to check API connectivity
 export const testApiConnection = async () => {
@@ -233,12 +246,124 @@ export const getText = (textId) => {
   return fetchApi(`/api/texts/${textId}`);
 };
 
-export const createText = (title, content, languageId) => {
+// Add getRecentTexts function
+export const getRecentTexts = () => {
+  return fetchApi('/api/texts/recent');
+};
+
+// Modified to include optional tag
+export const createText = (title, content, languageId, tag = null) => {
+  const payload = { title, content, languageId };
+  if (tag) {
+    payload.tag = tag;
+  }
   return fetchApi('/api/texts', {
     method: 'POST',
-    body: JSON.stringify({ title, content, languageId })
+    body: JSON.stringify(payload)
   });
 };
+
+// Modified to include optional tag
+export const createAudioLesson = async (title, languageId, audioFile, srtFile, tag = null) => {
+  const endpoint = '/api/texts/audio';
+  console.log(`[API] Creating audio lesson: "${title}" with tag: ${tag || 'none'}`);
+
+  try {
+    const token = getToken();
+    const headers = {
+      'Accept': 'application/json',
+      // DO NOT set Content-Type for FormData, browser does it with boundary
+    };
+
+    if (token && typeof token === 'string' && token.trim() !== '') {
+      headers.Authorization = `Bearer ${token.trim()}`;
+      console.log('[API Debug] Authorization header added for audio lesson upload');
+    } else {
+       console.log('[API Debug] No token available for audio lesson upload');
+       // Decide if auth is strictly required for this endpoint based on backend
+       throw new Error('Authentication required to create audio lesson');
+    }
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('languageId', languageId);
+    formData.append('audioFile', audioFile); // The File object
+    formData.append('srtFile', srtFile);     // The File object
+    if (tag) {
+      formData.append('tag', tag); // Add tag if provided
+    }
+
+    const requestConfig = {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include', // Keep consistent with fetchApi
+      mode: 'cors'           // Keep consistent with fetchApi
+    };
+
+    const fullUrl = new URL(endpoint, API_URL);
+    console.log('[API Debug] Full URL for audio lesson:', fullUrl.toString());
+    console.log('[API Debug] Request config for audio lesson:', {
+        method: requestConfig.method,
+        headers: requestConfig.headers, // Log headers (excluding Content-Type)
+        credentials: requestConfig.credentials,
+        mode: requestConfig.mode
+    });
+
+    const response = await fetch(fullUrl.toString(), requestConfig);
+    console.log('[API Debug] Audio lesson creation response status:', response.status);
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! Status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (e) {
+         // If response is not JSON, try to get text
+         try {
+            const text = await response.text();
+            errorMessage = text || errorMessage;
+         } catch (textError) {
+            // Keep the original status code error
+         }
+      }
+      console.error('[API Error] Audio lesson creation failed:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    // Parse successful response (assuming backend returns JSON like other create endpoints)
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      console.log('[API Debug] Audio lesson creation response data:', data);
+      return data;
+    } else {
+      console.log('[API Debug] Non-JSON response for audio lesson creation.');
+      return { message: response.statusText }; // Or handle as appropriate
+    }
+
+  } catch (error) {
+    console.error('[API Error] Failed to create audio lesson:', error);
+    throw error;
+  }
+};
+
+// Add updateText function
+export const updateText = (textId, { title, content, tag }) => {
+  const payload = { title, content, tag }; // Include tag in payload
+  return fetchApi(`/api/texts/${textId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+};
+
+// Add deleteText function
+export const deleteText = (textId) => {
+  return fetchApi(`/api/texts/${textId}`, {
+    method: 'DELETE'
+  });
+};
+
 
 // Books API
 export const getBooks = () => {
@@ -252,14 +377,109 @@ export const getBook = (bookId) => {
 export const createBook = (title, description, languageId, content, splitMethod = 'paragraph', maxSegmentSize = 3000) => {
   return fetchApi('/api/books', {
     method: 'POST',
-    body: JSON.stringify({ 
-      title, 
-      description, 
-      languageId, 
+    body: JSON.stringify({
+      title,
+      description,
+      languageId,
       content,
       splitMethod,
       maxSegmentSize
     })
+  });
+};
+
+// Add updateBook function
+export const updateBook = (bookId, { title }) => {
+  // Only updating title as per backend implementation
+  const payload = { title };
+  return fetchApi(`/api/books/${bookId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+};
+
+// Add createAudioLessonsBatch function
+export const createAudioLessonsBatch = async (languageId, tag, files) => {
+  const endpoint = '/api/texts/audio/batch';
+  console.log(`[API] Creating batch audio lessons for language ${languageId} with tag: ${tag || 'none'}`);
+
+  try {
+    const token = getToken();
+    const headers = {
+      'Accept': 'application/json',
+      // Content-Type is set automatically by browser for FormData
+    };
+
+    if (token && typeof token === 'string' && token.trim() !== '') {
+      headers.Authorization = `Bearer ${token.trim()}`;
+    } else {
+       throw new Error('Authentication required for batch upload');
+    }
+
+    const formData = new FormData();
+    formData.append('languageId', languageId);
+    if (tag) {
+      formData.append('tag', tag);
+    }
+    // Append all files under the same key 'files'
+    // Note: The backend expects List<IFormFile> files, so the key should match the parameter name.
+    for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+    }
+
+
+    const requestConfig = {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include',
+      mode: 'cors'
+    };
+
+    const fullUrl = new URL(endpoint, API_URL);
+    console.log('[API Debug] Full URL for batch audio lesson:', fullUrl.toString());
+
+    const response = await fetch(fullUrl.toString(), requestConfig);
+    console.log('[API Debug] Batch audio lesson creation response status:', response.status);
+
+    // Handle response (similar to single audio lesson upload)
+    if (!response.ok) {
+      let errorMessage = `HTTP error! Status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        // Include skipped files info if available in error response
+        errorMessage = errorData.message || errorData.title || errorMessage;
+        if (errorData.skippedFiles) {
+            errorMessage += ` Skipped: ${errorData.skippedFiles.join(', ')}`;
+        }
+      } catch (e) {
+         try { const text = await response.text(); errorMessage = text || errorMessage; } catch (textError) {}
+      }
+      console.error('[API Error] Batch audio lesson creation failed:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      console.log('[API Debug] Batch audio lesson creation response data:', data);
+      return data; // Should contain { createdCount, skippedFiles }
+    } else {
+      console.log('[API Debug] Non-JSON response for batch audio lesson creation.');
+      return { message: response.statusText };
+    }
+
+  } catch (error) {
+    console.error('[API Error] Failed to create batch audio lessons:', error);
+    throw error;
+  }
+};
+
+
+// Add deleteBook function
+export const deleteBook = (bookId) => {
+  return fetchApi(`/api/books/${bookId}`, {
+    method: 'DELETE'
   });
 };
 
@@ -299,6 +519,18 @@ export const getReadingActivity = async (period = 'all') => {
   }
 };
 
+// Fetch listening activity data
+export const getListeningActivity = async (period = 'all') => {
+  try {
+    console.log(`[API] Fetching listening activity for period: ${period}`);
+    const data = await fetchApi(`/api/users/listening-activity?period=${period}`);
+    return data;
+  } catch (error) {
+    console.error('Error getting listening activity:', error);
+    return { error: error.message }; // Return error object on failure
+  }
+};
+
 // Words API
 export const createWord = async (textId, term, status, translation) => {
   try {
@@ -306,16 +538,16 @@ export const createWord = async (textId, term, status, translation) => {
     if (!textId) throw new Error('Text ID is required');
     if (!term || term.trim() === '') throw new Error('Word term is required');
     if (!status) throw new Error('Word status is required');
-    
+
     console.log(`[API] Creating word: "${term}" with status: ${status}`);
-    
+
     const payload = {
       textId,
       term: term.trim(),
       status,
       translation: translation || null
     };
-    
+
     const response = await fetchApi('/api/words', {
       method: 'POST',
       headers: {
@@ -323,7 +555,7 @@ export const createWord = async (textId, term, status, translation) => {
       },
       body: JSON.stringify(payload)
     });
-    
+
     return response;
   } catch (error) {
     console.error('Error in createWord:', error);
@@ -336,17 +568,17 @@ export const updateWord = async (wordId, status, translation) => {
     // Validate inputs
     if (!wordId) throw new Error('Word ID is required');
     if (!status) throw new Error('Word status is required');
-    
+
     const payload = {
       status,
       translation: translation || null
     };
-    
+
     const response = await fetchApi(`/api/words/${wordId}`, {
       method: 'PUT',
       body: JSON.stringify(payload)
     });
-    
+
     return response;
   } catch (error) {
     console.error('Error in updateWord:', error);
@@ -394,13 +626,13 @@ export const generateStory = async (prompt, language, level, maxLength) => {
 export const translateSentence = async (text, sourceLanguageCode, targetLanguageCode) => {
   try {
     console.log('Initiating sentence translation request');
-    
+
     const payload = {
       text,
       sourceLanguageCode,
       targetLanguageCode
     };
-    
+
     const response = await fetchApi('/api/sentencetranslation', {
       method: 'POST',
       headers: {
@@ -408,7 +640,7 @@ export const translateSentence = async (text, sourceLanguageCode, targetLanguage
       },
       body: JSON.stringify(payload)
     });
-    
+
     return response;
   } catch (error) {
     console.error('Sentence translation failed:', error);
@@ -419,13 +651,13 @@ export const translateSentence = async (text, sourceLanguageCode, targetLanguage
 export const translateFullText = async (text, sourceLanguageCode, targetLanguageCode) => {
   try {
     console.log('Initiating full text translation request');
-    
+
     const payload = {
       text,
       sourceLanguageCode,
       targetLanguageCode
     };
-    
+
     const response = await fetchApi('/api/sentencetranslation/full-text', {
       method: 'POST',
       headers: {
@@ -433,7 +665,7 @@ export const translateFullText = async (text, sourceLanguageCode, targetLanguage
       },
       body: JSON.stringify(payload)
     });
-    
+
     return response;
   } catch (error) {
     console.error('Full text translation failed:', error);
@@ -469,5 +701,128 @@ export const updateUserSettings = async (settings) => {
   } catch (error) {
     console.error('Failed to update user settings:', error);
     throw error;
+  }
+};
+
+// Add near other translation functions
+
+export const batchTranslateWords = async (words, targetLanguageCode, sourceLanguageCode = null) => {
+  try {
+    const payload = {
+      words,
+      targetLanguageCode,
+      sourceLanguageCode // Optional
+    };
+    console.log(`[API] Sending batch translation request for ${words.length} words to ${targetLanguageCode}`);
+    // Assuming the endpoint is /api/translation/batch based on backend changes
+    return await fetchApi('/api/translation/batch', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  } catch (error) {
+    console.error('Batch translation failed:', error);
+    throw error;
+  }
+};
+
+// Add near other word functions
+
+export const addTermsBatch = async (languageId, terms) => {
+  try {
+    const payload = {
+      languageId,
+      terms // Array of { term: string, translation: string }
+    };
+     console.log(`[API] Sending batch add terms request for ${terms.length} terms for language ${languageId}`);
+    // Assuming the endpoint is /api/words/batch based on backend changes
+    return await fetchApi('/api/words/batch', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  } catch (error) {
+    console.error('Batch add terms failed:', error);
+    throw error;
+  }
+};
+
+// --- Admin API ---
+// Backup Database
+export const backupDatabase = async () => {
+  console.log('[API] Requesting database backup download');
+  // Use the specialized download helper
+  const { blob, filename } = await fetchApiDownload('/api/datamanagement/backup', { // Updated route
+    method: 'GET',
+  });
+
+
+  // Trigger download in the browser
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  a.remove();
+  console.log(`[API] Backup download triggered as ${filename}`);
+  return { message: `Backup download started as ${filename}` }; // Return success message
+};
+// Restore Database
+export const restoreDatabase = async (backupFile) => {
+  const endpoint = '/api/datamanagement/restore'; // Updated route
+  console.log(`[API] Uploading database backup file: ${backupFile.name}`);
+
+
+  if (!backupFile) {
+    throw new Error('Backup file is required for restore.');
+  }
+
+  try {
+    const token = getToken();
+    const headers = {
+      'Accept': 'application/json', // Expect JSON response (success/error message)
+      // DO NOT set Content-Type for FormData
+    };
+
+    if (token && typeof token === 'string' && token.trim() !== '') {
+      headers.Authorization = `Bearer ${token.trim()}`;
+    } else {
+       throw new Error('Authentication required for database restore');
+    }
+
+    const formData = new FormData();
+    // Key 'backupFile' must match the parameter name in AdminController.RestoreDatabase
+    formData.append('backupFile', backupFile);
+
+    const requestConfig = {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include',
+      mode: 'cors'
+    };
+
+    const fullUrl = new URL(endpoint, API_URL);
+    console.log('[API Debug] Full URL for restore:', fullUrl.toString());
+
+    const response = await fetch(fullUrl.toString(), requestConfig);
+    console.log('[API Debug] Restore response status:', response.status);
+
+    // Handle response (expecting JSON success/error message)
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      const errorMessage = responseData.message || responseData.title || `HTTP error! Status: ${response.status}`;
+      console.error('[API Error] Database restore failed:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    console.log('[API Debug] Restore response data:', responseData);
+    return responseData; // Should contain { message: "..." } on success
+
+  } catch (error) {
+    console.error('[API Error] Failed to restore database:', error);
+    throw error; // Re-throw to be caught by calling component
   }
 };

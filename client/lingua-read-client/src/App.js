@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Container } from 'react-bootstrap';
+import { /*Container*/ } from 'react-bootstrap'; // Removed unused Container
 import { useAuthStore } from './utils/store';
 import { jwtDecode } from 'jwt-decode';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -21,6 +21,8 @@ import BookCreate from './pages/BookCreate';
 import BookDetail from './pages/BookDetail';
 import Statistics from './pages/Statistics';
 import UserSettings from './pages/UserSettings';
+import CreateAudioLesson from './pages/CreateAudioLesson';
+import BatchAudioCreate from './pages/BatchAudioCreate'; // Import the batch create page
 
 function App() {
   const { token, setToken, clearToken } = useAuthStore();
@@ -50,12 +52,38 @@ function App() {
 
   // Check for theme in localStorage and apply on initial load
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      document.body.classList.add('dark-theme');
-    } else {
-      document.body.classList.remove('dark-theme');
-    }
+    const savedTheme = localStorage.getItem('theme') || 'light'; // Default to light if nothing saved
+
+    const applyTheme = (theme) => {
+      if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+        document.body.classList.remove('light-theme');
+      } else if (theme === 'light') {
+        document.body.classList.remove('dark-theme');
+        document.body.classList.add('light-theme');
+      } else { // System theme
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.body.classList.toggle('dark-theme', prefersDark);
+        document.body.classList.toggle('light-theme', !prefersDark);
+      }
+    };
+
+    applyTheme(savedTheme);
+
+    // Listener for system theme changes if 'system' is selected
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleSystemThemeChange = (e) => {
+      if (localStorage.getItem('theme') === 'system') {
+        applyTheme('system');
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+
+    // Cleanup listener on component unmount
+    return () => {
+      mediaQuery.removeEventListener('change', handleSystemThemeChange);
+    };
   }, []);
 
   return (
@@ -76,6 +104,8 @@ function App() {
           <Route path="/texts" element={token ? <TextList /> : <Navigate to="/login" />} />
           <Route path="/texts/create" element={token ? <TextCreate /> : <Navigate to="/login" />} />
           <Route path="/texts/:textId" element={token ? <TextDisplay /> : <Navigate to="/login" />} />
+          <Route path="/texts/create-audio" element={token ? <CreateAudioLesson /> : <Navigate to="/login" />} />
+          <Route path="/texts/create-batch-audio" element={token ? <BatchAudioCreate /> : <Navigate to="/login" />} /> {/* Add route for batch audio creation */}
           
           {/* Statistics route */}
           <Route path="/statistics" element={token ? <Statistics /> : <Navigate to="/login" />} />

@@ -70,7 +70,7 @@ namespace LinguaReadApi.Services
                         Temperature = 0.7,
                         TopK = 40,
                         TopP = 0.95,
-                        MaxOutputTokens = 4096,
+                        MaxOutputTokens = 20000, // Increased token limit
                         ResponseMimeType = "text/plain"
                     }
                 };
@@ -86,7 +86,7 @@ namespace LinguaReadApi.Services
                 _logger.LogDebug($"Request payload: {jsonPayload}");
 
                 // Create the request
-                var endpoint = $"{_baseUrl}/models/gemini-2.0-flash:generateContent?key={_apiKey}";
+                var endpoint = $"{_baseUrl}/models/gemini-2.5-pro-exp-03-25:generateContent?key={_apiKey}";
                 var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                 
                 // Send the request
@@ -107,15 +107,21 @@ namespace LinguaReadApi.Services
                 
                 if (geminiResponse?.Candidates != null && 
                     geminiResponse.Candidates.Length > 0 && 
-                    geminiResponse.Candidates[0].Content?.Parts != null &&
-                    geminiResponse.Candidates[0].Content.Parts.Length > 0)
+                    geminiResponse.Candidates[0].Content?.Parts != null)
                 {
-                    var generatedStory = geminiResponse.Candidates[0].Content.Parts[0].Text;
-                    _logger.LogInformation($"Story generation successful, length: {generatedStory?.Length ?? 0}");
-                    return generatedStory ?? string.Empty;
+                    // Concatenate text from all parts
+                    var generatedStory = string.Join("", geminiResponse.Candidates[0].Content.Parts
+                        .Where(part => !string.IsNullOrEmpty(part.Text))
+                        .Select(part => part.Text));
+
+                    if (!string.IsNullOrEmpty(generatedStory))
+                    {
+                        _logger.LogInformation($"Story generation successful, length: {generatedStory.Length}");
+                        return generatedStory;
+                    }
                 }
                 
-                _logger.LogWarning("Could not extract story from response");
+                _logger.LogWarning("Could not extract story from Gemini response structure.");
                 return "Story generation failed: Could not extract result";
             }
             catch (Exception ex)

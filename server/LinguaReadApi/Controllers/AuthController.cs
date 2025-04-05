@@ -45,7 +45,8 @@ namespace LinguaReadApi.Controllers
             // Create new user
             var user = new User
             {
-                UserId = Guid.NewGuid(),
+                // Id is handled by IdentityUser
+                UserName = model.Email, // Set UserName, e.g., using Email
                 Email = model.Email,
                 PasswordHash = passwordHash,
                 CreatedAt = DateTime.UtcNow
@@ -59,7 +60,7 @@ namespace LinguaReadApi.Controllers
             var token = GenerateJwtToken(user);
 
             // Return token along with user info
-            return StatusCode(201, new { userId = user.UserId, email = user.Email, token });
+            return StatusCode(201, new { userId = user.Id, email = user.Email, token }); // Use user.Id
         }
 
         [HttpPost("login")]
@@ -102,7 +103,7 @@ namespace LinguaReadApi.Controllers
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), // Use ClaimTypes.NameIdentifier and user.Id
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
@@ -132,20 +133,20 @@ namespace LinguaReadApi.Controllers
     {
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty; // Initialize
 
         [Required]
         [StringLength(100, MinimumLength = 6)]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty; // Initialize
     }
 
     public class LoginModel
     {
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty; // Initialize
 
         [Required]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty; // Initialize
     }
 } 

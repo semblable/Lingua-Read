@@ -5,31 +5,31 @@ namespace LinguaReadApi.Services
     // Shared response models for Gemini API
     public class GeminiResponse
     {
-        public Candidate[] Candidates { get; set; }
+        public Candidate[] Candidates { get; set; } = Array.Empty<Candidate>(); // Initialize
     }
 
     public class Candidate
     {
-        public Content Content { get; set; }
+        public Content Content { get; set; } = new Content(); // Initialize
     }
 
     public class Content
     {
-        public Part[] Parts { get; set; }
+        public Part[] Parts { get; set; } = Array.Empty<Part>(); // Initialize
     }
 
     public class Part
     {
-        public string Text { get; set; }
+        public string Text { get; set; } = string.Empty; // Initialize
     }
 
     public class GeminiRequest
     {
         [JsonPropertyName("contents")]
-        public Content[] Contents { get; set; }
+        public Content[] Contents { get; set; } = Array.Empty<Content>(); // Initialize
 
         [JsonPropertyName("generationConfig")]
-        public GenerationConfig GenerationConfig { get; set; }
+        public GenerationConfig GenerationConfig { get; set; } = new GenerationConfig(); // Initialize
     }
 
     public class GenerationConfig
@@ -45,8 +45,8 @@ namespace LinguaReadApi.Services
 
         [JsonPropertyName("maxOutputTokens")]
         public int MaxOutputTokens { get; set; }
-        
+
         [JsonPropertyName("responseMimeType")]
-        public string ResponseMimeType { get; set; }
+        public string ResponseMimeType { get; set; } = "text/plain"; // Initialize to default
     }
-} 
+}

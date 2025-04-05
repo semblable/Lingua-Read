@@ -61,10 +61,10 @@ namespace LinguaReadApi.Services
                     },
                     GenerationConfig = new GenerationConfig
                     {
-                        Temperature = 0.1,
+                        Temperature = 0.3,
                         TopK = 32,
                         TopP = 1.0,
-                        MaxOutputTokens = 8192,
+                        MaxOutputTokens = 60000,
                         ResponseMimeType = "text/plain"
                     }
                 };

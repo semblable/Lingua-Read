@@ -89,6 +89,54 @@ namespace LinguaReadApi.Controllers
 
             return Ok(languages);
         }
+
+        /// <summary>
+        /// Translates a batch of words using DeepL.
+        /// </summary>
+        /// <param name="request">The batch translation request containing words and language codes.</param>
+        /// <returns>A dictionary mapping original words to their translations.</returns>
+        [HttpPost("batch")] // Added route segment "batch"
+        public async Task<ActionResult<Dictionary<string, string>>> TranslateBatch([FromBody] BatchTranslationRequest request)
+        {
+            if (request.Words == null || request.Words.Count == 0)
+            {
+                return BadRequest("Word list cannot be empty.");
+            }
+            if (string.IsNullOrEmpty(request.TargetLanguageCode))
+            {
+                return BadRequest("Target language code cannot be empty.");
+            }
+
+            try
+            {
+                // SourceLanguageCode is optional for DeepL, service handles null
+                var translations = await _translationService.TranslateBatchAsync(
+                    request.Words,
+                    request.TargetLanguageCode,
+                    request.SourceLanguageCode); // Pass sourceLang if provided
+
+                return Ok(translations);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details
+                // Consider returning a more specific error response
+                return StatusCode(500, $"Batch translation failed: {ex.Message}");
+            }
+        }
+    } // End of Controller class
+
+    // Add the new Request DTO below the existing ones
+    public class BatchTranslationRequest
+    {
+        [JsonPropertyName("words")]
+        public List<string> Words { get; set; } = new List<string>();
+
+        [JsonPropertyName("targetLanguageCode")]
+        public string TargetLanguageCode { get; set; } = string.Empty;
+
+        [JsonPropertyName("sourceLanguageCode")] // Optional
+        public string? SourceLanguageCode { get; set; }
     }
 
     public class TranslationRequest

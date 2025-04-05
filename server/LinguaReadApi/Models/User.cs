@@ -1,24 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity; // Add Identity using
 
 namespace LinguaReadApi.Models
 {
-    public class User
+    // Inherit from IdentityUser<Guid>
+    public class User : IdentityUser<Guid>
     {
-        [Key]
-        public Guid UserId { get; set; }
-        
-        [Required]
-        [StringLength(100)]
-        public string Username { get; set; } = string.Empty;
-        
-        [Required]
-        [StringLength(100)]
-        public string Email { get; set; } = string.Empty;
-        
-        [Required]
-        public string PasswordHash { get; set; } = string.Empty;
+        // Remove properties provided by IdentityUser:
+        // Id (replaces UserId, Key is handled by Identity)
+        // UserName (replaces Username)
+        // Email
+        // PasswordHash
+        // Other IdentityUser properties like PhoneNumber, EmailConfirmed etc. are also available
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLogin { get; set; }

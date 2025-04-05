@@ -1,6 +1,6 @@
 /* Full width layout container */
 .text-display-wrapper {
-  position: absolute;
+  /* position: absolute; /* Removed to prevent overlapping nav dropdown */
   left: 0;
   right: 0;
   width: 100%;
@@ -93,6 +93,14 @@
   margin-bottom: 2em;
 }
 
+/* Style for the currently active SRT line */
+.srt-line.active-srt-line {
+  /* background-color: var(--active-srt-line-bg, rgba(255, 223, 186, 0.7)); /* Replaced with border */
+  border-left: 4px solid var(--active-srt-line-border, #fd7e14); /* Use a distinct left border (orange) */
+  padding-left: calc(0.5rem - 4px); /* Adjust padding to account for border width */
+  font-weight: 500; /* Slightly bolder */
+}
+
 /* Dark theme adjustments */
 .dark-theme .resize-divider {
   background-color: #333333;
@@ -107,33 +115,39 @@
   background-color: #555555;
 }
 
+/* Dark theme adjustments for active SRT line */
+.dark-theme .srt-line.active-srt-line {
+  border-left-color: #61dafb; /* Brighter blue border */
+  background-color: rgba(80, 80, 80, 0.4); /* Darker grey background for better contrast */
+}
+
 /* Media queries for responsive design */
 @media (max-width: 768px) {
   .resizable-container {
     flex-direction: column;
   }
-  
+
   .resize-divider {
     width: 100%;
     height: 6px;
     cursor: row-resize;
   }
-  
+
   .resize-divider::after {
     width: 30px;
     height: 2px;
   }
-  
+
   .left-panel, .right-panel {
     width: 100% !important;
     height: auto !important;
   }
-  
+
   .left-panel {
     height: 60vh !important;
   }
-  
+
   .right-panel {
     height: 40vh !important;
   }
-} 
+}

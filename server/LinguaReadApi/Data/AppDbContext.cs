@@ -57,7 +57,7 @@ namespace LinguaReadApi.Data
             // Language - Book: One-to-Many
             modelBuilder.Entity<Book>()
                 .HasOne(b => b.Language)
-                .WithMany()
+                .WithMany(l => l.Books) // Correct: Specify the inverse navigation property
                 .HasForeignKey(b => b.LanguageId)
                 .OnDelete(DeleteBehavior.Restrict);
                 

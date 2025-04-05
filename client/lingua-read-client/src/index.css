@@ -4,7 +4,7 @@
   --font-color-light: #212529;
   --dark-grey-light: #e9ecef;
   --light-grey-light: #adb5bd;
-  
+
   /* Dark theme colors */
   --background-color-dark: #48484a;
   --font-color-dark: #c4c8ce;
@@ -22,7 +22,7 @@
   /* Status colors - dark theme */
   --status-0-color-dark: rgba(86, 146, 174, 0.4); /* Lighter blue with opacity for dark theme */
   --status-1-color-dark: #b46b7a;
-  --status-2-color-dark: #988542; 
+  --status-2-color-dark: #988542;
   --status-3-color-dark: #699859;
   --status-4-color-dark: #5692AE;
   --status-5-color-dark: transparent;
@@ -32,7 +32,7 @@
   --font-color: var(--font-color-light);
   --dark-grey: var(--dark-grey-light);
   --light-grey: var(--light-grey-light);
-  
+
   --status-0-color: var(--status-0-color-light);
   --status-1-color: var(--status-1-color-light);
   --status-2-color: var(--status-2-color-light);
@@ -47,7 +47,7 @@
   --font-color: var(--font-color-dark);
   --dark-grey: var(--dark-grey-dark);
   --light-grey: var(--light-grey-dark);
-  
+
   --status-0-color: var(--status-0-color-dark);
   --status-1-color: var(--status-1-color-dark);
   --status-2-color: var(--status-2-color-dark);
@@ -75,7 +75,7 @@ code {
 
 /* Text display word styles */
 .untracked-word {
-  color: #fff !important; 
+  color: #fff !important;
   cursor: pointer;
   background-color: var(--status-0-color);
 }
@@ -90,27 +90,27 @@ code {
 /* Status color scheme */
 .word-status-0 {
   background-color: var(--status-0-color) !important;
-  color: #000 !important;
+  color: #000 !important; /* Default for light theme */
 }
 
 .word-status-1 {
   background-color: var(--status-1-color) !important;
-  color: #000 !important;
+  color: #000 !important; /* Default for light theme */
 }
 
 .word-status-2 {
   background-color: var(--status-2-color) !important;
-  color: #000 !important;
+  color: #000 !important; /* Default for light theme */
 }
 
 .word-status-3 {
   background-color: var(--status-3-color) !important;
-  color: #000 !important;
+  color: #000 !important; /* Default for light theme */
 }
 
 .word-status-4 {
   background-color: var(--status-4-color) !important;
-  color: #000 !important;
+  color: #000 !important; /* Default for light theme */
 }
 
 .word-status-5 {
@@ -201,4 +201,18 @@ body, html {
 .col, [class*="col-"] {
   padding-left: 0 !important;
   padding-right: 0 !important;
-} 
+}
+
+/* Dark theme overrides for word status text color */
+.dark-theme .word-status-0,
+.dark-theme .word-status-1,
+.dark-theme .word-status-2,
+.dark-theme .word-status-3,
+.dark-theme .word-status-4 {
+  color: #f0f0f0 !important; /* Use a light color for text in dark mode */
+}
+
+/* Ensure known words inherit the correct dark theme font color */
+.dark-theme .word-status-5 {
+  color: var(--font-color-dark) !important;
+}
