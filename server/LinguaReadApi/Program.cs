@@ -12,6 +12,8 @@ using System.IO; // Add this for Path.Combine
 using Microsoft.AspNetCore.Http.Features; // Needed for FormOptions
 using Microsoft.AspNetCore.Server.Kestrel.Core; // Needed for KestrelServerOptions
 using DotNetEnv; // <-- Add this using directive
+using Microsoft.AspNetCore.Identity; // Keep one Identity using
+// using Microsoft.AspNetCore.Identity.EntityFrameworkCore; // This namespace is not needed directly here
 
 // --- Load .env file ---
 Env.Load(); // <-- Load environment variables from .env file
@@ -44,6 +46,22 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// --- Add ASP.NET Core Identity ---
+// Make sure LinguaReadApi.Models.User exists and is the correct user class
+builder.Services.AddIdentity<LinguaReadApi.Models.User, IdentityRole<Guid>>(options => // Specify Guid as the key type for IdentityRole
+{
+    // Configure identity options if needed (e.g., password requirements)
+    options.SignIn.RequireConfirmedAccount = false; // Adjust as needed
+    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = false;
+})
+.AddEntityFrameworkStores<AppDbContext>() // Tell Identity to use your DbContext
+.AddDefaultTokenProviders(); // Adds providers for password reset tokens, etc.
+ 
+// --- Remove the two duplicate AddIdentity blocks ---
 // Register HttpClient
 builder.Services.AddHttpClient();
 

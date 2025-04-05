@@ -31,15 +31,19 @@ namespace LinguaReadApi.Services
             _httpClient = httpClient;
             _configuration = configuration;
             _logger = logger;
-             // Consider using options pattern or safer key retrieval
-            _apiKey = _configuration["DeepLApiKey"]; 
+
+            // Read API key and throw if missing
+            _apiKey = _configuration["DeepLApiKey"] ?? throw new InvalidOperationException("DeepL API Key (DeepLApiKey) is not configured in environment variables or app settings.");
             _apiUrl = _configuration["DeepLApiUrl"] ?? "https://api-free.deepl.com/v2/translate"; // Default to free API
 
-            if (string.IsNullOrEmpty(_apiKey))
-            {
-                _logger.LogError("DeepL API Key is not configured.");
-                throw new InvalidOperationException("DeepL API Key is missing in configuration.");
-            }
+            // The check below is now redundant because of the null-coalescing throw above,
+            // but it doesn't hurt to leave it commented for future reference.
+            // if (string.IsNullOrEmpty(_apiKey))
+            // {
+            //     _logger.LogError("DeepL API Key is not configured.");
+            //     throw new InvalidOperationException("DeepL API Key is missing in configuration.");
+            // }
+
              _httpClient.DefaultRequestHeaders.Add("Authorization", $"DeepL-Auth-Key {_apiKey}");
         }
 
@@ -139,12 +143,12 @@ namespace LinguaReadApi.Services
     // Ensure PropertyNamingPolicy is handled if needed during deserialization, or use [JsonPropertyName]
     public class DeepLResponse
     {
-        public DeepLTranslation[] translations { get; set; }
+        public DeepLTranslation[] translations { get; set; } = Array.Empty<DeepLTranslation>(); // Initialize
     }
 
     public class DeepLTranslation
     {
-        public string detected_source_language { get; set; }
-        public string text { get; set; }
+        public string detected_source_language { get; set; } = string.Empty; // Initialize
+        public string text { get; set; } = string.Empty; // Initialize
     }
 }

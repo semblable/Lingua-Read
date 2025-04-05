@@ -153,7 +153,7 @@ namespace LinguaReadApi.Controllers
                 BookId = book.BookId,
                 Title = book.Title,
                 Description = book.Description,
-                LanguageName = language.Name,
+                LanguageName = language?.Name ?? "Unknown", // Handle potential null language
                 CreatedAt = book.CreatedAt,
                 PartCount = await _context.Texts.CountAsync(t => t.BookId == book.BookId),
                 LastReadTextId = null,
@@ -420,8 +420,9 @@ namespace LinguaReadApi.Controllers
             else
             {
                 // Calculate progress based on current part number and format to 2 decimal places
+                // Use ?? 0 to handle potential (though unlikely) null PartNumber
                 completionPercentage = totalTexts > 0
-                    ? Math.Round(((double)text.PartNumber / totalTexts) * 100, 2)
+                    ? Math.Round(((double)(text.PartNumber ?? 0) / totalTexts) * 100, 2)
                     : 0;
             }
             // Save changes again to persist IsFinished if updated

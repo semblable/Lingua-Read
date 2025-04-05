@@ -83,11 +83,17 @@ namespace LinguaReadApi.Controllers
             // Set LastActivity safely
             if (books.Any(b => b.LastReadAt.HasValue))
             {
+                // Provide a default value for Max in case the filtered list is empty (though Any check prevents this)
+                // or to satisfy the compiler about nullability.
                 var maxDate = books.Where(b => b.LastReadAt.HasValue)
-                                  .Max(b => b.LastReadAt.Value);
-                statistics.LastActivity = maxDate;
+                                  .Max(b => b.LastReadAt ?? DateTime.MinValue);
+                // Ensure we don't assign MinValue if no valid dates were found
+                if (maxDate != DateTime.MinValue)
+                {
+                    statistics.LastActivity = maxDate;
+                }
             }
-            
+
             return statistics;
         }
 
@@ -112,6 +118,12 @@ namespace LinguaReadApi.Controllers
                         break;
                     case "last_month":
                         startDate = now.Date.AddDays(-29); // Start of the month (last 30 days including today)
+                        break;
+                    case "last_90":
+                        startDate = now.Date.AddDays(-89); // Last 90 days including today
+                        break;
+                    case "last_180":
+                        startDate = now.Date.AddDays(-179); // Last 180 days including today
                         break;
                     case "all":
                     default:
@@ -168,6 +180,96 @@ namespace LinguaReadApi.Controllers
             }
         }
 
+        // GET: api/users/listening-activity
+        [HttpGet("listening-activity")]
+        public async Task<IActionResult> GetListeningActivity([FromQuery] string period = "all")
+        {
+            _logger.LogInformation("Getting listening activity for period: {Period}", period);
+            var userId = GetUserId();
+
+            try
+            {
+                DateTime startDate;
+                var now = DateTime.UtcNow;
+
+                switch (period.ToLower())
+                {
+                    case "last_day":
+                        startDate = now.Date;
+                        break;
+                    case "last_week":
+                        startDate = now.Date.AddDays(-6);
+                        break;
+                    case "last_month":
+                        startDate = now.Date.AddDays(-29);
+                        break;
+                    case "last_90":
+                        startDate = now.Date.AddDays(-89); // Last 90 days including today
+                        break;
+                    case "last_180":
+                        startDate = now.Date.AddDays(-179); // Last 180 days including today
+                        break;
+                    case "all":
+                    default:
+                        startDate = DateTime.MinValue;
+                        break;
+                }
+
+                _logger.LogDebug("Fetching listening activities from {StartDate} for user {UserId}", startDate, userId);
+
+                var activities = await _context.UserActivities
+                    .Where(a => a.UserId == userId
+                                && a.ActivityType == "Listening"
+                                && a.ListeningDurationSeconds.HasValue // Ensure we only count listening activities with duration
+                                && a.Timestamp >= startDate)
+                    .Include(a => a.Language) // Include Language for grouping by name
+                    .OrderBy(a => a.Timestamp)
+                    .ToListAsync();
+
+                _logger.LogInformation("Found {ActivityCount} listening activities for the period.", activities.Count);
+
+                // Aggregate by date
+                var activityByDate = activities
+                    .GroupBy(a => a.Timestamp.Date)
+                    .Select(g => new {
+                        Date = g.Key.ToString("yyyy-MM-dd"),
+                        TotalSeconds = g.Sum(a => a.ListeningDurationSeconds ?? 0) // Sum duration
+                    })
+                    .ToDictionary(g => g.Date, g => g.TotalSeconds);
+
+                // Aggregate by language
+                var activityByLanguage = activities
+                    .Where(a => a.Language != null) // Ensure language is loaded
+                    .GroupBy(a => new { a.LanguageId, a.Language!.Name }) // Group by language ID and name
+                    .Select(g => new {
+                        LanguageId = g.Key.LanguageId,
+                        LanguageName = g.Key.Name,
+                        TotalSeconds = g.Sum(a => a.ListeningDurationSeconds ?? 0) // Sum duration
+                    })
+                    .ToList(); // Keep as a list as requested in the plan
+
+                // Calculate total listening time in the period
+                long totalListeningSeconds = activities.Sum(a => a.ListeningDurationSeconds ?? 0);
+
+                var result = new
+                {
+                    TotalListeningSeconds = totalListeningSeconds,
+                    ListeningByDate = activityByDate, // Renamed for clarity
+                    ListeningByLanguage = activityByLanguage, // Renamed for clarity
+                    Period = period,
+                    StartDate = startDate == DateTime.MinValue ? "all" : startDate.ToString("yyyy-MM-dd")
+                };
+
+                _logger.LogInformation("Successfully retrieved and aggregated listening activity data.");
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving listening activity data for user {UserId} and period {Period}", userId, period);
+                return StatusCode(500, new { message = "Error retrieving listening activity data", error = ex.Message });
+            }
+        }
+ 
         private Guid GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

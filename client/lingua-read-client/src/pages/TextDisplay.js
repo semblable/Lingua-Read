@@ -128,8 +128,10 @@ const TextDisplay = () => {
   const audioRef = useRef(null);
   const listRef = useRef(null);
   const resizeDividerRef = useRef(null);
-  const lastSaveTimeRef = useRef(Date.now()); // Ref for throttling saves
-  const saveInterval = 5000; // Save every 5 seconds
+  const lastSaveTimeRef = useRef(Date.now()); // Ref for throttling position saves
+  const saveInterval = 5000; // Save position every 5 seconds
+  const startTimeRef = useRef(null); // Ref for tracking listening start time
+  const accumulatedDurationRef = useRef(0); // Ref for tracking total listening duration in ms for the session
 
   // --- State Declarations ---
   const [loading, setLoading] = useState(true);
@@ -400,17 +402,87 @@ const TextDisplay = () => {
       finally { setLoading(false); }
     };
     fetchText();
-    // Cleanup function to save time on immediate unmount before timeupdate fires
+    // Cleanup function to save time and log duration on unmount
     return () => {
-        if (audioRef.current && isAudioLesson) { // Check isAudioLesson here too
-            const currentTime = audioRef.current.currentTime;
-            if (currentTime > 0) { // Only save if there's actual progress
-                 console.log(`[Audio Save - Unmount] Saving time: ${currentTime} for textId: ${textId}`);
-                 localStorage.setItem(`audioTime-${textId}`, currentTime.toString());
-            }
+      console.log('[TextDisplay Cleanup] Running cleanup function...');
+      // Log critical state values *at the time of cleanup*
+      console.log(`[TextDisplay Cleanup] State at cleanup: isAudioLesson=${isAudioLesson}, text exists=${!!text}, languageId=${text?.languageId}`);
+      try {
+        // Save Current Playback Position
+        if (audioRef.current && isAudioLesson) {
+          const currentTime = audioRef.current.currentTime;
+          if (currentTime > 0) {
+            console.log(`[Audio Save - Unmount] Saving position: ${currentTime} for textId: ${textId}`);
+            localStorage.setItem(`audioTime-${textId}`, currentTime.toString());
+          }
         }
-    };
-  }, [textId, fetchAllLanguageWords, isAudioLesson]); // Added isAudioLesson dependency
+
+        // Log Listening Duration
+        if (isAudioLesson && text?.languageId) {
+            console.log('[Audio Log - Unmount] Starting duration calculation...');
+            console.log(`[Audio Log - Unmount] Accumulated duration (ms): ${accumulatedDurationRef.current}`);
+            let finalDurationMs = accumulatedDurationRef.current;
+            // If audio was playing when unmounted, add the last segment
+            if (startTimeRef.current) {
+                const lastSegmentMs = Date.now() - startTimeRef.current;
+                console.log(`[Audio Log - Unmount] Audio was playing. Adding last segment (ms): ${lastSegmentMs}`);
+                finalDurationMs += lastSegmentMs;
+            } else {
+                console.log('[Audio Log - Unmount] Audio was paused/ended.');
+            }
+            const durationInSeconds = Math.round(finalDurationMs / 1000);
+            console.log(`[Audio Log - Unmount] Calculated total duration (s): ${durationInSeconds} for languageId: ${text.languageId}`);
+
+            console.log(`[Audio Log - Unmount] Checking duration threshold (> 5s)... Duration is ${durationInSeconds}s.`);
+
+            if (durationInSeconds > 5) { // Only log if listened for more than 5 seconds
+                console.log('[Audio Log - Unmount] Duration > 5s. Preparing API call...');
+                const token = localStorage.getItem('token');
+                const payload = {
+                  languageId: text.languageId,
+                  durationSeconds: durationInSeconds
+                };
+                console.log('[Audio Log - Unmount] API Payload:', payload);
+                console.log('[Audio Log - Unmount] Making fetch call to logListening...');
+                fetch(`${API_URL}/api/activity/logListening`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('[Audio Log - Unmount] API call failed:', response.statusText);
+                    } else {
+                        console.log('[Audio Log - Unmount] API call successful.');
+                    }
+                })
+                .catch(error => {
+                    console.error('[Audio Log - Unmount] API call error:', error);
+                });
+            } else {
+                console.log('[Audio Log - Unmount] Duration <= 5s. Skipping API call.');
+            }
+        } else {
+             console.log('[Audio Log - Unmount] Skipping duration log: Not an audio lesson or no languageId.');
+        }
+        // Reset refs for safety, although component is unmounting
+        accumulatedDurationRef.current = 0;
+        startTimeRef.current = null;
+        console.log('[TextDisplay Cleanup] Refs reset.');
+
+      } catch (cleanupError) { // Add catch block
+          console.error('[TextDisplay Cleanup] Error during cleanup:', cleanupError);
+      } finally { // Add finally block
+          // Move ref resetting inside finally
+          accumulatedDurationRef.current = 0;
+          startTimeRef.current = null;
+          console.log('[TextDisplay Cleanup] Finished cleanup function and reset refs.');
+      }
+    }; // End of return function
+  }, [textId, fetchAllLanguageWords, isAudioLesson, text?.languageId]); // End of useEffect dependencies
 
 
   // Audio Sync & Scroll
@@ -657,6 +729,63 @@ const TextDisplay = () => {
   };
   // --- End Event Handlers ---
 
+  // --- Audio Play/Pause/End Handlers for Duration Tracking ---
+  const handlePlay = () => {
+      if (!startTimeRef.current) { // Start timer only if not already started
+          startTimeRef.current = Date.now();
+          console.log('[Audio Tracking] Play started/resumed. Start time:', startTimeRef.current);
+      }
+  };
+
+  const handlePauseOrEnd = () => {
+      if (startTimeRef.current) {
+          const elapsed = Date.now() - startTimeRef.current;
+          accumulatedDurationRef.current += elapsed;
+          console.log(`[Audio Tracking] Paused/Ended. Elapsed: ${elapsed}ms. Accumulated: ${accumulatedDurationRef.current}ms`);
+          startTimeRef.current = null; // Reset start time
+
+          // --- Attempt to log duration here ---
+          const durationInSeconds = Math.round(accumulatedDurationRef.current / 1000);
+          console.log(`[Audio Tracking - Pause/End] Checking duration threshold (> 5s)... Duration is ${durationInSeconds}s.`);
+
+          if (durationInSeconds > 5 && isAudioLesson && text?.languageId) { // Check conditions again
+              console.log('[Audio Tracking - Pause/End] Duration > 5s. Preparing API call...');
+              const token = localStorage.getItem('token');
+              const payload = {
+                languageId: text.languageId,
+                // Send the *accumulated* duration up to this point
+                durationSeconds: durationInSeconds
+              };
+              console.log('[Audio Tracking - Pause/End] API Payload:', payload);
+              console.log('[Audio Tracking - Pause/End] Making fetch call to logListening...');
+              fetch(`${API_URL}/api/activity/logListening`, {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify(payload)
+              })
+              .then(response => {
+                  if (!response.ok) {
+                      console.error('[Audio Tracking - Pause/End] API call failed:', response.statusText);
+                  } else {
+                      console.log('[Audio Tracking - Pause/End] API call successful (Note: This might log multiple times per session).');
+                      // Optionally reset accumulated duration after successful log?
+                      // accumulatedDurationRef.current = 0; // Consider implications
+                  }
+              })
+              .catch(error => {
+                  console.error('[Audio Tracking - Pause/End] API call error:', error);
+              });
+          } else {
+               console.log('[Audio Tracking - Pause/End] Duration <= 5s or not audio lesson/no languageId. Skipping API call.');
+          }
+          // --- End duration logging attempt ---
+      }
+  };
+  // --- End Audio Tracking Handlers ---
+
 
   // --- Rendering Logic ---
   const renderAudioTranscript = () => {
@@ -761,7 +890,10 @@ const TextDisplay = () => {
             controls
             src={audioSrc}
             onTimeUpdate={(e) => setAudioCurrentTime(e.target.currentTime)}
-            onLoadedMetadata={handleAudioMetadataLoaded} // Add this handler
+            onLoadedMetadata={handleAudioMetadataLoaded}
+            onPlay={handlePlay} // Track play start
+            onPause={handlePauseOrEnd} // Track pause
+            onEnded={handlePauseOrEnd} // Track end
             style={{ width: '100%' }}
           >
             Your browser does not support the audio element.

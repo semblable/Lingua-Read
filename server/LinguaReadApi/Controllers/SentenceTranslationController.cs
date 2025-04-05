@@ -122,27 +122,27 @@ namespace LinguaReadApi.Controllers
     public class SentenceTranslationRequest
     {
         [JsonPropertyName("text")]
-        public string Text { get; set; }
+        public string Text { get; set; } = string.Empty; // Initialize
 
         [JsonPropertyName("sourceLanguageCode")]
-        public string SourceLanguageCode { get; set; }
+        public string SourceLanguageCode { get; set; } = string.Empty; // Initialize
 
         [JsonPropertyName("targetLanguageCode")]
-        public string TargetLanguageCode { get; set; }
+        public string TargetLanguageCode { get; set; } = string.Empty; // Initialize
     }
 
     public class SentenceTranslationResponse
     {
         [JsonPropertyName("originalText")]
-        public string OriginalText { get; set; }
+        public string OriginalText { get; set; } = string.Empty; // Initialize
 
         [JsonPropertyName("translatedText")]
-        public string TranslatedText { get; set; }
+        public string TranslatedText { get; set; } = string.Empty; // Initialize
 
         [JsonPropertyName("sourceLanguageCode")]
-        public string SourceLanguageCode { get; set; }
+        public string SourceLanguageCode { get; set; } = string.Empty; // Initialize
 
         [JsonPropertyName("targetLanguageCode")]
-        public string TargetLanguageCode { get; set; }
+        public string TargetLanguageCode { get; set; } = string.Empty; // Initialize
     }
 } 

@@ -309,11 +309,11 @@ namespace LinguaReadApi.Controllers
                 if (existingWords.TryGetValue(trimmedTerm, out var existingWord))
                 {
                     // Word exists - Update status to 5 (Known) if it's lower
-                    bool needsSave = false; // Flag to check if any change was made
+                    // bool needsSave = false; // Removed unused variable
                     if (existingWord.Status < 5)
                     {
                         existingWord.Status = 5;
-                        needsSave = true;
+                        // needsSave = true; // Removed unused assignment
                     }
 
                     // Handle translation only if provided in the DTO
@@ -328,17 +328,17 @@ namespace LinguaReadApi.Controllers
                                  Translation = termDto.Translation,
                                  CreatedAt = DateTime.UtcNow
                              });
-                             needsSave = true;
+                            // needsSave = true; // Removed unused assignment
                         }
                         else if (existingWord.Translation.Translation != termDto.Translation)
                         {
                             // Update existing translation only if different
                             existingWord.Translation.Translation = termDto.Translation;
                             existingWord.Translation.UpdatedAt = DateTime.UtcNow;
-                            needsSave = true;
+                            // needsSave = true; // Removed unused assignment
                         }
                     }
-                    // If needsSave is true, EF Core's change tracker will handle the update on SaveChangesAsync
+                    // EF Core's change tracker will handle the update on SaveChangesAsync if changes were made
                 }
                 else
                 {

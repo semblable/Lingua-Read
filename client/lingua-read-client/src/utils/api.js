@@ -519,6 +519,18 @@ export const getReadingActivity = async (period = 'all') => {
   }
 };
 
+// Fetch listening activity data
+export const getListeningActivity = async (period = 'all') => {
+  try {
+    console.log(`[API] Fetching listening activity for period: ${period}`);
+    const data = await fetchApi(`/api/users/listening-activity?period=${period}`);
+    return data;
+  } catch (error) {
+    console.error('Error getting listening activity:', error);
+    return { error: error.message }; // Return error object on failure
+  }
+};
+
 // Words API
 export const createWord = async (textId, term, status, translation) => {
   try {

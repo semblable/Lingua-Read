@@ -24,6 +24,9 @@ namespace LinguaReadApi.Models
         
         [Required]
         public DateTime Timestamp { get; set; }
+
+        // Duration for listening activities
+        public int? ListeningDurationSeconds { get; set; }
         
         // Navigation properties
         public virtual Language? Language { get; set; }

@@ -138,7 +138,7 @@ namespace LinguaReadApi.Controllers
                     TextId = t.TextId,
                     Title = t.Title,
                     LanguageName = t.Language.Name,
-                    LastAccessedAt = t.LastAccessedAt.Value, // Non-nullable here
+                    LastAccessedAt = t.LastAccessedAt ?? DateTime.MinValue, // Use default if somehow null despite Where clause
                     IsAudioLesson = t.IsAudioLesson,
                     BookId = t.BookId,
                     BookTitle = t.Book != null ? t.Book.Title : null,
@@ -723,7 +723,7 @@ namespace LinguaReadApi.Controllers
     {
         public int TextId { get; set; }
         public string Title { get; set; } = string.Empty;
-        public string LanguageName { get; set; } = string.Empty;
+        public string? LanguageName { get; set; } // Language name - Can be null if language is missing
         public DateTime CreatedAt { get; set; }
         public string? Tag { get; set; }
         public bool IsAudioLesson { get; set; }
