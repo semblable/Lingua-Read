@@ -18,6 +18,8 @@ namespace LinguaReadApi.Data
         public DbSet<Book> Books { get; set; }
         public DbSet<UserActivity> UserActivities { get; set; }
         public DbSet<UserSettings> UserSettings { get; set; }
+        public DbSet<Tag> Tags { get; set; }
+        public DbSet<BookTag> BookTags { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -44,7 +46,7 @@ namespace LinguaReadApi.Data
                 .HasOne(t => t.Book)
                 .WithMany(b => b.Texts)
                 .HasForeignKey(t => t.BookId)
-                .OnDelete(DeleteBehavior.Restrict)
+                .OnDelete(DeleteBehavior.Cascade) // Changed from Restrict to Cascade
                 .IsRequired(false);
             
             // User - Book: One-to-Many
@@ -124,6 +126,27 @@ namespace LinguaReadApi.Data
                 .WithOne(u => u.Settings)
                 .HasForeignKey<UserSettings>(us => us.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Tag entity
+            modelBuilder.Entity<Tag>()
+                .HasIndex(t => t.Name)
+                .IsUnique();
+
+            // Configure BookTag join entity (Many-to-Many: Book <-> Tag)
+            modelBuilder.Entity<BookTag>()
+                .HasKey(bt => new { bt.BookId, bt.TagId }); // Composite primary key
+
+            modelBuilder.Entity<BookTag>()
+                .HasOne(bt => bt.Book)
+                .WithMany(b => b.BookTags) // Navigation property in Book
+                .HasForeignKey(bt => bt.BookId)
+                .OnDelete(DeleteBehavior.Cascade); // If a book is deleted, remove its tag associations
+
+            modelBuilder.Entity<BookTag>()
+                .HasOne(bt => bt.Tag)
+                .WithMany(t => t.BookTags) // Navigation property in Tag
+                .HasForeignKey(bt => bt.TagId)
+                .OnDelete(DeleteBehavior.Cascade); // If a tag is deleted, remove its associations with books
         }
     }
 } 

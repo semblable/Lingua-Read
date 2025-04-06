@@ -18,7 +18,8 @@
           "Npgsql": "9.0.3",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.4",
           "Swashbuckle.AspNetCore": "6.6.2",
-          "System.IdentityModel.Tokens.Jwt": "8.6.0"
+          "System.IdentityModel.Tokens.Jwt": "8.6.0",
+          "VersOne.Epub": "3.3.3"
         },
         "runtime": {
           "LinguaReadApi.dll": {}
@@ -1581,6 +1582,14 @@
           "System.Threading": "4.3.0",
           "System.Xml.ReaderWriter": "4.3.0"
         }
+      },
+      "VersOne.Epub/3.3.3": {
+        "runtime": {
+          "lib/netstandard2.0/VersOne.Epub.dll": {
+            "assemblyVersion": "3.3.3.0",
+            "fileVersion": "3.3.3.0"
+          }
+        }
       }
     }
   },
@@ -2583,6 +2592,13 @@
       "sha512": "sha512-5zJ0XDxAIg8iy+t4aMnQAu0MqVbqyvfoUVl1yDV61xdo3Vth45oA2FoY4pPkxYAH5f8ixpmTqXeEIya95x0aCQ==",
       "path": "system.xml.xdocument/4.3.0",
       "hashPath": "system.xml.xdocument.4.3.0.nupkg.sha512"
+    },
+    "VersOne.Epub/3.3.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-OZ44RjUHD2VAmJ/Mi+t4LDjd2EJZhFX1OHDAVuxx9m+jbg+k4MmKVTEUbYR4raU2XeIQoqNaNQFzOPDqhb2O8Q==",
+      "path": "versone.epub/3.3.3",
+      "hashPath": "versone.epub.3.3.3.nupkg.sha512"
     }
   }
 }

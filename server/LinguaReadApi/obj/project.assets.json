@@ -2645,6 +2645,19 @@
         "runtime": {
           "lib/netstandard1.3/System.Xml.XDocument.dll": {}
         }
+      },
+      "VersOne.Epub/3.3.3": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/VersOne.Epub.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/VersOne.Epub.dll": {
+            "related": ".xml"
+          }
+        }
       }
     }
   },
@@ -8567,6 +8580,23 @@
         "system.xml.xdocument.4.3.0.nupkg.sha512",
         "system.xml.xdocument.nuspec"
       ]
+    },
+    "VersOne.Epub/3.3.3": {
+      "sha512": "OZ44RjUHD2VAmJ/Mi+t4LDjd2EJZhFX1OHDAVuxx9m+jbg+k4MmKVTEUbYR4raU2XeIQoqNaNQFzOPDqhb2O8Q==",
+      "type": "package",
+      "path": "versone.epub/3.3.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net46/VersOne.Epub.dll",
+        "lib/net46/VersOne.Epub.xml",
+        "lib/netstandard1.3/VersOne.Epub.dll",
+        "lib/netstandard1.3/VersOne.Epub.xml",
+        "lib/netstandard2.0/VersOne.Epub.dll",
+        "lib/netstandard2.0/VersOne.Epub.xml",
+        "versone.epub.3.3.3.nupkg.sha512",
+        "versone.epub.nuspec"
+      ]
     }
   },
   "projectFileDependencyGroups": {
@@ -8581,7 +8611,8 @@
       "Npgsql >= 9.0.3",
       "Npgsql.EntityFrameworkCore.PostgreSQL >= 9.0.4",
       "Swashbuckle.AspNetCore >= 6.6.2",
-      "System.IdentityModel.Tokens.Jwt >= 8.6.0"
+      "System.IdentityModel.Tokens.Jwt >= 8.6.0",
+      "VersOne.Epub >= 3.3.3"
     ]
   },
   "packageFolders": {
@@ -8676,6 +8707,10 @@
           "System.IdentityModel.Tokens.Jwt": {
             "target": "Package",
             "version": "[8.6.0, )"
+          },
+          "VersOne.Epub": {
+            "target": "Package",
+            "version": "[3.3.3, )"
           }
         },
         "imports": [

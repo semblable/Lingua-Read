@@ -374,7 +374,8 @@ export const getBook = (bookId) => {
   return fetchApi(`/api/books/${bookId}`);
 };
 
-export const createBook = (title, description, languageId, content, splitMethod = 'paragraph', maxSegmentSize = 3000) => {
+// Modified createBook to include tags
+export const createBook = (title, description, languageId, content, splitMethod = 'paragraph', maxSegmentSize = 3000, tags = []) => {
   return fetchApi('/api/books', {
     method: 'POST',
     body: JSON.stringify({
@@ -383,15 +384,75 @@ export const createBook = (title, description, languageId, content, splitMethod 
       languageId,
       content,
       splitMethod,
-      maxSegmentSize
+      maxSegmentSize,
+      tags // Add tags array to payload
     })
   });
 };
 
-// Add updateBook function
-export const updateBook = (bookId, { title }) => {
-  // Only updating title as per backend implementation
-  const payload = { title };
+// Added uploadBook function for file uploads
+export const uploadBook = async (formData) => {
+  const endpoint = '/api/books/upload';
+  console.log(`[API] Uploading book file...`);
+
+  try {
+    const token = getToken();
+    const headers = {
+      'Accept': 'application/json',
+      // Content-Type is NOT set for FormData, browser handles it
+    };
+
+    if (token && typeof token === 'string' && token.trim() !== '') {
+      headers.Authorization = `Bearer ${token.trim()}`;
+    } else {
+       throw new Error('Authentication required for book upload');
+    }
+
+    const requestConfig = {
+      method: 'POST',
+      headers,
+      body: formData, // FormData object
+      credentials: 'include',
+      mode: 'cors'
+    };
+
+    const fullUrl = new URL(endpoint, API_URL);
+    console.log('[API Debug] Full URL for book upload:', fullUrl.toString());
+
+    const response = await fetch(fullUrl.toString(), requestConfig);
+    console.log('[API Debug] Book upload response status:', response.status);
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! Status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.title || errorMessage;
+      } catch (e) {
+         try { const text = await response.text(); errorMessage = text || errorMessage; } catch (textError) {}
+      }
+      console.error('[API Error] Book upload failed:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      console.log('[API Debug] Book upload response data:', data);
+      return data; // Should be the created BookDto
+    } else {
+      console.log('[API Debug] Non-JSON response for book upload.');
+      return { message: response.statusText };
+    }
+
+  } catch (error) {
+    console.error('[API Error] Failed to upload book:', error);
+    throw error;
+  }
+};
+
+// Modified updateBook to include tags and description
+export const updateBook = (bookId, { title, description, tags }) => {
+  const payload = { title, description, tags }; // Include description and tags
   return fetchApi(`/api/books/${bookId}`, {
     method: 'PUT',
     body: JSON.stringify(payload)
