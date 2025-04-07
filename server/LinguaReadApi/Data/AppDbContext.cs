@@ -20,6 +20,8 @@ namespace LinguaReadApi.Data
         public DbSet<UserSettings> UserSettings { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<BookTag> BookTags { get; set; }
+        public DbSet<AudiobookTrack> AudiobookTracks { get; set; } // Added for Audiobook feature
+        public DbSet<UserBookProgress> UserBookProgresses { get; set; } // Added for per-book audiobook progress
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -147,6 +149,29 @@ namespace LinguaReadApi.Data
                 .WithMany(t => t.BookTags) // Navigation property in Tag
                 .HasForeignKey(bt => bt.TagId)
                 .OnDelete(DeleteBehavior.Cascade); // If a tag is deleted, remove its associations with books
+
+            // Configure UserBookProgress entity
+            modelBuilder.Entity<UserBookProgress>()
+                .HasKey(ubp => new { ubp.UserId, ubp.BookId }); // Composite primary key
+
+            modelBuilder.Entity<UserBookProgress>()
+                .HasOne(ubp => ubp.User)
+                .WithMany() // No collection navigation property in User for this
+                .HasForeignKey(ubp => ubp.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // If user is deleted, delete their progress
+
+            modelBuilder.Entity<UserBookProgress>()
+                .HasOne(ubp => ubp.Book)
+                .WithMany() // No collection navigation property in Book for this
+                .HasForeignKey(ubp => ubp.BookId)
+                .OnDelete(DeleteBehavior.Cascade); // If book is deleted, delete its progress records
+
+            modelBuilder.Entity<UserBookProgress>()
+                .HasOne(ubp => ubp.CurrentAudiobookTrack)
+                .WithMany() // No collection navigation property in AudiobookTrack for this
+                .HasForeignKey(ubp => ubp.CurrentAudiobookTrackId)
+                .IsRequired(false) // TrackId can be null
+                .OnDelete(DeleteBehavior.SetNull); // If track is deleted, set FK to null
         }
     }
 } 

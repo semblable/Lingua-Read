@@ -9,7 +9,7 @@ namespace LinguaReadApi.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [AllowAnonymous] // Explicitly allow anonymous access to all health endpoints
-    [EnableCors("AllowClientApp")] // Enable CORS for this controller
+    // [EnableCors("AllowClientApp")] // Rely on global CORS policy applied in Program.cs
     public class HealthController : ControllerBase
     {
         private readonly ILogger<HealthController> _logger;
@@ -25,14 +25,15 @@ namespace LinguaReadApi.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            _logger.LogInformation("Health check requested at: {time}", DateTimeOffset.UtcNow);
+            _logger.LogInformation("Health check requested at: {time}", DateTimeOffset.UtcNow); // Restore logging
             
+            // Return minimal response to isolate issues
             return Ok(new
             {
                 Status = "healthy",
-                Timestamp = DateTimeOffset.UtcNow,
-                Version = "1.0.0",
-                Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"
+                Timestamp = DateTimeOffset.UtcNow
+                // Version = "1.0.0", // Temporarily removed
+                // Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development" // Temporarily removed
             });
         }
 
@@ -64,7 +65,7 @@ namespace LinguaReadApi.Controllers
         [HttpGet("activity")]
         public IActionResult GetTestActivity([FromQuery] string period = "all")
         {
-            _logger.LogInformation("Test activity data requested for period: {period} at: {time}", 
+            _logger.LogInformation("Test activity data requested for period: {period} at: {time}",
                 period, DateTimeOffset.UtcNow);
             
             // Current date for reference
@@ -99,7 +100,7 @@ namespace LinguaReadApi.Controllers
         [HttpGet("diagnostics")]
         public IActionResult GetDiagnostics()
         {
-            _logger.LogInformation("Diagnostics endpoint called at {time} from {ip}", 
+            _logger.LogInformation("Diagnostics endpoint called at {time} from {ip}",
                 DateTime.UtcNow, HttpContext.Connection.RemoteIpAddress);
             
             try

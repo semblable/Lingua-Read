@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Form, Button, Card, Alert, Spinner, Row, Col, Tabs, Tab } from 'react-bootstrap'; // Added Tabs, Tab
 import { useNavigate } from 'react-router-dom';
-import { createBook, uploadBook, getLanguages } from '../utils/api'; // Added uploadBook
+import { createBook, uploadBook, getLanguages, uploadAudiobookTracks } from '../utils/api'; // Added uploadBook and uploadAudiobookTracks
 
 const BookCreate = () => {
   const [title, setTitle] = useState('');
@@ -17,7 +17,8 @@ const BookCreate = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [loadingLanguages, setLoadingLanguages] = useState(true);
-  
+  const [audioFiles, setAudioFiles] = useState([]); // State for audio files
+  const [audioUploadError, setAudioUploadError] = useState(''); // Separate error for audio upload
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -93,13 +94,42 @@ const BookCreate = () => {
         newBook = await uploadBook(formData);
       }
 
+      // --- Start: Audiobook Upload Logic ---
+      let audioUploadSuccess = true;
+      if (audioFiles.length > 0 && newBook?.bookId) {
+        console.log(`Book created/uploaded (ID: ${newBook.bookId}), now uploading audio tracks...`);
+        setAudioUploadError(''); // Clear previous audio error
+        const audioFormData = new FormData();
+        audioFiles.forEach(file => {
+          audioFormData.append('Files', file);
+        });
+
+        try {
+          await uploadAudiobookTracks(newBook.bookId, audioFormData);
+          console.log(`Audio tracks uploaded successfully for book ${newBook.bookId}`);
+        } catch (audioErr) {
+          audioUploadSuccess = false;
+          const audioErrorMsg = audioErr.message || 'Failed to upload audio tracks. Please add them later from the book detail page.';
+          console.error("Audio upload failed:", audioErrorMsg);
+          // Set a separate error state or append to the main error?
+          // For now, let's just log it and potentially show a non-blocking message later.
+          // We will still navigate to the book page.
+          setAudioUploadError(audioErrorMsg); // Use a separate state to avoid overwriting book creation errors
+        }
+      }
+      // --- End: Audiobook Upload Logic ---
+
+      // Navigate even if audio upload failed, but maybe show a message?
+      // We could pass state via navigation if needed: navigate(`/books/${newBook.bookId}`, { state: { audioUploadError: audioUploadError } });
       navigate(`/books/${newBook.bookId}`);
+
     } catch (err) {
        const errorMsg = err.response?.data?.message || err.message || `Failed to ${activeTab === 'manual' ? 'create' : 'upload'} book. Please try again.`;
        setError(errorMsg);
+       // Don't proceed to audio upload if book creation failed
     } finally {
        setLoading(false);
-    } // <-- Add missing closing brace for try/catch/finally
+    }
   };
 
   if (loadingLanguages) {
@@ -121,6 +151,15 @@ const BookCreate = () => {
       }
     } else {
       setFile(null);
+    }
+  };
+
+  const handleAudioFileChange = (e) => {
+    if (e.target.files) {
+      setAudioFiles(Array.from(e.target.files)); // Store as array
+      setAudioUploadError(''); // Clear audio error on new selection
+    } else {
+      setAudioFiles([]);
     }
   };
 
@@ -271,6 +310,21 @@ const BookCreate = () => {
               </Tab>
             </Tabs>
 
+            {/* Audiobook Upload Input */}
+            <Form.Group controlId="audiobookFiles" className="mb-4 mt-3">
+              <Form.Label>Upload Audiobook Tracks (Optional)</Form.Label>
+              <Form.Control
+                type="file"
+                multiple
+                accept=".mp3"
+                onChange={handleAudioFileChange}
+                disabled={loading}
+              />
+              <Form.Text className="text-muted">
+                Select one or more MP3 files if you want to add an audiobook component now. You can also add them later.
+              </Form.Text>
+              {audioUploadError && <Alert variant="warning" className="mt-2">{audioUploadError}</Alert>}
+            </Form.Group>
             <div className="d-grid gap-2">
               {/* Submit button outside tabs */}
               <Button variant="primary" type="submit" disabled={loading || languages.length === 0 || (activeTab === 'upload' && !file)}>

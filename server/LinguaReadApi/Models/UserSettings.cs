@@ -23,6 +23,10 @@ namespace LinguaReadApi.Models
         // Navigation Preferences
         public bool AutoAdvanceToNextLesson { get; set; } = false; // automatically go to next lesson after completion
         public bool ShowProgressStats { get; set; } = true; // show progress statistics
+
+        // Audiobook Playback State
+        public int? CurrentAudiobookTrackId { get; set; } // FK to AudiobookTrack
+        public double? CurrentAudiobookPosition { get; set; } // Position in seconds
         
         // Creation timestamps
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -18,7 +18,8 @@ The core concept involves users reading texts or stories in their target languag
 *   **User Customization:** Settings for theme (Light/Dark/System), text size, font, and translation behavior.
 *   **Statistics:** Insights into reading activity, listening time (per language, per day), and vocabulary progress. Includes filtering by various time periods (Today, 7/30/90/180 Days, All Time).
 *   **Batch Operations:** Translate all words, mark all as known, create audio lessons in batches.
-*   **Listening Time Tracking:** Automatically tracks time spent actively listening to audio lessons.
+*   **Listening Time Tracking:** Automatically tracks time spent actively listening to audio lessons and audiobooks.
+*   **Audiobook Player:** Upload MP3 files for a book to create a persistent audiobook playlist. Tracks playback progress per book and integrates listening time into statistics.
  
 ## Technology Stack
 
@@ -29,12 +30,12 @@ The core concept involves users reading texts or stories in their target languag
 
 ## Setup and Running
 
-*(Instructions TBD - Add details on how to set up the database, configure API keys, build, and run the frontend and backend servers)*
+*(Instructions below provide basic setup. Ensure database connection and API keys are configured.)*
 
 ### Prerequisites
 
 *   Node.js and npm/yarn
-*   .NET SDK (specify version)
+*   .NET SDK (e.g., .NET 8 or later)
 *   PostgreSQL Server
 
 ### Backend Setup
@@ -50,15 +51,14 @@ dotnet restore
 # This command applies pending migrations. The initial setup uses ASP.NET Core Identity.
 dotnet ef database update --context AppDbContext
  
-# Configure API keys and JWT settings in server/LinguaReadApi/.env file (create if needed)
-# Example .env content:
-# DEEPL_AUTH_KEY=your_deepl_key
-# GEMINI_API_KEY=your_gemini_key
-# JWT_KEY=your_super_secret_jwt_key_at_least_32_chars
-# JWT_ISSUER=YourAppNameOrDomain
-# JWT_AUDIENCE=YourAppNameOrDomain
-# JWT_EXPIRY_IN_HOURS=24
-# ...
+# Configure API keys and JWT settings in server/LinguaReadApi/.env file (create if needed from .env.example or similar)
+# Ensure the following keys are present:
+# - DEEPL_AUTH_KEY
+# - GEMINI_API_KEY
+# - JWT_KEY (must be sufficiently long and secret)
+# - JWT_ISSUER (e.g., http://localhost:5000)
+# - JWT_AUDIENCE (e.g., http://localhost:3000)
+# - JWT_EXPIRY_IN_HOURS (e.g., 24)
 
 # Run the backend server
 dotnet run

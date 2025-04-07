@@ -3,17 +3,20 @@ using System;
 using LinguaReadApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace LinguaReadApi.Migrations
+namespace LinguaReadApi.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250406133839_AddAudiobookFeature")]
+    partial class AddAudiobookFeature
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -353,32 +356,6 @@ namespace LinguaReadApi.Migrations
                     b.ToTable("UserActivities");
                 });
 
-            modelBuilder.Entity("LinguaReadApi.Models.UserBookProgress", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("BookId")
-                        .HasColumnType("integer");
-
-                    b.Property<double?>("CurrentAudiobookPosition")
-                        .HasColumnType("double precision");
-
-                    b.Property<int?>("CurrentAudiobookTrackId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("UserId", "BookId");
-
-                    b.HasIndex("BookId");
-
-                    b.HasIndex("CurrentAudiobookTrackId");
-
-                    b.ToTable("UserBookProgresses");
-                });
-
             modelBuilder.Entity("LinguaReadApi.Models.UserSettings", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -591,32 +568,6 @@ namespace LinguaReadApi.Migrations
                         .IsRequired();
 
                     b.Navigation("Language");
-                });
-
-            modelBuilder.Entity("LinguaReadApi.Models.UserBookProgress", b =>
-                {
-                    b.HasOne("LinguaReadApi.Models.Book", "Book")
-                        .WithMany()
-                        .HasForeignKey("BookId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LinguaReadApi.Models.AudiobookTrack", "CurrentAudiobookTrack")
-                        .WithMany()
-                        .HasForeignKey("CurrentAudiobookTrackId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("LinguaReadApi.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Book");
-
-                    b.Navigation("CurrentAudiobookTrack");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("LinguaReadApi.Models.UserSettings", b =>

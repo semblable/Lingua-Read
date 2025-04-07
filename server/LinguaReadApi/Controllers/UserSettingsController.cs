@@ -61,7 +61,9 @@ namespace LinguaReadApi.Controllers
                 HighlightKnownWords = settings.HighlightKnownWords,
                 DefaultLanguageId = settings.DefaultLanguageId,
                 AutoAdvanceToNextLesson = settings.AutoAdvanceToNextLesson,
-                ShowProgressStats = settings.ShowProgressStats
+                ShowProgressStats = settings.ShowProgressStats,
+                CurrentAudiobookTrackId = settings.CurrentAudiobookTrackId, // Added
+                CurrentAudiobookPosition = settings.CurrentAudiobookPosition // Added
             };
         }
 
@@ -116,6 +118,55 @@ namespace LinguaReadApi.Controllers
             };
         }
 
+        // PUT: api/usersettings/audiobook-progress
+        [HttpPut("audiobook-progress")]
+        public async Task<IActionResult> UpdateAudiobookProgress([FromBody] UpdateAudiobookProgressDto updateDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = GetUserId();
+            var settings = await _context.UserSettings.FirstOrDefaultAsync(s => s.UserId == userId);
+
+            if (settings == null)
+            {
+                // Optionally create settings if they don't exist, or return NotFound/BadRequest
+                 return NotFound("User settings not found.");
+                // Or create default:
+                // settings = new UserSettings { UserId = userId, CreatedAt = DateTime.UtcNow };
+                // _context.UserSettings.Add(settings);
+            }
+
+            // Optional: Validate if the trackId exists and belongs to the user
+            if (updateDto.CurrentAudiobookTrackId.HasValue)
+            {
+                 var trackExists = await _context.AudiobookTracks
+                     .AnyAsync(at => at.Id == updateDto.CurrentAudiobookTrackId.Value && at.Book.UserId == userId);
+                 if (!trackExists)
+                 {
+                     return BadRequest("Invalid Audiobook Track ID or track does not belong to user.");
+                 }
+            }
+             else // If trackId is null, position should also be null
+             {
+                 if (updateDto.CurrentAudiobookPosition.HasValue)
+                 {
+                     return BadRequest("Audiobook position cannot be set without a valid Track ID.");
+                 }
+             }
+
+
+            settings.CurrentAudiobookTrackId = updateDto.CurrentAudiobookTrackId;
+            settings.CurrentAudiobookPosition = updateDto.CurrentAudiobookPosition;
+            settings.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // Indicate success without returning data
+        }
+
         private Guid GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -138,6 +189,8 @@ namespace LinguaReadApi.Controllers
         public int DefaultLanguageId { get; set; } = 0;
         public bool AutoAdvanceToNextLesson { get; set; } = false;
         public bool ShowProgressStats { get; set; } = true;
+        public int? CurrentAudiobookTrackId { get; set; } // Added
+        public double? CurrentAudiobookPosition { get; set; } // Added
     }
 
     public class UpdateUserSettingsDto
@@ -153,5 +206,15 @@ namespace LinguaReadApi.Controllers
         public int? DefaultLanguageId { get; set; }
         public bool? AutoAdvanceToNextLesson { get; set; }
         public bool? ShowProgressStats { get; set; }
+    }
+
+    public class UpdateAudiobookProgressDto
+    {
+        // Nullable to allow clearing the current track
+        public int? CurrentAudiobookTrackId { get; set; }
+
+        // Nullable, should only be non-null if TrackId is non-null
+        [Range(0, double.MaxValue)]
+        public double? CurrentAudiobookPosition { get; set; } // Position in seconds
     }
 } 

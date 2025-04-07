@@ -9,6 +9,7 @@ import {
   API_URL
 } from '../utils/api';
 import TranslationPopup from '../components/TranslationPopup';
+import AudiobookPlayer from '../components/AudiobookPlayer'; // Import AudiobookPlayer
 import './TextDisplay.css';
 
 // --- SRT Parsing Utilities ---
@@ -396,7 +397,10 @@ const TextDisplay = () => {
               const currentPartIndex = bookData.parts.findIndex(part => part.textId === parseInt(textId));
               setNextTextId(currentPartIndex >= 0 && currentPartIndex < bookData.parts.length - 1 ? bookData.parts[currentPartIndex + 1].textId : null);
             }
-          } catch (err) { console.error('Failed to update last read or get book data:', err); }
+          } catch (bookErr) {
+               console.error('Failed to get book data:', bookErr);
+               // Don't block text display if book fetch fails, but player won't show
+          }
         }
       } catch (err) { setError(err.message || 'Failed to load text'); }
       finally { setLoading(false); }
@@ -882,6 +886,8 @@ const TextDisplay = () => {
         </Card.Body>
       </Card>
 
+      {/* Audiobook Player rendering removed from here to fix duplication */}
+
       {/* Audio Player */}
       {isAudioLesson && audioSrc && displayMode === 'audio' && (
         <div className="audio-player-container p-2 bg-light border-bottom">
@@ -899,6 +905,13 @@ const TextDisplay = () => {
             Your browser does not support the audio element.
           </audio>
         </div>
+      )}
+
+      {/* Audiobook Player (Render below header if applicable and not an audio lesson) */}
+      {!loading && !error && !isAudioLesson && book && book.audiobookTracks && book.audiobookTracks.length > 0 && (
+         <div className="audiobook-player-container p-2 border-bottom bg-light sticky-top"> {/* Added container & sticky */}
+            <AudiobookPlayer book={book} />
+         </div>
       )}
 
       {/* Main Content Area */}

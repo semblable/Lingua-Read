@@ -19,7 +19,7 @@ namespace LinguaReadApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize] // Restore authorization
     public class BooksController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -73,6 +73,7 @@ namespace LinguaReadApi.Controllers
                 .Include(b => b.Texts)
                 .Include(b => b.BookTags) // Include BookTags
                     .ThenInclude(bt => bt.Tag) // Then include Tags
+                .Include(b => b.AudiobookTracks) // Include AudiobookTracks
                 .FirstOrDefaultAsync();
                 
             if (book == null)
@@ -99,6 +100,13 @@ namespace LinguaReadApi.Controllers
                 {
                     TagId = bt.TagId,
                     Name = bt.Tag.Name
+                }).ToList(),
+                AudiobookTracks = book.AudiobookTracks.OrderBy(at => at.TrackNumber).Select(at => new AudiobookTrackDto
+                {
+                    TrackId = at.Id,
+                    FilePath = at.FilePath, // Assuming FilePath is relative and web-accessible
+                    TrackNumber = at.TrackNumber,
+                    Duration = at.Duration
                 }).ToList()
             };
             
@@ -490,6 +498,113 @@ namespace LinguaReadApi.Controllers
             };
 
             return CreatedAtAction(nameof(GetBook), new { id = book.BookId }, bookDto);
+        }
+
+        // Explicit OPTIONS handler for CORS preflight debugging
+        [HttpOptions("{bookId}/audiobook")]
+        [AllowAnonymous] // Allow preflight requests without authentication
+        public IActionResult UploadAudiobookOptions(int bookId)
+        {
+            // The CORS middleware should add the necessary headers.
+            // This action just needs to return Ok() to signal the OPTIONS request is allowed.
+            return Ok();
+        }
+
+        // POST: api/books/{bookId}/audiobook
+        [HttpPost("{bookId}/audiobook")]
+        [RequestSizeLimit(600 * 1024 * 1024)] // 600 MB Limit
+        [RequestFormLimits(MultipartBodyLengthLimit = 600 * 1024 * 1024)] // 600 MB Limit
+        public async Task<IActionResult> UploadAudiobook(int bookId, [FromForm] UploadAudiobookDto uploadDto)
+        {
+            if (uploadDto.Files == null || !uploadDto.Files.Any())
+            {
+                return BadRequest("No audio files uploaded.");
+            }
+
+            var userId = GetUserId();
+
+            // 1. Verify book exists and belongs to user
+            var book = await _context.Books
+                                     .Include(b => b.AudiobookTracks) // Include existing tracks
+                                     .FirstOrDefaultAsync(b => b.BookId == bookId && b.UserId == userId);
+            if (book == null)
+            {
+                return NotFound("Book not found or access denied.");
+            }
+
+            // 2. Define storage path
+            // Use a subfolder within wwwroot, e.g., wwwroot/audiobooks/{bookId}
+            // Ensure IWebHostEnvironment is injected if needed for path resolution, or construct path manually.
+            // For simplicity here, assuming relative path from wwwroot. Needs refinement for production.
+            var relativeBookAudioPath = Path.Combine("audiobooks", bookId.ToString());
+            var absoluteBookAudioPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativeBookAudioPath); // Adjust if wwwroot isn't the base
+
+            // Ensure the directory exists
+            Directory.CreateDirectory(absoluteBookAudioPath);
+
+            // 3. Process uploaded files
+            var addedTracks = new List<AudiobookTrack>();
+            int currentMaxTrackNumber = book.AudiobookTracks.Any() ? book.AudiobookTracks.Max(t => t.TrackNumber) : 0;
+
+            foreach (var file in uploadDto.Files)
+            {
+                if (file.Length == 0) continue;
+
+                // Basic check for MP3 extension (can be improved with MIME type checking)
+                var fileExtension = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+                if (fileExtension != ".mp3")
+                {
+                    // Log or return specific error for non-mp3 files? For now, skip.
+                    Console.WriteLine($"Skipping non-MP3 file: {file.FileName}");
+                    continue;
+                }
+
+                currentMaxTrackNumber++;
+                var trackNumber = currentMaxTrackNumber;
+                // Sanitize filename or create a structured one
+                var safeFileName = $"track_{trackNumber}{fileExtension}"; // Example: track_1.mp3
+                var relativeFilePath = Path.Combine(relativeBookAudioPath, safeFileName);
+                var absoluteFilePath = Path.Combine(absoluteBookAudioPath, safeFileName);
+
+                try
+                {
+                    // Save the file
+                    using (var stream = new FileStream(absoluteFilePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    // Create AudiobookTrack entity
+                    var newTrack = new AudiobookTrack
+                    {
+                        BookId = bookId,
+                        FilePath = relativeFilePath.Replace('\\', '/'), // Store with forward slashes for web compatibility
+                        TrackNumber = trackNumber,
+                        Duration = null // TODO: Optionally add duration extraction later
+                    };
+                    addedTracks.Add(newTrack);
+                }
+                catch (Exception ex)
+                {
+                    // Log error saving file
+                    Console.WriteLine($"Error saving audiobook file '{file.FileName}' for book {bookId}: {ex.Message}");
+                    // Consider how to handle partial failures - rollback? return error?
+                    // For now, continue processing other files but maybe return a specific status code later.
+                }
+            }
+
+            if (!addedTracks.Any())
+            {
+                return BadRequest("No valid MP3 files were processed.");
+            }
+
+            // 4. Add new tracks to context and save
+            _context.AudiobookTracks.AddRange(addedTracks);
+            await _context.SaveChangesAsync();
+
+            // 5. Return success response (e.g., list of created track info or just Ok)
+            // Returning NoContent for simplicity
+            return NoContent();
         }
 
         // Helper method to split content into parts
@@ -1116,7 +1231,17 @@ namespace LinguaReadApi.Controllers
         public int LanguageId { get; set; }
         public DateTime CreatedAt { get; set; }
         public List<TextPartDto> Parts { get; set; } = new List<TextPartDto>();
-        public List<TagDto> Tags { get; set; } = new List<TagDto>(); // Added Tags
+        public List<TagDto> Tags { get; set; } = new List<TagDto>();
+        public List<AudiobookTrackDto> AudiobookTracks { get; set; } = new List<AudiobookTrackDto>(); // Added for Audiobook feature
+    }
+
+    // DTO for Audiobook Track details
+    public class AudiobookTrackDto
+    {
+        public int TrackId { get; set; }
+        public string FilePath { get; set; } = string.Empty;
+        public int TrackNumber { get; set; }
+        public double? Duration { get; set; }
     }
 
     public class TextPartDto
@@ -1210,5 +1335,12 @@ namespace LinguaReadApi.Controllers
         [Required]
         [Range(500, 50000)]
         public int MaxSegmentSize { get; set; } = 3000; // Default
+    }
+
+    // DTO for Audiobook Upload
+    public class UploadAudiobookDto
+    {
+        [Required]
+        public List<IFormFile> Files { get; set; } = new List<IFormFile>();
     }
 }

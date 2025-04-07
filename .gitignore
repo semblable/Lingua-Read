@@ -38,8 +38,7 @@ server/LinguaReadApi/.env
 # --- Editor/IDE ---
 .vscode/
 .idea/
+.vs/
 *.sln.DotSettings.user
 
-# --- Existing (commented out as covered above) ---
-# node_modules/
-# server\LinguaReadApi\wwwroot\
+# --- End ---
