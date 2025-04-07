@@ -258,7 +258,7 @@ const AudiobookPlayer = ({ book }) => {
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [currentTrackIndex, playbackRate, audiobookTracks, isPlaying, playbackPositionLoaded]); // Removed currentTime dependency
+  }, [currentTrackIndex, playbackRate, audiobookTracks, isPlaying, playbackPositionLoaded, currentTrack]); // Added currentTrack dependency
 
   // --- Play/Pause Logic ---
   const togglePlayPause = useCallback(() => {
@@ -420,7 +420,7 @@ const AudiobookPlayer = ({ book }) => {
           setError("Failed to save progress.");
       }
     }
-  }, [bookId, currentTrack, updateAudiobookProgress]); // Dependencies for saveProgress
+  }, [bookId, currentTrack]); // Removed updateAudiobookProgress dependency
 
   // --- Log Listening Time ---
   const logListeningTime = useCallback(async (isUnmounting = false) => {
@@ -439,10 +439,11 @@ const AudiobookPlayer = ({ book }) => {
     } else if (isUnmounting) {
       console.log("[AudioPlayer Log] No accumulated time to log on unmount.");
     }
-  }, [languageId, logListeningActivity]); // Dependencies for logListeningTime
+  }, [languageId]); // Removed logListeningActivity dependency
 
   // --- Effect for Timers and Cleanup ---
   useEffect(() => {
+    const audioInstance = audioRef.current; // Capture ref value for cleanup
     let secondTimer = null;
 
     if (isPlaying && !isLoadingAudio) {
@@ -460,7 +461,7 @@ const AudiobookPlayer = ({ book }) => {
       clearInterval(secondTimer);
       console.log("[AudioPlayer Timers] Cleared save/log timers.");
       // Save progress immediately when paused (if audio is ready and wasn't loading)
-      if (!isPlaying && !isLoadingAudio && audioRef.current && audioRef.current.readyState > 0) {
+      if (!isPlaying && !isLoadingAudio && audioInstance && audioInstance.readyState > 0) {
           console.log("[AudioPlayer Timers] Saving/logging immediately on pause.");
           saveProgress(false);
           logListeningTime(false);
@@ -480,7 +481,7 @@ const AudiobookPlayer = ({ book }) => {
       // We capture the state *at the time of cleanup setup*.
       // Use refs directly for potentially more up-to-date values if needed,
       // but state values from the closure should be sufficient if deps are correct.
-      const audio = audioRef.current;
+      const audio = audioInstance; // Use captured ref value
       const track = currentTrack; // Use state variable captured by closure
       const position = audio ? audio.currentTime : null;
       const ready = audio ? audio.readyState : null;
@@ -488,13 +489,13 @@ const AudiobookPlayer = ({ book }) => {
       // Log unconditionally first
       console.log(`[AudioPlayer Cleanup] Final state check: isPlaying=${isPlaying}, isLoadingAudio=${isLoadingAudio}, bookId=${bookId}, trackId=${track?.trackId}, position=${position}, readyState=${ready}`);
 
-      if (audio && ready > 0 && track) {
+      if (audio && ready > 0 && track) { // Use captured ref value 'audio'
           console.log(`[AudioPlayer Cleanup] Saving final state: Book ${bookId}, Track ${track.trackId}, Pos ${position}`);
           // Call the useCallback versions directly
           saveProgress(true);
           logListeningTime(true);
       } else {
-           console.log(`[AudioPlayer Cleanup] Skipping final save/log. Conditions not met: audio=${!!audio}, readyState=${ready}, track=${!!track}`);
+           console.log(`[AudioPlayer Cleanup] Skipping final save/log. Conditions not met: audio=${!!audio}, readyState=${ready}, track=${!!track}`); // Use captured ref value 'audio'
       }
     };
     // Dependencies: Run effect when play state or loading state changes.
