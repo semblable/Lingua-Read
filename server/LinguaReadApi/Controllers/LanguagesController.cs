@@ -15,12 +15,10 @@ namespace LinguaReadApi.Controllers
     public class LanguagesController : ControllerBase
     {
         private readonly ILanguageService _languageService;
-        private readonly LanguageDataUpdater _languageDataUpdater;
 
-        public LanguagesController(ILanguageService languageService, LanguageDataUpdater languageDataUpdater)
+        public LanguagesController(ILanguageService languageService)
         {
             _languageService = languageService;
-            _languageDataUpdater = languageDataUpdater;
         }
 
         // GET: api/languages
@@ -115,23 +113,6 @@ namespace LinguaReadApi.Controllers
             }
         }
 
-        /// <summary>
-        /// TEMPORARY: Updates existing languages with CSV-derived values.
-        /// </summary>
-        [HttpPost("update-from-csv")]
-        public async Task<IActionResult> UpdateLanguagesFromCsv()
-        {
-            try
-            {
-                await _languageDataUpdater.UpdateLanguagesFromCsvDataAsync();
-                return Ok("Languages updated from CSV data.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error updating languages from CSV: {ex.Message}");
-                return StatusCode(500, "An error occurred during update.");
-            }
-        }
 
         // PUT: api/languages/{id}
         /// <summary>
