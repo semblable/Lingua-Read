@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Form, Button, Card, Alert, Spinner, Tab, Tabs, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { createText, getLanguages, generateStory } from '../utils/api';
+import { createText, getAllLanguages, generateStory } from '../utils/api';
 
 const TextCreate = () => {
   const [title, setTitle] = useState('');
@@ -25,7 +25,7 @@ const TextCreate = () => {
   useEffect(() => {
     const fetchLanguages = async () => {
       try {
-        const data = await getLanguages();
+        const data = await getAllLanguages();
         setLanguages(data);
         if (data.length > 0) {
           setLanguageId(data[0].languageId.toString());

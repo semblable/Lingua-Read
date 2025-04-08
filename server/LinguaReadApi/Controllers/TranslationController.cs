@@ -14,10 +14,12 @@ namespace LinguaReadApi.Controllers
     public class TranslationController : ControllerBase
     {
         private readonly ITranslationService _translationService;
+        private readonly ILanguageService _languageService; // Inject LanguageService
 
-        public TranslationController(ITranslationService translationService)
+        public TranslationController(ITranslationService translationService, ILanguageService languageService)
         {
             _translationService = translationService;
+            _languageService = languageService; // Assign injected service
         }
 
         /// <summary>
@@ -69,25 +71,20 @@ namespace LinguaReadApi.Controllers
         /// </summary>
         /// <returns>List of language codes and names</returns>
         [HttpGet("languages")]
-        public ActionResult<IEnumerable<LanguageInfo>> GetSupportedLanguages()
+        public async Task<ActionResult<IEnumerable<LanguageInfo>>> GetSupportedLanguages()
         {
-            // Return a list of languages supported by DeepL
-            var languages = new List<LanguageInfo>
-            {
-                new LanguageInfo { Code = "EN", Name = "English" },
-                new LanguageInfo { Code = "DE", Name = "German" },
-                new LanguageInfo { Code = "FR", Name = "French" },
-                new LanguageInfo { Code = "ES", Name = "Spanish" },
-                new LanguageInfo { Code = "IT", Name = "Italian" },
-                new LanguageInfo { Code = "NL", Name = "Dutch" },
-                new LanguageInfo { Code = "PL", Name = "Polish" },
-                new LanguageInfo { Code = "PT", Name = "Portuguese" },
-                new LanguageInfo { Code = "RU", Name = "Russian" },
-                new LanguageInfo { Code = "JA", Name = "Japanese" },
-                new LanguageInfo { Code = "ZH", Name = "Chinese" }
-            };
+            // Fetch languages marked as active for translation from the service
+            var activeLanguages = await _languageService.GetLanguagesForTranslationAsync();
 
-            return Ok(languages);
+            // Map the Language entities to LanguageInfo DTOs
+            var languageInfos = activeLanguages.Select(lang => new LanguageInfo
+            {
+                // Ensure case consistency if needed (e.g., DeepL might expect uppercase)
+                Code = lang.Code.ToUpperInvariant(),
+                Name = lang.Name
+            }).ToList();
+
+            return Ok(languageInfos);
         }
 
         /// <summary>

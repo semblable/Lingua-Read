@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Form, Button, Card, Alert, Spinner, Row, Col, Tabs, Tab } from 'react-bootstrap'; // Added Tabs, Tab
 import { useNavigate } from 'react-router-dom';
-import { createBook, uploadBook, getLanguages, uploadAudiobookTracks } from '../utils/api'; // Added uploadBook and uploadAudiobookTracks
+import { createBook, uploadBook, getAllLanguages, uploadAudiobookTracks } from '../utils/api'; // Switched to getAllLanguages
 
 const BookCreate = () => {
   const [title, setTitle] = useState('');
@@ -24,7 +24,7 @@ const BookCreate = () => {
   useEffect(() => {
     const fetchLanguages = async () => {
       try {
-        const data = await getLanguages();
+        const data = await getAllLanguages();
         setLanguages(data);
         if (data.length > 0) {
           setLanguageId(data[0].languageId.toString());

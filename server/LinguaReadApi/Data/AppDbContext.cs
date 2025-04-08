@@ -22,6 +22,8 @@ namespace LinguaReadApi.Data
         public DbSet<BookTag> BookTags { get; set; }
         public DbSet<AudiobookTrack> AudiobookTracks { get; set; } // Added for Audiobook feature
         public DbSet<UserBookProgress> UserBookProgresses { get; set; } // Added for per-book audiobook progress
+        public DbSet<LanguageDictionary> LanguageDictionaries { get; set; } // Added for Language Config feature
+        public DbSet<LanguageSentenceSplitException> LanguageSentenceSplitExceptions { get; set; } // Added for Language Config feature
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -114,6 +116,14 @@ namespace LinguaReadApi.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
+
+            modelBuilder.Entity<Language>()
+                .HasIndex(l => l.Name)
+                .IsUnique();
+
+            modelBuilder.Entity<Language>()
+                .HasIndex(l => l.Code)
+                .IsUnique();
             
             // UserActivity - Language: Many-to-One
             modelBuilder.Entity<UserActivity>()
@@ -172,6 +182,20 @@ namespace LinguaReadApi.Data
                 .HasForeignKey(ubp => ubp.CurrentAudiobookTrackId)
                 .IsRequired(false) // TrackId can be null
                 .OnDelete(DeleteBehavior.SetNull); // If track is deleted, set FK to null
+
+            // Configure Language -> LanguageDictionary: One-to-Many
+            modelBuilder.Entity<LanguageDictionary>()
+                .HasOne(ld => ld.Language)
+                .WithMany(l => l.Dictionaries)
+                .HasForeignKey(ld => ld.LanguageId)
+                .OnDelete(DeleteBehavior.Cascade); // If Language is deleted, delete its dictionaries
+
+            // Configure Language -> LanguageSentenceSplitException: One-to-Many
+            modelBuilder.Entity<LanguageSentenceSplitException>()
+                .HasOne(lse => lse.Language)
+                .WithMany(l => l.SentenceSplitExceptions)
+                .HasForeignKey(lse => lse.LanguageId)
+                .OnDelete(DeleteBehavior.Cascade); // If Language is deleted, delete its exceptions
         }
     }
 } 

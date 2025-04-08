@@ -196,8 +196,8 @@ const AudiobookPlayer = ({ book }) => {
       audio.src = newSrc;
       sourceChanged = true;
       setDuration(0); // Reset duration
-      console.log(`[AudioPlayer Log] setCurrentTime(0) from useEffect (src changed)`);
-      setCurrentTime(0); // Reset time state
+      // console.log(`[AudioPlayer Log] setCurrentTime(0) from useEffect (src changed)`); // Removed - Let loadedmetadata handle initial time
+      // setCurrentTime(0); // Reset time state - Let loadedmetadata handle initial time
       initialSeekPositionRef.current = 0; // Explicitly set initial seek to 0 for new track
       setIsLoadingAudio(isPlaying); // Set loading if intent was to play
     }
@@ -406,6 +406,8 @@ const AudiobookPlayer = ({ book }) => {
       return;
     }
 
+    // *** DEBUG LOG: Check position just before API call in saveProgress ***
+    console.log(`[AudioPlayer Save DEBUG] About to call API. Track ID: ${track?.trackId}, Position: ${position}, isUnmounting: ${isUnmounting}`);
     console.log(`[AudioPlayer Save] Attempting to save progress for Book ${bookId}: Track ID ${track.trackId}, Position ${position}, Unmounting: ${isUnmounting}`);
     try {
       await updateAudiobookProgress(bookId, {
@@ -490,7 +492,9 @@ const AudiobookPlayer = ({ book }) => {
       console.log(`[AudioPlayer Cleanup] Final state check: isPlaying=${isPlaying}, isLoadingAudio=${isLoadingAudio}, bookId=${bookId}, trackId=${track?.trackId}, position=${position}, readyState=${ready}`);
 
       if (audio && ready > 0 && track) { // Use captured ref value 'audio'
-          console.log(`[AudioPlayer Cleanup] Saving final state: Book ${bookId}, Track ${track.trackId}, Pos ${position}`);
+          // *** DEBUG LOG: Check position just before saving in cleanup ***
+          console.log(`[AudioPlayer Cleanup DEBUG] About to save final state. Track ID: ${track.trackId}, Position Read from audioRef.current: ${audio.currentTime}`);
+          console.log(`[AudioPlayer Cleanup] Saving final state: Book ${bookId}, Track ${track.trackId}, Pos ${position}`); // Note: 'position' here uses the value read on line 486
           // Call the useCallback versions directly
           saveProgress(true);
           logListeningTime(true);
@@ -621,8 +625,8 @@ const AudiobookPlayer = ({ book }) => {
             variant="outline-secondary"
             size="sm"
             onClick={() => {
-                console.log(`[AudioPlayer Log] setCurrentTime(0) from prev track button`);
-                setCurrentTime(0); // Reset time state immediately
+                // console.log(`[AudioPlayer Log] setCurrentTime(0) from prev track button`); // Removed - Let loadedmetadata handle initial time
+                // setCurrentTime(0); // Reset time state immediately - Let loadedmetadata handle initial time
                 initialSeekPositionRef.current = 0; // Ensure seek ref is 0
                 setCurrentTrackIndex(prev => Math.max(0, prev - 1));
             }}
@@ -635,8 +639,8 @@ const AudiobookPlayer = ({ book }) => {
             variant="outline-secondary"
             size="sm"
             onClick={() => {
-                console.log(`[AudioPlayer Log] setCurrentTime(0) from next track button`);
-                setCurrentTime(0); // Reset time state immediately
+                // console.log(`[AudioPlayer Log] setCurrentTime(0) from next track button`); // Removed - Let loadedmetadata handle initial time
+                // setCurrentTime(0); // Reset time state immediately - Let loadedmetadata handle initial time
                 initialSeekPositionRef.current = 0; // Ensure seek ref is 0
                 setCurrentTrackIndex(prev => Math.min(audiobookTracks.length - 1, prev + 1));
             }}

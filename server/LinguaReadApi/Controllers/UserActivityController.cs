@@ -268,7 +268,12 @@ public async Task<IActionResult> LogManualActivity([FromBody] LogManualActivityR
                     _logger.LogInformation("Found existing UserBookProgress for UserId: {UserId}, BookId: {BookId}. Updating.", userId, request.BookId);
                     _logger.LogInformation("Updating UserBookProgress: Old TrackId={OldTrackId}, Old Position={OldPosition}", progressRecord.CurrentAudiobookTrackId, progressRecord.CurrentAudiobookPosition);
                     progressRecord.CurrentAudiobookTrackId = request.CurrentAudiobookTrackId;
-                    progressRecord.CurrentAudiobookPosition = request.CurrentAudiobookPosition;
+                    // Only update position if a valid position is provided in the request
+                    if (request.CurrentAudiobookPosition.HasValue)
+                    {
+                         progressRecord.CurrentAudiobookPosition = request.CurrentAudiobookPosition;
+                    }
+                    // Always update the timestamp
                     progressRecord.UpdatedAt = DateTime.UtcNow;
                     _logger.LogInformation("Updating UserBookProgress: New TrackId={NewTrackId}, New Position={NewPosition}", progressRecord.CurrentAudiobookTrackId, progressRecord.CurrentAudiobookPosition);
                     // EF Core tracks changes on the found entity, no need for explicit Update call

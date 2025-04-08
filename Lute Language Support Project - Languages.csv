@@ -1,0 +1,1353 @@
+Status,Language,,Dictionaries,Sentence Translation,R-T-L,Parse as:,Character Substitutions,Split Sentences at,Split sentence exceptions,Word Characters,Sample Text (source),Extra Dictionaries,Alternate Names,Font,Scripts,ISO Code
+Existing,Afrikaans,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [AFR] [E]
+Glosbe [TRM] [P] | Tatoeba [TRM] [P]
+Rieme.co.za [TRM] [ENG] [E] 
+Redfox [TRM] [ENG] [E]
+Verbix [FRM] [E] | Cooljugator [FRM] [E]","Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|is.|mnr.|dr.|gr.|mev.|prof.|kom.|op.|ek.|Kol.|Ma.|ds.|kapt.|St.|me.|ao.|asb.|dra.|nie.|in.|het.|word.|ens.|bv.|asb.|n.C.|wees.|bl.|v.C.|Kor.|Prof.|o.a.|Joh.|no.,a-zA-ZÉËÏÓÖÜéëïóöüÊêÔô',UDHR | Wikipedia article | News article | Book sample,,,,"Latn, Arab",af
+Existing,Albanian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SQI] [E]
+Glosbe [TRM] [ENG] [P] | Tatoeba [TRM] [P]
+Tradukka [TRM] [ENG] [E]
+LingvoSoft [TRM] [ENG] [E]
+Seelrc [TRM] [ENG] [E]
+Fjalorthi [TRM] [SQI] [E]
+FJALE [TRM] [SQI] [E]
+Shkenca [TRM] SQI] [E]
+Verbix [FRM] [E] | Cooljugator [FRM] [E]","Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|etj.|të.|Nr.|në.|Dr.|p.sh.|dhe.|për.|me.|red.|p.e.s.|e.s.|d.m.th.,a-zA-ZÇËČĐƏǴŁŃḰR̃ŠÞŽçëčđəǵłńḱr̃šþž',UDHR | Wikipedia article | News article | Book sample,,,,"Latn, Grek, ota-Arab, Elba, Todr, Vith",sq
+Existing,Amharic,,"Amharicpro [TRM] [ENG] [E]
+AmharicDictionary [TRM] [ENG] [E]
+Abyssinica [TRM] [AMH] [MULTILINGUAL] [P]
+Wiktionary [TRM] [ENG] [E]
+WIktionary [TRM] [AMH] [E]
+Glosbe [TRM] [ENG] [P]
+Tradukka [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P]
+Verbix [FRM] [E]","Google Translate [P]
+Bing [P]
+Yandex [P]
+Abyssinica [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!¡?።፧፠፨,[A-Z].|[\u1200-\u1359\u1369-\u137C].|ዓ.ም.|እ.ኤ.አ.|ዓክልበ.|እ.አ.አ.|ኪ.ሜ.|ክ.በ.|እ.ኤ.ኣ.|ዓ.ዓ.|ኤ.አ.|አ.አ.|ወዘተ.|አ.ም.|ምዕ.,\u1200-\u1359\u1369-\u137C,UDHR excerpt | Wikipedia article,,,,Ethi,am
+Existing,Arabic,,"Arabic Student's Dictionary [TRM] | Almaany [TRM] [ENG] [E]
+Google Translate [TRM] [ENG] | Reverso [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P] | Wiktionary (General/MSA) [TRM]
+Wiktionary Varieties [TRM] [ENG] [E]:
+(S. Levantine) (Moroccan) (Hijazi) (Egyptian) (Gulf)
+(Cypriot) (N. Levantine) (Libyan) (Iraqi) (Mozarabic)
+(Tunisian) (Chadian) (Algerian) (Andalusian) (Najdi)
+(Sudanese) (Yemeni) (Juba) (Omani)
+(N. Mesopotamian) (Baharna) (Dhofari)
+Wiktionary [TRM] [ARA] [E] | Al-Riyadh [TRM] [ARA] [E]
+Reverso Conjugator [FRM] [P]
+Tatoeba [FRM] [ENG] [P]","Google Translate
+DeepL Translator
+Reverso",TRUE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?؟۔‎,د.|م.|أ.|ع.|أ.د.|ح.|ب.|ج.|س.|ل.ل.|ش.|ن.|ف.|ل.|ي.|خ.|ر.|ا.|غ.|ك.,\u0600-\u06FF\uFE70-\uFEFC,,,"Standard Arabic, Literary Arabic, High Arabic, Modern Standard Arabic, Classical Arabic, Judeo-Arabic",,"Arab, Hebr, Syrc, Brai",ar
+Existing,Armenian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [HYE] [E]
+Nayiri [TRM] [ENG] [E] | Nayiri [HYE] [E]
+Calfa [TRM] [E]
+Glosbe [TRM] [ENG] [P]
+Bararanonline [TRM] [HYE] [E]
+Verbix [FRM] [E]
+Tatoeba [TRM] [P]","Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,։՜՛՞,[A-Z]|[\u0531-\u0556\u0561-\u0588].|մ.թ.ա.|դր.|Հ.Գ.|Ն.Ս.Օ.Տ.Տ.|ս.թ.|Ս.թ.|են.|համար.|մասին.|հետ.,\u0531-\u0556\u0561-\u0588,UDHR (Wikipedia) | Book sample | Story sample,https://library.anau.am/images/stories/grqer/bararanner/Baratyan.pdf,"Modern Armenian, Eastern Armenian, Western Armenian",,"Armn, Brai",hy
+Existing,Azerbaijani,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [AZE] [E]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E] | Cooljugator [FRM] [E]","Google Translate [P]
+Yandex [P]
+Bing [E]
+Promt [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,və i.a.|və s.|Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑğĞıİöÖüÜşŞçÇƏəƢƣЬьIiƵƶꞐꞑƟɵАаБбҸҹЧчДдЭэӘәФфҜҝҒғҺһХхЫыИиЖжКкГгЛлМмНнОоӨөПпРрСсШшТтУуҮүВвЙйЗзЕеЈј',UDHR | Wikipedia article | News article | Book sample (A) (B),,"Azeri, Azari, Azeri Turkic, Azerbaijani Turkic, North Azerbaijani, South Azerbaijani, Afshar, Afshari, Afshar Azerbaijani, Afchar, Qashqa'i, Qashqai, Kashkay, Sonqor",,"Latn, Cyrl, fa-Arab",az
+Existing,Basque,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [EUS] [E]
+Glosbe [TRM] [ENG] [P]
+Morris [TRM] [ENG] [E]
+Elhuyar Hiztegia [TRM] [ENG] [E]
+Euskaltzaindia [TRM] [EUS] [SPA] [E]
+Elhuyar Hiztegia [TRM] [SPA] [E]
+Labayru [TRM] [SPA] [P]
+Euskaltzaindia [TRM] [SPA] [FRE] [E]
+Tatoeba Sentences [TRM] [P]
+Verbix [FRM] [E]
+Cooljugator [FRM] [E]","Google Translate [P]
+Yandex [P]
+Bing [E]
+Euskadi [E]
+Elia [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,etab.|Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.|K.a.|J.|I.|K.|A.|V.|M.|a.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑÇç',UDHR | Wikipedia article | News article | Book sample,,Euskara,,Latn,eu
+Existing,Belarusian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [BEL] [E]
+Glosbe [TRM] [ENG] [P]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]","Google Translate [P]
+Yandex [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,гл.|ст.|пач.|т.л.|г.д.|г.|тыс.,A-Za-zА-Яа-яІіЎўҐґ',UDHR | Wikipedia article | Book sample,,"Belorussian, Belarusan, Bielorussian, Byelorussian, Belarussian, White Russian",,"Cyrl, Latn",be
+Existing,Bengali,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [BEN] [E]
+Combined Bengali Dictionaries [TRM] [ENG] [BEN] [E]
+English-Bangla.com [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]
+Shabkosh [TRM] [BEN] [E]
+English-Bangla.com [TRM] [BEN] [E]
+Khandbahale [TRM] [ENG] [P]
+Trex [TRM] [P] | Tatoeba [TRM] [ENG] [P]","Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?।॥,ড.|সা.|ক.|গ.|খ.|ও.|ঘ.|করে.|জন্য.|এ.|আ.|না.|করতে.|রা.|স.|হবে.|থেকে.|এবং.|এক.,\u0980-\u09FF,Wikipedia article | Book sample,,Bangla,,"Beng, Newa",bn
+Existing,Breton,,"Geriafurch [TYPE] [FRA] [E]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [BRE] [E]
+Portail numérique de la langue bretonne [TYPE] [FRA]
+Devri [TYPE] [E] | Glosbe [TYPE] [ENG] [P]
+Tatoeba [TRM] [P] | Verbix [FRM] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?।,all.|bed.|holl.|bras.|get.|mor.|su.|..|kg.|Su.|se.|mat.|cm.|ger.|ren.|m.|int.|fin.|Stad.|km.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article | Sample book,,"Gwenedeg, Vannetais, Kerneveg, Cornouaillais, Leoneg, Léonard, Tregerieg, Trégorrois",,Latn,br
+Existing,Bulgarian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [BUL] [E]
+Linguee [TRM] [ENG] [E] | Pons [TRM] [ENG] [P]
+Rechnik [TRM] [ENG] [E] | Lingea [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]
+Tradukka [TRM] [ENG] [E]
+Sensagent [TRM] [ENG] [E]
+Talkoven [TRM] [BUL] [E]
+Institute for Bulgarian Language [TRM] [BUL] [E]
+Rechnik [TRM] [BUL] [E]
+T-Rechnik [TRM] [BUL] [E]
+Chitanka [TRM] [BUL] [E]
+Tatoeba [TRM] [P] | Verbix [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,г.|ж.|и т.н.|изд.|мн.|ч.|мн. ч.|прен.|прил.|съчет.,А-Яа-яa-zA-ZЁёЪ̀ъ̀ЍѝXxИ́и́',UDHR | Wikipedia article | News article | Book sample,,,,Cyrl,bg
+Existing,Catalan,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [CAT] [E]
+Diccionaris.cat [TRM] [P]
+Glosbe [TRM] [ENG] [P]
+dict.com [TRM] [E] | GDLC [TRM] [CAT] [P]
+Diec2 [TRM] [CAT] [P] | Tatoeba [TRM] [P]
+Diccionari de sinònims [TRM] [CAT] [E]
+Verbix [FRM] [E]
+Verbix nouns [FRM] [E]
+Verbix adjectives [FRM] [E]
+ | Cooljugator [FRM] [E]","Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,dc.|dg.|dir.|dj.|dl.|ds.|dt.|dv.|p.e.|p. e.|p.ex.|p. ex|St.|Sta.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ·',UDHR | Wikipedia article | Book sample,,,,Latn,ca
+Existing,Croatian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [HRV] [E]
+Lingea [TRM] [ENG] [P]
+Glosbe [TRM] [ENG] [P]
+Eudict [TRM] [ENG] [P]
+Hrvatski jezični [TRM] [HRV] [P]
+Školski rječnik hrvatskoga jezika [TRM] [HRV] [E]
+Žargonaut (Slang) [TRM] [HRV] [E]
+Jezikoslovac [TRM] [HRV] [E]
+Online rječnik [TRM] [ENG] [E]
+Tradukka [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P]
+Crodict Nouns [FRM] [E]
+Crodict Verbs [FRM] [E]
+Verbix [FRM] [E]","Google Translate [P]
+Bing [P]
+Yandex [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,tj.|pne.|tzv.|p.|I.|m.|npr.|st.|A.|M.|J.|g.|god.|S.|II.|V.|H.|P.|n.|C.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ,"UDHR (B-C), (B-L), (C-L), (M-L), (S-C), (S-L)
+
+Book sample 1 [S] | Book sample 2 [C]","Crodict (HRV) [TRM] [DEU] [E]
+Mreznik (HRV)
+Pravopis (HRV)
+Yak.net (HRV)","BCS, Croato-Serbian, Serbocroatian, Bosnian, Croatian, Montenegrin, Serbian, Shtokavian",,"Latn, Cyrl, Glag",sh
+Existing,Czech,,"Lingea [TRM] [ENG] [E] | Glosbe [TRM] [ENG] [P]
+Seznam.cz [TRM] [ENG] [P] | Bab.la [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E] | Wiktionary [TRM] [CES] [E]","Deepl [P] 
+Goggle Translate [P]
+Reverso [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|korun.|tzv.|II.|pozn.|např.|III.|red.|sv.|St.|I.|č.|J.|K.|spol.|mj.|N.|T.|B.|H.|O.|,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ,,,,,Latn,cs
+Existing,Danish,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [DAN] [E]
+Ord.dk [TRM] [ENG] [E]
+Ord.dk [TRM] [DAN] [E]
+Sproget [TRM] [DAN] [E]
+Glosbe [TRM] [ENG] [P]
+Trex [TRM] [P] | Bab.la [TRM] [P]
+Linguee [TRM] [E] | Den Danske Ordbog [TRM] [P]
+Tatoeba [TRM] [P] | Den Store Danske [TRM] [P]
+Verbix [FRM] [E]
+Verbix nouns [FRM] [E]
+| Cooljugator [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Yandex [P]
+Bing [E]
+Reverso [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,alm.|ang.|beg.|bet.|bio.|bl.a.|ca.|d.|d. v. s.|d.s.|d.s.s.|d.v.s.|dr.|dvs.|e.Kr.|egl.|el.|el.lign.|ell.|etc.|evt.|f.eks.|f.Kr.|fhv.|fr.|frk.|hhv.|if.|iflg.|jf.|jfr.|kgl.|kl.|knsp.|kr.|kvm.|m.|m.a.o.|mht.|mia.|min.|mio.|ml.|mv.|mvh.|ndf.|no.|nr.|o.a.|ogs.|osv.|pga.|pr.|rdlr.|resp.|self.|sj.|Skt.|sml.|spec.|t.h.|t.v.|t.o.m.|u.|udg.|vedr.|vha.|,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article | Book sample,,,,Latn,da
+Existing,Dutch,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [NLD] [E]
+Mijnwoordenboek [TYPE] [E]
+Van Dale [TYPE] [P]
+Cambridge Dictionary [TRM] [P]
+Glosbe [TRM] [ENG] [P]
+Bab.la [TRM] [P] | Trex [TRM] [P]
+Vandale [TRM] [NDL] [P]
+Reverso [TRM] [P] | Linguee [TRM] [E]
+Tatoeba [TRM] [P] | Verbix [FRM] [E]
+Verbix nouns [FRM] [E]
+Verbix adjectives [FRM] [E]
+Cooljugator [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Yandex [P]
+Bing [E]
+Reverso [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,mr.|mevr.|prof.|dhr.|drs.|Zr.|H.r|Hr.|Zr.|H.M.|Zr.Ms|n. Chr.|n.Chr.|v. CHr.|St.|a.j.b.|a.u.b|o.a.|o.m.|o.v.v.|p.r.|a.h.w.|nl.|o.s.|no.|nr.|m.b.t.|m.n.|m.i.|m.u.v|m.i.v.|m.a.w.|iem.|a.m|a.s.|i.i.g.|inz.|enz.|evt.|b. v.|bijv.|bv.|c.q.|ca.|d.i.|d.m.v|d.o.|E.|Ed.|Edt.|E.s|e.d.|t.g.v.|t.w.|v.|verg.|versch.|vgl.|vnl.|ws.|wrschl.|wsch.|,a-zA-ZÉËÏÓÖÜéëïóöüç',UDHR | Wikipedia article | Book sample,,"Netherlandic, Flemish",,"Latn, Brai",nl
+Existing,English,,"The Free Dictionary [TRM] [ENG]
+Wiktionary [TRM] [ENG] [E]
+Simple English Wiktionary [TRM] [ENG] [E]
+OALD [TRM] [ENG] [P]
+Longman [TRM] [ENG] [P]
+Merriam-Webster [TRM] [ENG]
+Cambridge [TRM] [ENG]
+Britannica [TRM] [ENG] [E]
+Reverso Conjugator [FRM] [P]
+Scholingua [FRM] [P]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.|U.S.|St.|No.|pp.|Jr.|p.m.|a.m.|Inc.|Gov.|Rep.|Ms.|Sen.|in.|Co.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ,,,"Modern English, New English, Polari, Yinglish",,"Latn, Brai, Shaw, Dsrt",en
+Existing,Esperanto,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [EPO] [E]
+Vortaro [TRM] [EPO] [E]
+dict.cc [TRM] [E] | Glosbe [TRM] [ENG] [P]
+Bab.la [TRM] [P] | Lernu [TRM] [ENG] [P]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E] | Cooljugator [FRM] [E]","Google Translate [P]
+Yandex [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥|ç=ĉ|û=ŭ|î=ĵ|Ç=Ĉ|Û=Ŭ|Î=Ĵ,.!?,ekz.|ĉ.|bv.|atm.|a.t.m.|ptm.|p.t.m.|a.K.|Ak.|eld.|j.|jc.|k.c.|kp.|m.|m.m.|n.|n.b.|resp.,a-zA-ZĈĜĤĴŜŬĉĝĥĵŝŭ',UDHR | Wikipedia article | Book sample (A) (B),,,,Latn,eo
+Existing,Estonian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [EST] [E]
+Glosbe [TRM] [P]
+Lingea [TRM] [E]
+Eki [TRM] [E]
+Aare [TRM] [E]
+Linguee [TRM] [E]
+EKSS [TRM] [EST] [E]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]
+Cooljugator [FRM] [E]","Google Translate [P]
+DeepL [P]
+Yandex [P]
+Bing [E]
+Promt [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,puhul.|toim.|A.|jne.|ilm.|J.|arv.|H.|lood.|K.|R.|jt.|N.|nn.|K.R.|E.|Mr.|P.|M.|kunst.|3.-4.,a-zA-ZŠšŽžÕõÄäÖöÜü',UDHR | Wikipedia article | News article | Book sample,,,,Latn,et
+Existing,Finnish,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [FIN] [E]
+Dictionary Pro [TYPE] [E]
+Glosbe [TRM] [P]
+Trex [TRM] [P]
+Bab.la [TRM] [P]
+Linguee [TRM] [E]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]
+Verbix nouns [FRM] [E]
+Cooljugator verbs [FRM] [E]
+Cooljugator adjectives [FRM] [E]
+Cooljugator nouns [FRM] [E]","DeepL [P]
+Google Translate [P]
+Yandex [P]
+Bing [E]
+Promt [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,aik.|alk.|alv.|ao.|ap.|dipl.ins.|eaa.|eKr.|elok.|em.|engl.|ent.|erit.|esim.|heinäk.|helmik.|huhtik.|ip.|jaa.|jKr.|jne.|joht.|Joos.|jouluk.|k.|ka.|kans.ed.|Kesk.|kesäk.|ko.|kok.|Kork. v.|ks.|kys.|l.|lat.|Laul. l.|lis.|lk.|lkm.|ll.|lokak.|lyh.|ma.|maalisk.|mahd.|marrask.|Matt.|miel.|milj.|mlk.|mon.|mrd.|myöh.|n.|nimim.|ns.|nyk.|oik.|ovh.|par.|pj.|pl.|ps.,a-zA-ZÅåÄäÖöŠšŽž',UDHR | Wikipedia article | News article | Book sample,,Suomi,,Latn,fi
+Existing,French,,"The Free Dictionary [TRM] [ENG] | Reverso [TRM] [ENG] [E]
+Larousse | WordReference | Pons [TRM] [ENG] [P]
+Lingea [TRM] [ENG] [] | Glosbe [TRM] [ENG] [P]
+Wiktionary [TRM] [ENG] [E] | Wiktionary [TRM] [FRA] [E]
+WordReference [TRM] [ENG] [E] | Larousse [TRM] [ENG] [P]
+Collins [TRM] [ENG] [P] | Pons [TRM] [ENG] [P]
+Bab.la [TRM] [ENG] [P] | Dict.com [TRM] [ENG] [E]
+Tr-Ex.me [TRM] [ENG] [E] | Linguee [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P] | Larousse [TRM] [FRA] [P]
+LeRobert [TRM] [FRA] [P] | Linternaute [TRM] [FRA] [P]
+Usito [TRM] [FRA] [P] | CNRTL [TRM] [FRA] [P]
+Reverso Conjugaror  [FRM] [P]
+Sholingua [FRM] [P]
+Leconjugeur [FRM] [P]
+Verbix [FRM] [E]
+Cooljugator [FRM] [E]","DeepL Translator
+Google Translate
+Reverso
+Prompt
+Yandex",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|etc.|sens.|fin.|St.|sûr.|sol.|nom.|point.|Dr.|bout.|dos.|haut.|pp.|vol.|av.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ,,,"Modern French, African French, Algerian French, Alsatian French, Antilles French, Atlantic Canadian French, Belgian French, Congolese French, European French, French French, Haitian French, Ivorian French, Lorraine French, Louisiana French, Luxembourgish French, Malian French, Marseille French, Missourian French, Moroccan French, Newfoundland French, North American French, Picard French, Provençal French‎, Quebec French, Réunion French, Rwandan French, Tunisian French, West African French",,"Latn, Brai",fr
+Existing,Galician,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [GLG] [E]
+Glosbe [TRM] [P]
+Real Academia Galega [TRM] [GLG] [P]
+Portal das Palabras [TRM] [GLG] [E]
+Estraviz [TRM] [GLG] [E]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]
+Verbix nouns [FRM] [E]
+Verbix adjectives [FRM] [E]","Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,p.|C.|A.|S.|M.|J.|P.|m.|E.|B.|D.|a.C.|R.|L.|etc.|H.|F.|T.|G.|W.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article | Book sample (A) (A),,,,Latn,gl
+Existing,Georgian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [KAT] [E]
+Glosbe [TRM] [P]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]","Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,გვ.|ვით.|თბ.|იხ.|მაგ.|მიც.|მოთ.|მოქ.|ნათ.|სახ.|ქ.|ძვ.|წმ.|წოდ.,\u10A0-\u10FF\u2D00-\u2D2F\u1C90-\u1CBF,Wikipedia article | News article | Book sample,,"Judeo-Georgian, Kivruli, Gruzinic",,"Geor, Geok, Hebr",ka
+Existing,German,,"The Free Dictionary [TRM] [ENG] | WordReference [TYPE]
+Wiktionary [TRM] [ENG] [E] | Wiktionary [TRM] [DEU] [E]
+Collins [TRM] [ENG] [P] | Linguee [TRM] [ENG] [E]
+Leo [TRM] [ENG] [P] | Dict.cc [TRM] [ENG] [E]
+Reverso [TRM] [ENG] [E] | Larousse [TRM] [ENG] [P]
+Langenscheidt [TRM] [ENG] [P] | Pons [TRM] [ENG] [P]
+Glosbe [TRM] [ENG] [P] | BeoLingus [TRM] [ENG] [P]
+EuroCosm [TRM] [ENG] [E] | Bab.la [TRM] [ENG] [P]
+Wortbedeutung [TRM] [DEU] [P] | DWDS [TRM] [DEU] [P]
+Duden [TRM] [DEU] [P] | Tatoeba [TRM] [ENG] [E]
+Reverso Conjugator  [FRM] [P]
+Verbformen [FRM] [P]
+Scholingua [FRM] [P]
+Verbix [FRM] [E]
+Cooljugator [FRM] [E]
+El Conjugador [FRM] [P]","DeepL Translator
+Google Translate
+Bing
+Yandex
+Reverso",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|Dr.|St.|bzw.|Mio.|Co.|ca.|Mrd.|u.a.|Prof.|Nr.|Hrsg.|Chr.|II.|III.|z.B.|usw.|usf.|d.h.|e.V.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ\u200C\u200D,,,"High German, New High German, Deutsch, Alsatian German, American German, Bavarian German, Belgian German, Central German, DDR German, East African German, German German, Hessian German, Indiana German, Liechtenstein German, Lorraine German, Luxembourgish German, Namibian German, Northern German, Prussian German, Silesia German, South African German, Southern German, South Tyrolean German, Switzerland German, Texan German",,"Latn, Latf",de
+Existing,Gothic,,"Wiktionary [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]
+Freelang [TRM] [ENG] [E]
+Verbix [FRM] [E]
+Tatoeba [TRM] [ENG] [P]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,𐌹𐍉𐌷|𐌻𐌿𐌺,𐌰𐌱𐌲𐌳𐌴𐌵𐌶𐌷𐌸𐌹𐌺𐌻𐌼𐌽𐌾𐌿𐍀𐍁𐍂𐍃𐍄𐍅𐍆𐍇𐍈𐍉𐍊a-zA-Zþúíáïāēƕōū\u16A0-\u16EA\u16EE-\u16FF,"Wikipedia sample text | Text sample (Gothic) | Text sample (Latin)
+Neo-Gothic: News article 1 | News article 2 | News article 3","Himma Daga (English and Spanish)
+Koebler Gotisch Deutsch (German)
+Koebler Englisch (English)
+Ben Reylo",,,"Goth, Runr, Latn",got
+Existing,Greek,,"WordReference [TRM] [ENG] [E]
+Dict.com [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E] | Wiktionary [TRM] [ELL] [E]
+Bab.la [TRM] [ENG] [P] | Glosbe [TRM] [ENG] [P]
+Sensagent [TRM] [ENG] [E]
+Greekdictionary,org [TRM] [ENG] [E]
+Portal [TRM] [ELL] [E]
+Christikolexiko [TRM] [ELL] [E]
+Thefreedictionary [TRM] [ELL] [E]
+Sensagent [TRM] [ELL] [E]
+Babiniotis [TRM] [ELL] [E]
+LSJ [TRM] [ELL] [P]
+Tatoeba [TRM] [ENG] [P]
+Cooljugator [FRM] [E]","Deepl [P]
+Google Translate [P]
+Bing [E]
+Reverso [E]
+Yandex [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?;,[A-Z].|[Α-Ω].|κτλ.|κλπ.|π.χ.|λ.χ.|κ.ά|δηλ.|Κος.|Κ.|Κα.|μ.Χ.|ΥΓ.|μ.μ.|π.μ.|σελ.|κεφ.|βλ.|αι.|Ε.Ε.|Δ.Σ.|Α.Ε.|Γ.Σ.|π.Χ.|τ.χλμ.|τ.μ.|κ.λπ.,α-ωΑ-ΩάόήέώύίΊΏΈΉΌΆΎϊΪϋΫΐΰ,,Translatum [TRM] [ENG] [P],"Modern Greek, Neo-Hellenic",,"Grek, Polyt, Brai",el
+Existing,Hebrew,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [HEB] [E]
+Morfix [TRM] [P] | Pealim [TYPE] [P]
+Glosbe [TRM] [P]
+Reverso [TRM] [P]
+Reverso context [TRM] [E]
+Milog [TRM] [HEB] [E]
+Lingea [TRM] [E]
+Tatoeba [TRM] [P]
+Reverso Conjugator [FRM] [P]
+Verbix [FRM] [E]
+Cooljugator [FRM] [E]","Google Translate [P]
+Morfix [P]
+Reverso [E]
+Yandex [P]
+Promt [P]
+Bing [E]",TRUE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥|'=ʼ,.!?؟,ב.|ל.|ה.|א.|מ.|ו.|ג.|ד.|ש.|C.|פ.|A.|B.|ס.|ק.|ר.|S.|א.ב.|מ.ס.|T.,\u05B0-\u05BF\u05C1\u05C2\u05C7\u05D0-\u05EA׳״,UDHR | Wikipedia article | Book sample,,Ivrit,,"Hebr, Phnx, Brai",he
+Existing,Hindi,,"Bolti Dictionary [TYPE]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [HIN] [E]
+Combined Hindi Dictionaries [TRM] [ENG] [HIN] [E]
+Shabdkosh [TRM] [ENG] [E]
+ShabdKhoj [TRM] [ENG] [E]
+Bab.la [TRM] [ENG] [P]
+Glosbe [TRM] [ENG] [P]
+Universal Word - Hindi Lexicon [TRM] [ENG] [E]
+Collins [TRM] [ENG] [P]
+Rekhtadictionary [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P]
+Hindi2Dictionary [TRM] [HIN] [E]
+Verbix [FRM] [E] ","Bing Translator [E]
+Google Translate [P]
+Yandex Translate [P]
+Reverso Translator [E]
+Collins Translator [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.?!|।॥,[A-Z].|[\u0900-\u0963].|[\u0966-\u097F].|[\u200C\u200D].|है.|ए.|हैं.|ई.|ओ.|हूं.|था.|चाहिए.|म.प्र.|होगा.|थी.|स.|ए.एस.आई.|उ.प्र.|न.|ए.टी.एम.|जाएगा.|प.|हो.|ए.के.|ई.पू.|सल्ल.|मी.|सी.|ए.एस.|एम.|इ.|डी.|रजि.|पू.|टी.,a-zA-Z\u0900-\u0963\u0966-\u097F,,,Hindavi,,"Deva, Kthi, Newa",hi
+Existing,Hungarian,,"Sztaki Szótár [TYPE] [E]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [HUN] [E]
+Bab.la [TYPE] [P] | Lingea [TYPE] [E]
+Glosbe [TYPE] [ENG] [P] | Linguee [TYPE] [E]
+Trex [TRM] [P]
+Tatoeba [TRM] [P]
+Verbix verbs [FRM] [E]
+Verbix nouns [FRM] [E]
+Cooljugator [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Revero [E]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,áll.|ált.|bek.|Bp.|Btk.|c.|cs.|dr.|Dr.|du.|e.|em.|évf.|f.|fej.|fszt.|gimn.|hsz.|i. e.|i. m.|i. sz.|igh.|ill.|isk.|k.|kb.|ker.|kht.|kir.|korm.|köv.|Kr.|Kr. e.|Kr. u.|krt.|ktg.|ld.|l.|m.|Magyaro.|Mo.|max.|NB.|nyrt.|o.|p.|Pf.|pl.|prof.|Ptk.|pu.|rt.|stb.|sz.|szn.|Szt.|szül.|t.|tel.|ti.|tv.|u.|ui.|úm.|ún.|vs.|zrt.|,a-zA-ZÁáÉéÍíÓóÖöŐőÚúÜüŰű',UDHR | Wikipedia article | News article | Book sample,,Magyar,,"Latn, Hung",hu
+Existing,Icelandic,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [ISL] [E]
+Glosbe [TYPE] [P]
+Tatoeba [TRM] [P]
+Verbix verbs [FRM] [E]
+Verbix nouns [FRM] [E]
+Cooljugator [FRM] [E]","Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,alg.|ao.|aths.|ákv. gr.|d.|e.|e.Kr.|f.|f.Kr.|forl.|fr.|frk.|fs.|fyrrv.|gr.|h.|hf.|hk.|hr.|hvk.|kk.|kvk.|lo.|m.a.|no.|óákv. gr.|óp.|skst.|so.|st.|tsk.|þ.e.|þf.|þgf.|þús.,a-zA-ZÁáÐðÉéÍíÓóÚúÝýÞþÆæÖö',UDHR | Wikipedia article | News article | Book sample,,,,Latn,is
+Existing,Indonesian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [IND] [E]
+Cambridge dictionary [TRM] [P]
+Glosbe [TRM] [P]
+Trex [TRM] [P]
+Bab.la [TRM] [P]
+Kamus.net [TRM] [P]
+Sederet kamus [TYPE] [E]
+KBBI [TRM] [IND] [E]
+Kamus Sabda [TRM] [IND] [E]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]
+Cooljugator [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Sdr.|Nn.|Tn.|Ny.|Pdt.|no.|dll.|dsb.|alm.|almh.|Bpk.|dkk.|Gg.|H.|Hj.|hlm.|Jend.|Jl.|ka.|tk.|kab.|Kapt.|kec.|kel.|kp.|,a-zA-Zéèêäëïö'-,UDHR | Wikipedia article | Book sample,,,,Latn,id
+Existing,Italian,,"WordReference [TYPE] [E]
+Wiktionary [TYPE] [ENG] [E]
+Wiktionary [TYPE] [ITA] [E]
+Collins [TRM] [P]
+Larousse [TRM] [P]
+Linguee [TYPE] [E]
+Cambridge Dictionary [TRM] [P]
+Glosbe [TRM] [P]
+Bab.la [TRM] [P]
+Trex [TRM] [P]
+Reverso [TRM] [P]
+Reverso context [TRM] [E]
+Treccani [TRM] [ITA] [P]
+De Mauro [TRM] [ITA] [E]
+Olivetti [TRM] [ITA] [E]
+Tatoeba [TRM] [P]
+Reverso Conjugator [FRM] [P]
+Scholingua [FRM] [P]
+Verbix [FRM] [E]
+Verbix nouns [FRM] [E]
+Verbix adjectives [FRM] [E]
+Cooljugator [FRM] [E]","Google Translate [P]
+DeepL Translator [P]
+Reverso [E]
+Yandex [P]
+Promt [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Sig.|Sig.na|Prof.|Dott.|Dott.ssa|Spett.|edit.|sec.|a.C.|d.C,a-zA-ZÀàÉéÈèÌìÎîÓóÒòÙù',UDHR | Wikipedia article | Book sample,,,,Latn,it
+Existing,Japanese,,"Jisho.org [TYPE]
+Japandict [TRM] [ENG] [P] | Weblio [TRM] [JPN] [E]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [JPN] [E]
+Jotoba [TRM] [ENG] [E]
+Lorenzi's Jisho [TRM] [ENG] [E]
+Tangorin [TRM] [ENG] [P]
+WordReference [TRM] [ENG] [E]
+Bab.la [TRM] [ENG] [P]
+Dict.com [TRM] [ENG] [E]
+Alc [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]
+Linguee [TRM] [ENG] [E]
+Reverso [TRM] [ENG] [E]
+Goo [TRM] [ENG] [P]
+Weblio [TRM] [ENG] [E]
+Ichi.moe [TRM] [ENG] [E]
+Romajidesu [TRM] [ENG] [E]
+Kotobank [TRM] [ENG] [P]
+Goo [TRM] [JPN] [P]
+Kotobank [TRM] [JPN] [P]
+Tatoeba [TRM] [ENG] [P]
+Tangorin [TRM] [ENG] [P]
+Immersionkit [TRM] [ENG] [E]
+Massif [TRM] [JPN] [E]
+Yourei [TRM] [JPN] [E]
+Reverso Conjugator [FRM] [P]
+Verbix [FRM] [E]
+Cooljugator [FRM] [E]","DeepL Translator [P]
+Bing [E]
+Yandex [P]
+Reverso [E]
+Google Translate [P]
+Ichi.moe [E]",FALSE,Japanese,´='|`='|’='|‘='|...=…|..=‥,.!?。？！,..|→.|、.|...|「.|〜.|○○○.|『.|』.|㌶.|.....|‐.|℡.|①.|②.|③.|・・・,\p{Han}\p{Katakana}\p{Hiragana},,Yomitan | Yomitan Dictionaries | Jitendex (Yomitan and Goldendict) | Sakura Paris,"Modern Japanese, Nipponese, Nihongo",,"Jpan, Latn, Brai",ja
+Existing,Latin,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [LAT] [E]
+Perseus [TYPE] [E]
+Collatinus [TYPE] [E]
+Olivetti [TRM] [E]
+LatDict [TRM] [E]
+LSJ [TRM] [P]
+Logeion [TRM] [E]
+Glosbe [TRM] [P]
+Trex [TRM] [P]
+Tatoeba [TRM] [P]
+Packhum [TRM] [E]
+Verbix verbs [FRM [E]
+Verbix nouns [FRM] [E]
+Verbix adjectives [FRM] [E]
+Cooljugator etymology [FRM] [E]","Google Translate [P]
+Yandex [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|a.C.n.|p.|e.g.|ed.|i.e.|f.|V.V.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia | Cicero: The Republic | Book sample,,,,"Latn, Ital",la
+Existing,Latvian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [LAV] [E]
+Glosbe [TRM] [P]
+Linguee [TRM] [E]
+Letonika [TRM] [E]
+Tēzaurs [TRM] [LAV] [E]
+Tatoeba [TRM] [P]
+Verbix verbs [FRM] [E]
+Verbix nouns [FRM] [E]
+Cooljugator [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,E.|milj.|A.|u.c.|J.|I.|M.|K.|t.sk.|š.g.|t.i.|R.|V.|u.|tūkst.|u.tml.|G.|S.|t.s.|D.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article | Book sample,,"Lettish, Lett",,Latn,lv
+Existing,Lithuanian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [LIT] [E]
+Glosbe [TRM] [P]
+Linguee [TRM] [E]
+Lingea [TRM] [E]
+Tekstovertimas [TRM] [E]
+Žodynas.lt [TRM] [ENG] [E]
+Žodynas.lt [TRM] [LIT] [E]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]
+Cooljugator [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,sav.|pvz.|proc.|m.|mnr.|Nr.|tūkst.|mln.|mlrd.|trln.|mėn.|mst.|m.|kt.|ir t.t.|ir t. t.|gub.|d.|g.|aps.|apskr.|ež.|kuop.|pan.|par.|plg.|ppr.|,a-zA-ZÀ-ÖØ-öø-ȳ',UDHR | Wikipedia article | Book sample,,,,Latn,lt
+Existing,Norwegian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [NOR] [E]
+Wiktionary [TRM] [NOB] [E]
+Wiktionary [TRM] [NNO] [E]
+Lingea [TRM] [ENG] [E]
+YourDictionary [TYPE]
+Glosbe [TRM] [ENG] [P]
+Bab.la [TRM] [ENG] [P]
+Tritrans [TRM] [ENG] [E]
+Sensagent [TRM] [ENG] [E]
+Trex [TRM] [ENG] [P]
+Ordbøkene.no [TYPE]
+Lexin [TYPE] {NF}
+Verbix [TRM] [E]
+Tatoeba [TRM] [ENG] [P]","DeepL Translator
+Google Translate
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,d.y.|eg.|el.|nr.|t.d.|dvs.|A.O.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia (Bokmål) | Wikipedia (Nynorsk),,,,Latn,no
+Existing,Old Chinese,*,"Wiktionary (Old Chinese) [TRM] [ENG] [E]
+Wiktionary (Middle Chinese) [TRM] [ENG] [E]
+Archchinese [TRM] [ENG] [E] | MDBG [TRM] [ENG] [E]
+Xiaoma [TRM] [ENG] [P] | Chinese Text Project [TRM] [?] [P]",DeepL Translator,FALSE,Classical Chinese,´='|`='|’='|‘='|...=…|..=‥,.!?。！？,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,一-龥,,,,,Hant,och
+Existing,Persian,,"Wiktionary (Iranian/Dari) [TRM] [ENG] [E]
+Wiktionary (Tajiki) [TRM] [ENG] [E]
+Wiktionary [TRM] [PES] [E]
+Combined Persian Dictionaries [TRM] [ENG] [E]
+FarsiDictionary [TRM] [ENG] [E]
+Vajehyab [TRM] [PES] [P]
+Glosbe [TRM] [P]
+Tatoeba [TRM] [ENG] [P]
+Verbix [FRM] [E]
+Cooljugator [FRM] [E]","Google Translate (Iranian/Dari) [P]
+Google Translate (Tajiki) [P]
+Reverso [E]
+Yandex [P]
+Bing [E]",TRUE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,".،!؟؛:​,;",است.|شود.|شد.|بود.|کرد.|میشود.|کنند.|کند.|باشد.|دارد.|کنیم.|میکند.|نیست.|هستند.|ندارد.|داشت.|میکنند.|داد.|باشند.|کنم.,\u0600-\u0608\u0610-\u061A\u0620-\u065F\u066E-\u06D3\u06D5-\u06FF\u077E-\u077F\u7B50-\uFDFF\u0400-\u04FF,UDHR (Persian) | Wikipedia article (Persian) | Book sample (Persian) | UDHR (Tajiki),,"Farsi, New Persian, Modern Persian, Western Persian, Iranian Persian, Eastern Persian, Dari, Aimaq, Aimak, Aymaq, Eimak",,"fa-Arab, Hebr",fa
+Existing,Polish,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [POL] [E]
+Cambridge Dictionary [TRM [P]
+Pons [TYPE] | Glosbe [TRM] [P]
+Bab.la [TRM] [P]
+Trex [TRM] [P]
+Reverso [TRM] [P]
+Reverso context [TRM] [E]
+Linguee [TRM] [E] | WSJP [TRM] [E]
+PWN [TRM] [E] | DobrySłownik [TRM] [E]
+Lingea [TRM] [E]
+Tatoeba [TRM] [P]
+Verbix verbs [FRM] [E]
+Verbix nouns [FRM] [E]
+Cooljugator [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Reverso [E]
+Yandex [P]
+Promt [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,blm.|blp.|bm.|br.|cdn.|d.|daw.|etc.|g.|gł.|głęb.|godz.|itd.|itp.|mies.|n.e.|np.|o.|odc.|ok.|oo.|p.Chr.|p.n.e.|pchor.|pot.|ppłk.|ppor.|proc.|r.|s.|scs.|sp. z o.o.|szer.|św.|t.|tj.|tow.|ts.|tydz.|tzn.|tzw.|ul.|ur.|ww.|z d.|z.|zm.|zob.,a-zA-ZĄąĆćĘęŁłŃńÓóŚśŹźŻż',UDHR | Wikipedia article | News article | Book sample,,,,Latn,pl
+Existing,Portuguese,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [POR] [E]
+Michaelis [TRM] [ENG] [E]
+Michaelis [TRM] [POR] [E]
+Porto Editora [TRM] [ENG] [P]
+Porto Editora [TRM] [POR] [P]
+Priberam [TRM] [POR] [P]
+Dicio [TRM] [POR] [E]
+WordReference [TYPE] [E]
+Cambridge Dictionary [TRM] [P]
+Glosbe [TRM] [P]
+Bab.la [TRM] [P]
+Trex [TRM] [P]
+Reverso [TRM] [P]
+Reverso context [TRM] [E]
+Linguee [TRM] [E]
+PONS [TRM] [E]
+Tatoeba [TRM] [P]
+Reverso Conjugator [FRM] [P]
+Verbix verbs [FRM] [E]
+Verbix nouns [FRM] [E]
+Verbix adjectives [FRM] [E]
+Cooljugator [FRM] [E]
+Porto Editora [FRM] [POR] [P]","DeepL Translator [P]
+Google Translate [P]
+Reverso [E]
+Yandex [P]
+Promt [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Sr.|Sra.|Srta.|Dr.|Prof.|Pe.|a.C.|d.C.,a-zA-ZÀÁÂÃÇÉÊÍÓÔÕÚÜàáâãçéêíóôõúü',UDHR | Wikipedia article | News article,,Modern Portuguese,,"Latn, Brai",pt
+Existing,Punjabi,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [PNB] [E]
+Wiktionary [TRM] [PAN] [E]
+Shabdkosh [TRM] [ENG] [E]
+Learnpunjabi.org [TRM] [ENG] [E]
+Bhai Maya Singh [TRM] [ENG] [E]
+Tamilcube [TRM] [ENG] [P]
+Glosbe [TRM] [ENG] [P]
+Srigranth [TRM] [ENG] [HIN] [E]
+Kanwal Bashir and Abbas Kazmi [TRM] [ENG] [E]
+Punjapedia [TRM] [PAN] [E]
+Iqbal Salah-ud-Din [TRM] [PNB] [E]
+Tatoeba (Eastern) [TRM] [ENG] [P]
+Tatoeba (Western) [TRM] [ENG] [P]","Google Translate [P]
+Bing [E]
+Yandex [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.،؛!؟.!?।॥۔,[A-Z].|ਈ.|ਏ.|ਸ.|ਓ.|ਸੀ.|ਈ.ਪੂ.|ਏ.ਵੀ.|ਪੀ.|ਈ.ਓ.|ਆਈ.|ਡੀ.|ਵੀ.|ਏ.ਸੀ.|ਯੂ.|ਈ.ਟੀ.|ਐਸ.|ਮੀ.,\u0A00-\u0A7F\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF,Wikipedia article (WP) | Wikipedia article (EP),opd.cle [TRM] [PNB],Panjabi,,"Guru, pa-Arab",pa
+Existing,Romanian,,"WordReference [TRM] [E]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [RON] [E]
+Dex-online [TRM] [RON] [E]
+Archeus [TRM] [RON] [E]
+Hallo.ro [TRM] [P] | Glosbe [TRM] [ENG] [P]
+Bab.la [TRM] [P]
+Reverso [TRM] [P]
+Reverso context [TRM] [E]
+Linguee [TRM] [E]
+Trex [TRM] [P]
+Lingea [TRM] [E] | Tatoeba [TRM] [P]
+Verbix verbs [FRM] [E]
+Verbix nouns [FRM] [E]
+Verbix adjectives [FRM] [E]
+Cooljugator [FRM] [E]","Google Translate [P]
+DeepL Translate [P]
+Reverso [E]
+Yandex [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,al.|ap.|bd.|bl.|cap.|dle.|Dle.|dvs.|Dvs.|dv.|Dv.|et.|etc.|fem.|jud.|lat.|loc.|masc.|nr.|pag.|Rom.|sc.|sec.|Sf.|str.|v.|vol.|,a-zA-ZĂăÂâÎîȘșȚțŞşŢţА-Яа-яЄєӁӂḐḑĬĭŬŭĬĭꙊꙋꙊ̆ꙋ̆ѢѣꙖꙗѤѥѦѧѪѫѮѯѰѱѲѳѴѵꙞꙟЏџ',UDHR | Wikipedia article | News article | Book sample,,"Daco-Romanian, Roumanian, Rumanian",,"Latn, Cyrl, Cyrs",ro
+Existing,Russian,,"OpenRussian [TYPE] [E]
+RussianDict [TRM] [P]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [RUS] [E]
+Gramota [TRM] [RUS] [E]
+Bab.la [TRM] [P]
+Glosbe [TRM] [P]
+Pons [TRM] [P]
+Trex [TRM] [P]
+Reverso [TRM] [P]
+Reverso context [TRM] [E]
+Linguee [TRM] [E]
+Lingea [TRM] [E]
+WordReference [TRM] [E]
+Tatoeba [TRM] [P]
+Reverso Conjugator [FRM] [P]
+Verbix [FRM] [E]
+Verbix nouns [FRM] [E]
+Cooljugator [FRM] [E]
+Cooljugator adjectives [FRM] [E]
+Cooljugator nouns [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Reverso Translator [E]
+Bing [E]
+Promt [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|[А-Я].|тыс.|млн.|руб.|ул.|млрд.|год.|им.|ст.|т.д.|гг.|др.|кв.|т.е.,А-Яа-яЁё,,,,,"Cyrl, Brai",ru
+Existing,Sanskrit,,"Combined Sanskrit Dictionary Search [TRM] [ENG] [E]
+Sanskrit - Dictionary [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SAN] [E]
+Sanskritdictionary [TRM] [ENG] [E]
+Andhrabharati [TRM] [ENG] [P]
+Monier Williams [TRM] [ENG] [P]
+Glosbe [TRM] [ENG] [P]
+Amara [TRM] [ENG] [E]
+Sanscritdictionary.org [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.?!।॥,[\u0900-\u0963].|[\u0966-\u097F].|[A-Z].|श.|ई.|स.|अ.|ए.|उ.|च.कि.मी.|मी.|ई.पू.|इ.|p.|ऐ.|ओ.|च.|आ.|ड.|वा.,a-zA-Zāīūṣḥṃṛṭṇḍṝḹḻśṅñ\u0900-\u0963\u0966-\u097F,Bhagavad Ghita (Devanagari and Latin) | Upanishads (Devanagari and Latin) | Sample text (Devanagari and Latin),"Ambuda [TRM] [ENG] [SAN] [E]
+Goldendict Dictionary 
+University of Cologne Dictionaries
+https://sanskritdocuments.org/dict/",,,"as-Beng, Bali, Beng, Bhks, Brah, Mymr, xwo-Mong, Deva, Gujr, Guru, Gran, Hani, Java, Kthi, Knda, Kawi, Khar, Khmr, Laoo, Mlym, mnc-Mong, Marc, Modi, Mong, Nand, Newa, Orya, Phag, Ranj, Saur, Shrd, Sidd, Sinh, Soyo, Lana, Takr, Taml, Tang, Telu, Thai, Tibt, Tutg, Tirh, Zanb",sa
+Existing,Serbian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SRP] [E]
+Glosbe [TRM] [ENG] [P]
+LingvoSoft [TRM] [ENG] [E]
+Sensagent [TRM] [ENG] [E]
+Vokabular [TRM] [SRP] [E]
+Tatoeba [TRM] [ENG] [P]
+Verbix [FRM] [E]","Google Translate [P]
+Bing (Cyrillic) [E]
+Bing (Latin) [E]
+Yandex [P]
+Pons [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,н.|п.|е.|М.|p.|А.|С.|В.|Д.|Ј.|Б.|м.|m.|Р.|П.|ф.|г.|К.|Н.|Г.|в.д.|д.|в.|Ђ.|И.|д.о.о.|Љ.|Н.М.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ\u0400-\u04ff,"UDHR (B-C), (B-L), (C-L), (M-L), (S-C), (S-L)
+
+Book sample 1 [S] | Book sample 2 [C]",,"BCS, Croato-Serbian, Serbocroatian, Bosnian, Croatian, Montenegrin, Serbian, Shtokavian",,"Latn, Cyrl, Glag",sh
+Existing,Slovak,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SLK] [E]
+Slovnik.sk [TRM] [P]
+Zoznam.sk [TRM] [P]
+Slovenské slovníky [TRM] [P]
+Glosbe [TRM] [P]
+Linguee [TRM] [E]
+Trex [TRM] [P]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Reverso [E]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,M.|tzv.|h.|J.|K.|č.|s.|II.|R.|P.|A.|a.|I.|S.|hod.|mil.|r.|L.|resp.|B.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Book sample,,,,Latn,sk
+Existing,Slovene,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SLV] [E]
+fran.si [TRM] [P]
+Glosbe [TRM] [P]
+Linguee [TRM] [E]
+Trex [TRM] [P]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,oz.|t.|i.|d.|prof.|npr.|v.|II.|t.i.|m.|P.|J.|o.|A.|doc.|g.|I.|B.|D.|itd.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article | Book sample,,Slovenian,,Latn,sl
+Existing,Spanish,,"The Free Dictionary [TRM] [ENG]
+WordReference [TYPE] [ENG]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SPA] [E]
+SpanishDict [TRM] [ENG] [P]
+Larousse [TRM] [ENG] [P]
+Diccionarios.com [TRM] [ENG] [P]
+Reverso [TRM] [ENG] [P]
+Collins [TRM] [ENG] [P]
+Pons [TRM] [ENG] [P]
+Dict.com [TRM] [ENG] [E]
+Bab.la [TRM] [ENG] [P]
+Tr-Ex.me [TRM] [ENG] [P]
+Glosbe [TRM] [ENG] [P]
+Linguee [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P]
+RAE [TRM] [SPA] [E]
+Reverso Conjugator [FRM] [P]
+Scholingua [FRM] [P]","DeepL Translator [P]
+Google Translate [P]
+Reverso Translator [E]
+Bing [E]
+Yandex []",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Dr.|Dra.|Drs.|[A-Z].|Ud.|Vd.|Vds.|Sr.|Sra.|Srta.|a. C.|d.C.|Pte.|etc.|UU.|p.m.|a.m.|vs.|Jr.|pp.|St.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ,,,"Castilian, Amazonian Spanish, Amazonic Spanish, Loreto-Ucayali Spanish",,"Latn, Brai",es
+Existing,Swahili,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SWA] [E]
+MobiTuki [TRM] [P]
+Glosbe [TRM] [P]
+Bab.la [TRM] [P]
+Tatoeba [TRM] [P]
+Verbix [FRM] [P]","Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Bi.|Bw.|Dk.|Dkt.|Mhe.|Mwl.|n.k.,a-zA-Z'-,UDHR | Wikipedia article | Book sample (A) (B),,"Settler Swahili, KiSetla, KiSettla, Setla, Settla, Kitchen Swahili, Kihindi, Indian Swahili, KiShamba, Kishamba, Field Swahili, Kibabu, Asian Swahili, Kimanga, Arab Swahili, Kitvita, Army Swahili",,"Latn, Arab",sw
+Existing,Swedish,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SWE] [E]
+Folkets Lexikon [TYPE] [E]
+Svenska Akademiens ordbok [TRM] [E]
+Cambridge [TRM] [P]
+Glosbe [TRM] [P]
+Bab.la [TRM] [P]
+Reverso [TRM] [P]
+Reverso context [TRM] [E]
+Linguee [TRM] [E]
+WordReference [TRM] [E]
+Trex [TRM] [P]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]
+Cooljugator [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Reverso [E]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,bildl.|bl.a.|d.|d.v.s.|d.y.|d.ä.|dets.|dr.|Dr.|dvs.|E. N.|e.d.|e.dyl.|e.Kr.|e. Kr.|e.l.|e.likn.|e.m.|eg.|el.|el.dyl.|el.likn.|etc.|ev.|ex.|exkl.|f.|f.d.|f.Kr.|f. Kr.|f.m.|f.n.|f.v.t.|fr.|fr.o.m.|förk.|g.s.|ibl.|inkl.|inst.|it.|jmf.|kl.|kungl.|m.fl.|m.m.|m.v.h.|N.N.|n.s.|o.d.|o.dyl.|o.l.|o.likn.|o.s.a.|o.s.v.|omkr.|osv.|p.g.a.|pers.|rdr.|rdr. rgs.|resp.|rgs.|s.k.|s.ö.|särsk.|t.|t.ex.|t.h.|t.o.m.|t.v.|tim.|ung.|v.|vanl.|äfv.|äv.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article | Book sample,,,,Latn,sv
+Existing,Tibetan,,"Wiktionary [TRM] [ENG] [E]
+Christian Steinert [TRM] [ENG] [E]
+Tywiki.tsandra [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]
+English Tibetan Dictionary [TRM] [ENG] [E]
+Tibterminology [TRM] [ENG] [E]
+Mandala [TRM] [ENG] [TIB] [E]
+Nitharta [TRM] [TIB] [E]
+Monlamdictionary [TRM] [TIB] [E]
+Panlex [TRM] [ENG] [P]
+Nitartha Dictionary (Romanized)[TRM] [TIB] [E]
+Freelang [TRM] [ENG] [E]
+Tibetan-Tibetan Dictionary [TRM] [TIB] [E]
+Verbix [FRM] [E]","Glosbe [P]
+THL [E]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|ངས.|བློ་ཡུལ་དུ་མེད་པའི་བྱུར་པོ་ཆེ་ཞིག་བྱུང་འདུག.|མི་རྐྱང་ངས.|མེ་ཏོག་གི་དྲི་བསུང་རྒྱང་རིང་དུ་ཁ་བ།.|མེ་ཏོག་ལྟ་བུའི་ཕྲུ་གུ་དག་འོད་ཟེར་གྱི་གཤོག་ཐོགས་བཞིན་མཁའ་རུ་ལྡིང་དུས.|རོ་དྲུག་གི་ཡ་གྱལ་ཏེ་དོམ་མཁྲིས་ལྟ་བུའི་རྫས་གང་ཁར་རེག་པའི་ཚེ་ཁ་ཡི་དྲི་སྦྱང་ཞིང་ཡི་ག་མེད་པར་གྱུར་པའི་བྲོ་བ་ཞིག.|ལ་ལ་གཉིད་ལོག་འགའ་ཞིག་བློ་རྩེ་གཅིག་གིས་སློབ་ལ་འབད།།.|뭐.,u\0F00\u0F15-\u0F39\u0F3E-\u0FFF,Wikipedia article,Tibetan dictionary [TRM] [ENG] [TIB] [E],"Amdo Tibetan, Amdo, Dolpo, Khams, Khams Tibetan, Khamba, Gola, Humla, Limi, Lhasa, Lhasa Tibetan, Lhomi, Loke, Lowa, Mugom, Mugu, Mustang, Nubri, Panang, Shing Saapa, Thudam, Tichurong, Tseku, Ü, Dbus, Walungge",,Tibt,bo
+Existing,Turkish,,"WordReference [TYPE]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [TUR] [E]
+Tureng [TRM] [E]
+Sesli Sözlük [TRM] [P]
+Reverso context [TRM] [E]
+Bab.la [TRM] [P]
+Glosbe [TRM] [P]
+Zargan [TRM] [E]
+Lingea [TRM] [E]
+Türkçe Sözlük [TYPE] [TUR] [E]
+Türk Dil Kurumu Sözlükleri [TYPE] [TUR] [E]
+Lugatim [TRM] [TUR] [E]
+Sensagent TR-TR [TRM] [TUR] [E]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]
+Cooljugator [FRM] [E]","DeepL Translator [P]
+Google Translate [P]
+Reverso [E]
+Yandex [P]
+Bing [E]",FALSE,Turkish,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|[À-Ö].|vb.|M.Ö.|Sh.|A.Ş.|T.C.|vs.|var.|Ş.|M.A.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑğĞıİöÖüÜşŞçÇ,,,,,Latn,tr
+Existing,Ukrainian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [UKR] [E]
+Cybernova [TRM] [E]
+Slovnyk.ua [TRM] [UKR] [E]
+Glosbe [TRM] [P]
+Reverso [TRM] [P]
+Reverso context [TRM] [E]
+Trex [TRM] [P]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]
+Verbix noun [FRM] [E]
+Tatoeba Sentences [TRM]","DeepL Translate [P]
+Google Translate [P]
+Reverso [E]
+Promt [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,адм.|г.|год.|губ.|див.|ім.|кн.|обл.|од.|р-н.|с.|св.|ст.|т. ін.|т. с.|та ін.|тел.|у т. ч.|,А-Яа-яA-Za-zЁёҐґІіЇїЄєЇ́ї́О́о́',UDHR | Wikipedia article | News article | Book sample,,,,Cyrl,uk
+Existing,Vietnamese,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [VIE] [E]
+Vdict [TRM] [ENG] [E]
+Dict.com [TRM] [ENG] [E]
+Bab.la [TRM] [ENG] [P]
+Glosbe [TRM] [ENG] [P]
+Tratu.coviet [TRM] [ENG] [E]
+Tratu.soha [TRM] [ENG] [E]
+Vdict [TRM] [VIE] [E]
+Tratu.coviet [TRM] [VIE] [E]
+Tratu.soha [TRM] [VIE] [E]
+Tracau [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P]
+Cooljugator [TRM] [ENG] [E]","Google Translate
+Bing [E]
+Yandex [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Ng.|BS.|Đ.|h.|Q.|q.|sg.|t.|T.|Th.,a-zA-ZÀ-ÖØ-öø-ȳĀ-ɏḀ-ỿọể',Wikipedia article | Book sample,"Uni-Leipzig [TRM] [ENG] [E]
+Dictionary recommendations (Paper, App and Online)
+Yomitan (Browser Extension)
+Yomitan dictionaries","Annamese, Annamite",,"Latn, Hani",vi
+Existing,Mandarin Chinese,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [ZHO] [E]
+Han Dian [TRM]
+MDBG [TRM]
+Collins [TRM]
+Bab.la [TRM]","DeepL [P]
+Reverso [P]",FALSE,Mandarin,´='|`='|’='|‘='|...=…|..=‥,.!?。！？,,一-龥,UDHR (simplified) | Wikipedia (Mandarin) | Wikipedia (simplified) | Wikipedia (traditional),Yomitan | Yomichan Dictionaries,"Mandarin Chinese, Putonghua, Guoyu, Huayu, Guanhua, Beifanghua, Standard Chinese",,"Hants, Latn, Bopo",cmn
+Existing,Nahuatl,,"Wiktionary [TRM] [ENG] [E]
+Gran Diccionario Náhuatl [TRM] [SPA] [E]
+Wired Humanities [TRM] [ENG] [P]
+Wiktionary Varieties: (Central) (C. Huasteca Durango)
+(E. Huasteca) (Tetelcingo) (Mecayapan) (W. Huasteca)
+(N. Puebla) (Zacatlán-Ahuacatlán-Tepetzintla) (Guerrero)
+(Morelos) (Ometepec) (Orizaba) (Highland Puebla)
+(Temascaltepec) (Coatepec) [TRM] [ENG] [E]
+Tatoeba [TRM] [P]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|a.X.|A.C.|mes.|x.C.|ca.|km.|cm.|Inc.|etc.|mm.|pag.|Mr.|St.|kg.|Bo.|El.|In.|Ka.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑčλšñāēīōâêîôäëïöàʼ\U00015C00-\U00015FFF,UDHR | Sample text,https://aulex.org/nahuatl/,,,Latn,nah
+Existing,Navajo,,"Wiktionary [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]
+The Navaho Language [TRM] [ENG] [E]
+Tatoeba [TRM] [P]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|U.S.|N.N.C.|Apr.|B.I.A.|C.N.|D.W.,a-zA-ZÀ-ÖØ-öø-ȳáąą́éęę́íįį́óǫǫ́ʼ,Story (Wikipedia),https://digscholarship.unco.edu/cgi/viewcontent.cgi?article=1000&context=navajo,"Navaho, Diné bizaad",,Latn,nv
+Existing,Kazakh,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [KAZ] [E]
+Lugat [TRM] [KAZ & ENG] [E]
+Glosbe [TRM] [ENG] [P]
+Audaru [TRM] [E]
+Freelang [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P]
+Verbix [FRM] [E]","Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|[u0400-\u04FF].|т.б.|ж.|қ.|с.ғ.с.|Б.|т.|б.|Қ.|Ә.|Ж.|ғ.|Д.|р.а.|с.ғ.с.|Н.Ә.|б.з.б.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ\u0400-\u04FF,UDHR (Cyrillic) | Wikipedia article (Cyrillic),,,,"Cyrl, Latn, kk-Arab",kk
+Existing,Macedonian,,"Wiktionary [TRM] [ENG] [E]
+Off.net [TRM[ [ENG] [E]
+Time [TRM] [ENG] [P]
+Glosbe [TRM] [ENG] [P]
+Zoze [TRM] [ENG] [E]
+Makedonkski [TRM] [MK] [E]
+Drmj [TRM] [MK] [E]
+Zoze [TRM] [MK] [E]
+Tatoeba [TRM] [ENG] [P]
+Verbix [FRM] [ENG] [E]
+Cooljugator [FRM] [ENG] [E]","Google Translate [P]
+Yandex [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[\u0400-\u04FF].|т.е.|т.н.|п.н.е.|итн.|в.д.|год.|сл.|П.С.|А.С.|А.И.|З.З.|С.А.|А.Д.|А.Ф.|Б.П.,\u0400-\u04FF,UDHR | Wikipedia article,,,,"Cyrl, Grek",mk
+Existing,Bosnian,,"Glosbe [TRM] [ENG] [P]
+Rjecnik [TRM] [ENG] [E]
+Lingvozone [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]
+Rjecnik (1) [TRM] [ENG] [E]
+Dict.cc [TRM] [ENG] [E]
+Wiktionary [TRM] [BOS] [E]
+Freelang [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P]","Google Translate [P]
+Bing [E]
+Yandex [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|[u0400-\u04FF].|bh.|d.o.o.|prof.|d.d.|tj.|tzv.|v.d.|Bh.|npr.|dr.|Beograda.|br.|a.d.|dipl.|p.n.e.|god.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ\u0400-\u04ff,Bloom Library,,"BCS, Croato-Serbian, Serbocroatian, Bosnian, Croatian, Montenegrin, Serbian, Shtokavian",,"Latn, Cyrl, Glag",bos
+Existing,Ainu,,"An Ainu-English-Japanese Dictionary [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]
+Ainugo [TRM] [JPN] [ENG] [P]
+A Topical Dictionary of Conversational Ainu [TRM] [ENG] [P]
+Tatoeba [TRM] [P]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥|ㇰ=ク|ｼ=シ|ㇲ=ス|ㇳ=ト|ㇴ=ヌ|ㇵ=ハ|ㇶ=ヒ|ㇷ=フ|ㇸ=ヘ|ㇹ=ホ|ﾑ=ㇺ|ﾗ=ㇻ|ﾘ=ㇼ|ﾙ=ㇽ|ﾚ=ㇾ|ﾛ=ㇿ|ｸ=ク|ﾌﾟ=プ,.!?。？！,[\u3040-\u309F]|[\u30A0-\u30FF]|[\u31F0-\u31FF]|[一-龥]|ㇷ゚|セ゚|ツ゚|ト゚,a-zA-Z\u3040-\u309F\u30A0-\u30FF\u31F0-\u31FF一-龥ㇷ゚セ゚ツ゚ト゚,Story 1 | Story 2 | Story 3,,Ainu (Japan),,"Kana, Latn, Cyrl",ain
+Existing,Okinawan,,"Jlect [TRM] [ENG] [JPN] [E]
+Wiktionary [TRM] [ENG] [E]
+Hougen Ajima [TRM] [JPN] [E]
+Tatoeba [TRM] [P]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?。？！,[A-Z]|[\u3040-\u309F\u30A0-\u30FF]|[一-龥]|'|[À-Ö]|[Ø-ö]|ī|ū|ō|ē,\u3040-\u309F\u30A0-\u30FF一-龥a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'īūō,Example text (Wikipedia) | Sample text (Imabi),,,,Jpan,ryu
+Initial,Acehnese,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,"Achinese, Atjehnese",,"Latn, ms-Arab",ace
+Initial,Afar,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,Qafar,,"Latn, Ethi",aa
+Initial,Akkadian,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,-,\U00012000-\U000123FF\U00012400-\U0001247F\U00012480-\U0001254F,Wikipedia - Cuneiform List of Signs,CAD,,,"Xsux, Latn",akk
+Initial,Alemannic German,,"Wiktionary [TRM] [ENG] [E]
+Idiotikon [TRM] [DEU] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia article 1 | Wikipedia article 2,,"Swiss German, Walser German, Walserdeutsch, Walser, Wallisertiitsch, Italian Walser, Pomattertitsch, Formazza, Kampel, Remmaljertittschu, Rimella, Chalchoufe, Titzschu, Alagna, Greschóneytitsch, Greschóney, Greschoney, Gressoney, Éischemtöitschu, Issime",,Latn,gsw
+Initial,Ancient Greek,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,α-ωΑ-ΩάόήέώύίΊΏΈΉΌΆΎϊΪϋΫΐΰἀ-ῳἈ-ῼ´῾\u0308,Homer's Iliad,,"Classical Greek, Egyptian Ancient Greek",,"Polyt, Cprt",grc
+Initial,Anindilyakwa,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Bible,,Enindhilyagwa,,Latn,aoi
+Initial,Aragonese,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [ARG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,an
+Initial,Aromanian,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [RUP] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÃãÂâȚțĂă,UDHR | Wikipedia article,,,,"Latn, Grek",rup
+Initial,Arrernte / Arrarnta,,"Wiktionary (Eastern) [TRM] [ENG] [E]
+Wiktionary (Western) [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Bible (Eastern) | Bible (Western),https://ausil.org.au/Dictionary/Western-Arrarnta/lexicon/index.htm,#N/A,,#N/A,#N/A
+Initial,Assamese,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0980-\u09E3\u09F0\u09F0\u09F1\u09FD\u09FE,Wikipedia article 1 | Wikipedia article 2,,Asamiya,,as-Beng,as
+Initial,Asturian,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [AST] [E]
+Glosbe [TRM] [ENG] [P]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑḤḶḥḷ',UDHR | Wikipedia article,,,,Latn,ast
+Initial,Aymara,,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,"Southern Aymara, Central Aymara",,Latn,ay
+Initial,Bambara,*,"Wiktionary [TRM] [ENG] [E]
+An ka taa [TRM [ENG/FRA] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?߹,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'\u0620-\u065F\u0750-\u077F\u08A0-\u08FF\u07CA-\u07F3,UDHR | Wikipedia article (N'Ko),,Bamanankan,,Latn,bm
+Initial,Bashkir,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?߹,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0400-\u04FF,Wikipedia article 1 | Wikipedia article 2,,,,Cyrl,ba
+Initial,Bavarian,*,"Wiktionary [TRM] [ENG] [E]
+Wikipedia [TRM] [BAR] [E]
+Glosbe [TYPE] [ENG] [P]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia article,,Austro-Bavarian,,Latn,bar
+Initial,Beaver,,"First Voices [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑęąd̲z̲t̲s̱ḏẕǫ́’'ʼʔ\u1400-\u166D\u116F-\u167F,Story 1 | Story 2 | Story 3,,"Dane-zaa, Danezaa, Danezaa ZaageɁ",,Latn,bea
+Initial,Bhojpuri,*,Glosbe [TRM] [ENG] [P],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?।।॥,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0900-\u0963\u0970-\u097F,Wikipedia article,,,,"Deva, Kthi",bho
+Initial,Biblical Hebrew,,"Wiktionary [TRM] [ENG] [E]
+AlHaTorah [TRM] [ENG] [E]",-,TRUE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥|'=ʼ,׃‎,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u05B0-\u05BF\u05D0-\u05EA\u05C1\u05C2\u05C7,Torah,,#N/A,,#N/A,#N/A
+Initial,Bikol Central,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,"Central Bikol, Bikol",,"Latn, Tglg",bcl
+Initial,Bislama,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,,,Latn,bi
+Initial,Blackfoot,,"Blackfoot Dictionary [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]
+Freelang [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑʼ\u1401-\u1665\u166F-\u167F,Sample text (Latin and Syllabics) | Excerpt (Latin),Vocabulary list,"Siksika, Blackfeet",,"Latn, Cans",bla
+Initial,Carrier,,"Wiktionary [TRM] [ENG] [E]
+First voices (Southern) [TRM] [ENG] [E]
+First voices (Nadhel-Stella Whut'enne) [TRM] [ENG] [E]
+First voices (Nak'azdli) [TRM] [ENG] [E]
+First voices (Tz'azt'en-ne Bughuni) [TRM] [ENG] [E]
+First voices (Saik'uz Dakelh) [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑs̲z̲t̲d̲'\u1400-\u166D\u116F-\u167F,,,,,"Latn, Cans",crx
+Initial,Cebuano,*,"Bohol [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-Z\u1700-\u171F,UDHR | News article,,,,"Latn, Tglg",ceb
+Initial,Central Kurdish,,"Wiktionary [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]",Google Translate,TRUE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\u200C,UDHR | Wikipedia article,,Sorani,,ku-Arab,ckb
+Initial,Chamorro,,"Diksionåriu [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,Chamoru,,Latn,ch
+Initial,Cherokee,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [CHR] [E]
+Cherokee Dictionary [TYPE] [E]
+Glosbe [TRM] [P]
+Manataka American Indian Council [TYPE] [P]
+Your Grandmother's Cherokee [P]
+Cherokee Language Resources [P]",,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,",.!?",Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u13A0-\u13FF\uAB70-\uABBF,UDHR | Wikipedia article,,"Tsalagi, Lower Cherokee, Middle Cherokee, Kituwah, Kituhwa, Eastern Cherokee, Overhill Cherokee, Otali, Western Cherokee",,Cher,chr
+Initial,Chibcha,,"Muysc Cubun [TRM] [SPA] [E]
+Muysc Cubun (Advanced Search) [TRM] [SPA] [E]
+Wiktionary [TRM] [ENG] [E]
+IDS [TRM] [ENG] [E]
+Lexibank [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑïʠ,All sample texts sources,,,,,chb
+Initial,Chichewa,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,"Chicheŵa, Chinyanja, Nyanja, Chewa, Cicewa, Cewa, Cinyanja",,Latn,ny
+Initial,Chickasaw,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,,,Latn,cic
+Initial,Classical Tibetan,,"Tibetan-English Dictionary [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0F40-\u0FDA,Sample texts,,,,"Tibt, Hani, Marc, Mong, mnc-Mong, xwo-Mong, Phag, Tang, Zanb",xct
+Initial,Cornish,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [COR] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia article | Bible,,,,Latn,kw
+Initial,Corsican,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,Corsu,,Latn,co
+Initial,Cree,,"Creedictionary (Roman) [TRM] [ENG] [E]
+Creedictionary (Syllabics) [TRM] [ENG] [E]
+Intwewina (Plains) [TRM] [ENG] [P]
+Moosecree.ca (Moose) [TRM] [ENG] [E]
+Wiktionary varieties: (General) (Plains) (N. East)",,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u1400-\u166D\u116F-\u167Fa-zA-ZēĒōŌāĀīĪšŠâÂêÊîÎôÔðÐýÝñÑ',"Sample 1 (A) (B) + Book sample 1 (Plains) | Sample 2 (Woods) (A) (B)
+
+Sample 3 (Swampy) | Sample 4 (Moose) | Sample 5 (Atikamekw)
+
+Sample 6 (East)","(Plains) https://dictionary.plainscree.atlas-ling.ca/#/help
+(W. Swampy) https://fortsevern.atlas-ling.ca/
+(Atikamekw) [FRA] https://dictionnaire.langueatikamekw.ca/#/results
+(Atikamekw) [FRM] [FRA] https://verbes.atikamekw.atlas-ling.ca/
+(Eastern) https://dictionary.eastcree.org/",,,"Cans, Latn",cr
+Initial,Dakota,*,"Wiktionary [TRM] [ENG] [E]
+A Dakota-English dictionary (archive.org) [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑŋČčǦǧȞȟŠšŽžḳḣc̄p̄ṗṡc̀s̀',Sample,"https://dictionary.swodli.com/index.html
+https://www.native-languages.org/dakota.htm",,,Latn,dak
+Initial,Dhivehi,,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0780-\u07B1,UDHR | Wikipedia article,,"Divehi, Maldivian, Mahal, Mahl",,"Thaa, Diak",dv
+Initial,Ditidaht,,"First Voices [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑʔʕƛ̓x̣ʷ,Sample 1 | Sample 2,,Diitidaht,Andika,Latn,dtd
+Initial,Dyula,*,"Wiktionary [TRM] [ENG] [E]
+An ka taa [TRM] [ENG/FRA] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,,,Latn,dyu
+Initial,Dzongkha,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0F40-\u0FDA,Wikipedia article 1 | Wikipedia article 2,,,,Tibt,dz
+Initial,Erzya,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0400-\u04FF,Wikipedia article,,Mordvin,,Cyrl,myv
+Initial,Ewe,,"Wiktionary [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'\u0303,UDHR,,,,Latn,ee
+Initial,Faroese,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [FAO] [E]
+Glosbe [TRM] [ENG] [P]
+Sprotin [TRM] [ENG] [E]
+Sprotin [TRM] [FAO] [E]
+Føroysk-ensk orðabók (archive.org) [TRM]",Glosbe,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article | News article,,Faeroese,,Latn,fo
+Initial,Fon,,"Wiktionary [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,fon
+Initial,Franco-Provençal,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,"Arpetan, Arpitan",,Latn,frp
+Initial,Friulian,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,fur
+Initial,Fula,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?𞥟𞥞,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'\U0001E900-\U0001E94B\u0620-\u065F\u066E-\u06D3\u0750-\u077F\u06FA-\u0FFF\uFE70-\uFEFF\u06DC,UDHR | Wikipedia article,,"Fulani, Adamawa Fulfulde, Bagirmi Fulfulde, Borgu Fulfulde, Central-Eastern Niger Fulfulde, Fulfulde, Maasina Fulfulde, Nigerian Fulfulde, Pular, Pulaar, Western Niger Fulfulde",,"Latn, Adlm",ff
+Initial,Gagauz,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Turkish,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-Zа-яА-ЯЁёӒӓӁӂӦӧӰӱÄäÇçÊêİıÖöŞşŢţÜüĞğÂĂÎƵâăîƶ,UDHR | Wikipedia article,,,,"Latn, Cyrl",gag
+Initial,Greenlandic,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-Zæøå,UDHR,"https://ordbog.gl/2018-kal-eng/
+https://www.freelang.net/online/greenlandic.php",Kalaallisut,,Latn,kl
+Initial,Guaraní,,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúẽñȲÁÉÍÓÚẼÑ',UDHR | Sample 1 | Sample 2,,Guarani,,Latn,gn
+Initial,Gujarati,*,"Gujarati Lexicon [TYPE]
+Shabdkosh [TYPE]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [GUJ] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0A80-\u0AFF,Wikipedia article | News article,,,,"Arab, Gujr",gu
+Initial,Gunwinggu,,"Wiktionary [TRM] [ENG] [E]
+Njamed [TRM] [ENG] []",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',,,"Bininj Gunwok, Bininj Gun-Wok, Bininj Kunwok, Bininj Kun-Wok, Kunwinjkuan, Kunwinjku, Gunwinjgu, Kuninjku, Kundjeyhmi, Gundjeihmi, Manyallaluk Mayali, Mayali, Kundedjnjenghmi, Kune Dulerayek, Kune Narayek, Kune",,Latn,gup
+Initial,Gurindji,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Bible,https://gurindjidictionary.org.au/,,,Latn,gue
+Initial,Haida,,"First Voices (Northern) [TRM] [ENG] [E]
+First Voices (Southern) [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary (Northern) [TRM] [ENG] [E]
+Wiktionary (Southern) [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑḵx̱'’,Sample 1 | Sample 2 | Sample 3,,,,Latn,hai
+Initial,Haisla,,First Voices [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑḡʼ'l̕x̄k̓°˚ʷ,Sample 1 | Sample 2 | Sample 3,,,,,has
+Initial,Haitian Creole,*,"Wiktionary [TRM] [ENG] [E]
+Creole101 [TRM] [ENG] [E]
+Webonary [TRM] [ENG] [E]
+Freelang [TRM]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳ,UDHR,,"Creole, Haitian, Kreyòl",,Latn,ht
+Initial,Hausa,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [HAU] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥|'=ʼ,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÁáÀàÂâÉéÈèÊêÍíÌìÎîÓóÒòÔôÚúÙùÛûƁɓƊɗƘƙƳƴ'ʼďĶķ',UDHR | Wikipedia article,,,,"Latn, Arab",ha
+Initial,Hawaiian,*,"Wiktionary [TRM] [ENG] [E]
+Wehewehe Wikiwiki [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'ʻ,UDHR | Wikipedia article,,,,Latn,haw
+Initial,Heiltsuk,,"First Voices [TRM] [ENG] [E]
+Mother Tongues [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑḷṇṃW̓ɫ'ħʔáíx̌,Song 1 | Song 2 | Song 3 | Story 1 | Story 2 | Story 3,,,,,hei
+Initial,Hiligaynon,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,,,Latn,hil
+Initial,Igbo,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [IBO] [E]
+Nkọwa okwu [TRM]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥|à=a|è=e|é=e|Ì=I|Í=I|ì=i|ọ́=ọ|ọ̀=ọ|ò=o|ụ̀=ụ|ù=u|,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZỊịṄṅỌọỤụ',UDHR | Wikipedia article 1 | Wikipedia article 2,,,,Latn,ig
+Initial,Ilocano,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,"Ilokano, Iloko",,"Latn, Tglg",ilo
+Initial,Ingrian,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Sample,,Izhorian,,Latn,izh
+Initial,Inuktitut,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u1400-\u166D\u116F-\u167Fa-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑɫⱢ',News article 1 | News article 2 | Sample 1 (S. Qikiqtaaluk) | Sample 2 (Nunatsiavut),,"Aivilimmiut, Eastern Canadian Inuktitut, Eastern Canadian Inuit, Inuinnaq, Inuinnaqtun, Inuvialuktun, Inuvialuk, Western Canadian Inuktitut, Western Canadian Inuit, Western Canadian Inuktun, Kivallirmiut, Natsilingmiut, Nunavimmiutit, Nunatsiavummiut, Siglitun, Siglit",,"Cans, Latn",iu
+Initial,Inupiaq,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑḷḶ',Sample 1 | Sample 2,,"Inupiak, Iñupiaq, Inupiatun",,Latn,ik
+Initial,Inuvialuktun,*,-,-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'\u1400-\u166D\u116F-\u167F,Sample 1 (Inuinnaqtun) | Sample 2 (Aivilingmiutut),,"Western Canadian Inuktitut, Western Canadian Inuktun, Western Canadian Inuit",,"Cans, Latn",ikt
+Initial,Irish,*,"Foclóir Gaeilge-Béarla [TYPE]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [GLE] [E]
+Foclóir.ie [TYPE] | Potafocal [TYPE]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,.i.|Br.|m.sh.|srl.|Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article | Lingq story,,"Irish Gaelic, Gaelic, Cois Fharraige Irish, Cois Fhairrge Irish, Connacht Irish, Connaught Irish, Cork Irish, Donegal Irish, Galway Irish, Kerry Irish, Mayo Irish, Munster Irish, Ulster Irish, Waterford Irish, West Muskerry Irish",,"Latn, Latg",ga
+Initial,Javanese,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [JAV] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,"Latn, Java",jv
+Initial,Kalau Lagau Ya,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Bible,,#N/A,,#N/A,#N/A
+Initial,Kannada,*,"Shabdakosh [TYPE]
+Wiktionary [TYPE] [ENG] [E]
+Wiktionary [TRM] [KAN] [E]
+Glosbe [TYPE] [ENG] [P]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0C80-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0CF3,Wikipedia article | News article,,,,"Knda, Tutg",kn
+Initial,Karelian,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,"North Karelian, Northern Karelian, South Karelian, Southern Karelian, Tver Karelian",,Latn,krl
+Initial,Kashubian,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia article,,,,Latn,csb
+Initial,Kaska,*,"First Voices [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑłŁįęąųǫīēāūōîêâûôǐěǎǔǒį́ę́ą́ų́ǫ́į̂ę̂ą̂ų̂ǫ̂į̌ę̌ą̌ų̌ǫ̌į̄́ę̄́ą̄́ų̄́ǭ́ḗṓū́ÿʼ',Sample 1 | Sample 2 | Sample 3,,,,Latn,kkz
+Initial,Kazakh (1),,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [KAZ] [E]
+Lugat [TRM] [KAZ & ENG] [E]
+Glosbe [TRM] [ENG] [P]
+Audaru [TRM] [ENG] [E]
+Freelang [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P]
+Verbix [FRM] [E]","Google Translate [P]
+Yandex [P]
+Bing [E]",TRUE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?؟۔‎,[A-Z].|т.б.|ж.|қ.|с.ғ.с.|Б.|т.|б.|Қ.|Ә.|Ж.|ғ.|Д.|р.а.|с.ғ.с.|Н.Ә.|б.з.б.,\u0600-\u06FF\uFE70-\uFEFC,Menıñ Qazaqstanym (Wikipedia),,,,"Cyrl, Latn, kk-Arab",kk
+Initial,Kinyarwanda,*,"Wiktionary [TRM] [ENG] [E]
+Iriza Dictionary [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]",Google Translate [P],FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,#N/A,,#N/A,#N/A
+Initial,Kirundi,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,#N/A,,#N/A,#N/A
+Initial,Kriol,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Bible,https://ausil.org.au/Dictionary/Kriol/lexicon/index.htm,Australian Kriol,,Latn,rop
+Initial,Kwak'wala,*,"Wiktionary [TRM] [ENG] [E]
+First Voices [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳa̱A̱c̓C̓g̱G̱k̓K̓l̓L̓m̓M̓n̓N̓p̓P̓q̓Q̓t̓T̓w̓W̓x̌X̌x̱X̱y̓Y̓łŁəƏƛƛ̓ǧǦʔḵḴḵ̓Ḵ̓ꟛꟚꟜꟜ̓ʼᶻʷ'’,News article,,Kwakʼwala,,Latn,kwk
+Initial,Ladin,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,lld
+Initial,Ladino,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'\u0591-\u05BD\u05BF\u05C1\u05C2\u05D0-\u05F4,UDHR (Latin) | Wikipedia article (Latin) | Wikipedia article (Hebrew),,"Judaeo-Spanish, Judæo-Spanish, Judeo-Spanish",,"Hebr, Latn, Cyrl",lad
+Initial,Lakota,*,"Wiktionary [TRM] [ENG] [E]
+Freelang [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑŋČčǦǧȞȟŠšŽžḳḣ',Sample,,Lakhota,,Latn,lkt
+Initial,Ligurian,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,lij
+Initial,Limburgish,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [LIM] [E]
+D'n Dictionair [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia article 1 | Wikipedia article 2,,"Limburgan, Limburgian, Limburgic",,Latn,li
+Initial,Lingala,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,Ngala,,Latn,ln
+Initial,Lojban,,"Vlasisku [TRM]
+Wiktionary [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-Z',Sample,,,,Latn,jbo
+Initial,Low German,*,Wiktionary [TRM] ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,"Low Saxon, Modern Low German",,Latn,nds
+Initial,Luxembourgish,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [LTZ] [E]
+LOD [TRM] [] [E]
+Glosbe [TRM] [ENG] [P]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,lb
+Initial,Maithili,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?।॥,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0900-\u0963\u0970-\u097F,Wikipedia article,,,,"Deva, Tirh, Kthi, Newa",mai
+Initial,Malagasy,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [MLG] [E]
+Glosbe [TRM] [ENG] [P]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,"Antankarana, Antankarana Malagasy, Bara Malagasy, Bara, Betsimisaraka Malagasy, Betsimisaraka, Northern Betsimisaraka Malagasy, Northern Betsimisaraka, Southern Betsimisaraka Malagasy, Southern Betsimisaraka, Bushi, Shibushi, Kibushi, Masikoro Malagasy, Masikoro, Plateau Malagasy, Sakalava, Tandroy Malagasy, Tandroy, Tanosy, Tanosy Malagasy, Tesaka, Tsimihety, Tsimihety Malagasy",,Latn,mg
+Initial,Malay,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [MSA] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,"Malaysian, Standard Malay",,"Latn, ms-Arab",ms
+Initial,Maltese,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [MLT] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,mt
+Initial,Mam,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Bible 1 (Huehuetenango) | Bible 2 (Quetzaltenango),,,,Latn,mam
+Initial,Manchu,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u1800-\u18AF,Sample,,,,"mnc-Mong, Latn",mnc
+Initial,Manx,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [GLV] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,"Manx Gaelic, Northern Manx, Southern Manx",,Latn,gv
+Initial,Maori,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [MRI] [E]
+Te Aka Māori [TYPE]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia Article,,Māori,,Latn,mi
+Initial,Marathi,*,"Shabdkosh [TYPE]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [MAR] [E]",Marathi To English Translator,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0900-\u097F\U00011600-\U0001165F\u200D\u094D\u0930\u0902,Wikipedia article | News article,,,,"Deva, Modi",mr
+Initial,Michif,,"Wiktionary [TRM] [ENG] [E]
+Michif Dictionary [TRM] [ENG] [E]
+Michif Talking Dictionary [TRM] [ENG] [E]
+Metis Museum [TRM] [ENG] [E]
+Metis Museum (Northern) [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Sample 1 | Sample 2,,,,Latn,crg
+Initial,Middle English,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Book sample,,"Medieval English, Mediaeval English",,Latn,enm
+Initial,Moksha,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0400-\u04FF,Wikipedia article,,Mordvin,,Cyrl,mdf
+Initial,Mongolian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [MON] [E]
+Bolor [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]
+Mongoltoli [TRM] [MON] [E]
+Toli [TRM] [MON] [P]
+Freelang (Latin) [TRM] [ENG] [P]
+Tatoeba [TRM] [ENG] [P]","Google [P]
+Bing [E]
+Yandex [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,[A-Z].|г.м.|УБ.|Д.|Б.|Ж.|S.M.|З.Энхболд.|л.|У.|Ц.Ц.|Д.Баттулга.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑА-Яа-яЁёӨөҮү,,"Mongolian-English Dictionary (Paper)
+Dictionaries of Mongolian Languages
+Dictionary recommendations Altaica.ru
+Studymongolian",Khalkha Mongolian,,"Cyrl, Mong, Latn, Brai",mn
+Initial,Mongolian (Traditional),*,"Wiktionary [TRM] [ENG] [E]
+Bolor [TRM] [ENG] [E]
+Mongoltoli [TRM] [MON] [E]",Bing [E],FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u180B-\u18AF,Wikipedia article,"Mongolian-English Dictionary (Paper)
+Dictionaries of Mongolian Languages
+Dictionary recommendations Altaica.ru
+Studymongolian",Khalkha Mongolian,,"Cyrl, Mong, Latn, Brai",mn
+Initial,Nepali,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [NEP] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?।॥,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0900-\u0963\u0970-\u097F,UDHR (Wikipedia) | Wikipedia article,,"Nepalese, Palpa",,"Deva, Newa",ne
+Initial,Ngaanyatjarra,,"Webonary [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Bible,https://www.webonary.org/ngaanyatjarra/,,,Latn,ntj
+Initial,Nigerian Pidgin,*,"Wiktionary [TRM] [ENG] [E]
+Naija Lingo [TYPE]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÁáÀàÉéÈèẸẹÍíÌìÓóÒòỌọṢṣÚúÙù',Wikipedia article,,,,Latn,pcm
+Initial,Nootka,,"First Voices (Barkley) [TRM] [ENG] [E]
+First Voices (Hesquiaht) [TRM] [ENG] [E]
+First Voices (Tseshaht) [TRM] [ENG] [E]
+First Voices (Ehattesaht) [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑʔʕƛ̓x̣ḥʷ',Sample 1 | Sample 2 | Sample 3 | Sample 4 | Sample 5,,"Nuu-chah-nulth, Nuuchahnulth, T'aat'aaqsapa",,Latn,nuk
+Initial,Norman,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ,Sample 1 | Sample 2 | Sample 3,https://www.calameo.com/read/000330002d28863d3a558,"Cauchois, Jèrriais, Jersiais, Jersey French, Jersey Norman, Jersey Norman French, Guernésiais, Guernesiais, Dgèrnésiais, Guernsey French, Guernsey Norman French, Augeron, Sercquiais, Auregnais, Cotentinais, Brayon, Roumois",,Latn,nrf
+Initial,North Frisian,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,frr
+Initial,Northern Kurdish,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [KMR] [E] ",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑḳḲ,UDHR | Wikipedia article,,Kurmanji,,"Latn, Cyrl, Armn, ku-Arab, Yezi",kmr
+Initial,Northern Ndebele,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,North Ndebele,,Latn,nd
+Initial,Northern Sotho,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,,,Latn,nso
+Initial,Nyunga,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Bible,,"Noongar, Nyuunga",,Latn,nys
+Initial,Occitan,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [OCI] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,"Latn, Hebr",oc
+Initial,Odia,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [ORY] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR (Wikipedia) | Wikipedia article,,"Oriya, Oorya",,Orya,or
+Initial,Ojibwe,,"Wiktionary [TRM] [ENG] [E]
+First Voices [TRM] [ENG] [E]",,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'\u1400-\u166D\u116F-\u167F,"Sample 1 | Sample 2 | Sample 3
+Sample 4 | Sample 5",,"Ojibway, Ojibwa, Chippewa, Ojibwemowin, Southwestern Ojibwa",,"Cans, Latn",oj
+Initial,Old Armenian,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0531-\u0556\u0561-\u0588,Sample 1 | Sample 2,,"Classical Armenian, Liturgical Armenian, Grabar",,Armn,xcl
+Initial,Old Church Slavonic,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.჻⁖⁘⁙;,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u2C00-\u2C5F\u0400-\u04FF\u2DE0-\u2DFF\uA640-\uA69F,Sample 1 | Sample 2 | Sample 3,,Old Church Slavic,,"Cyrs, Glag",cu
+Initial,Old English,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [ANG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'\u16A0-\u16EA\u16EE-\u16F8,Book sample 1 | Book sample 2 | Sample text (Runic),,Anglo-Saxon,,"Latn, Runr",ang
+Initial,Old French,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Sample 1 | Sample 2 | Sample 3,,"Judeo-French, Zarphatic",,"Latn, Hebr",fro
+Initial,Old Norse,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'\u16A0-\u16EA\u16EE-\u16F8,Book sample 1 | Sample text (Runic),,"Old Icelandic, Old Norwegian",,"Latn, Runr",non
+Initial,Oowekyala,,First Voices [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑx̌ǧə̀p̓n̓m̓t̓y̓w̓q̓',Sample 1 | Sample 2,,#N/A,,#N/A,#N/A
+Initial,Oromo,*,"Wiktionary [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,"Orma, Borana-Arsi-Guji Oromo, West Central Oromo",,"Latn, Ethi",om
+Initial,Ottoman Turkish,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0600-\u06FF\u0750-\u077F\u0870-\u089F\uFB50-\uFDFF\U0001ED00-\U0001EDAF\u200C,Story 1 | Story 2,,Ottoman,,"ota-Arab, Armn",ota
+Initial,Páez,,TalkingDictionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑẽ',UDHR,,,,Latn,pbb
+Initial,Pali (1),*,"Wiktionary [TRM] [ENG] [E]
+PTS (DSAL) [TYPE]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?;𑁈𑁇।॥,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-Zāīūṃṇñṭḍṅḷก-๛\u1000-\u108F\u109A-\u109F\u1780-\u17DD\u17F0-\u17F9\u0D80-\u0DDF\u0DF2\u0DF3\u0E80-\u0ECE\u0EDC-\u0EDF\u1A20-\u1AA2,"Tipitaka.org (Thai, Burmese, Cambodian, Sinhala) | Lao | Tai Tham",Goldendict (Software),,,"Latn, Brah, Deva, Beng, Sinh, Mymr, Thai, Lana, Laoo, Khmr, Cakm",pi
+Initial,Pashto,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [PUS] [E]
+ThePashto [TYPE]
+Glosbe [TYPE] [ENG] [P]
+A Dictionary of The Pukhto, Pushto (DSAL) [TYPE]",Google Translate,TRUE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?؟,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0600-\u066F\u066E-\u06D3\uFB50-\uFDFF,UDHR (Wikipedia) | Wikipedia article | News article,,"Pashtun, Pushto, Pashtu, Afghani, Central Pashto, Northern Pashto, Southern Pashto, Pukhto, Pakhto, Pakkhto",,ps-Arab,ps
+Initial,Pintupi-Luritja,,-,-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑṯṮṉṈḻḺ',UDHR | Bible,https://ausil.org.au/Dictionary/Pintupi-Luritja/lexicon/index.htm,,,,piu
+Initial,Pitjantjatjara,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Bible,,,,pjt-Latn,pjt
+Initial,Quechua,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [QUE] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,,,Latn,qu
+Initial,Romansch,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Comparisons 1 (A) (B) | Comparisons 2,,"Romansh, Rumantsch, Romanche",,Latn,rm
+Initial,Rusyn,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,А-Яа-яЁёҐґЄєІіЇї,Dialectal variations - short text | Wikipedia article,,#N/A,,#N/A,#N/A
+Initial,Saami,*,"Wiktionary: (Northern) (Kildin) (Lule) (Skolt) (Inari) (Pite)
+(Southern) (Akkala) (Ume) (Ter) (Kemi) [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑА-Яа-яa-zA-ZА̄а̄Е̄е̄Ё̄ё̄ӢӣО̄о̄ӮӯЭ̄э̄Ю̄ю̄Я̄я̄',"UDHR (Northern) | Wikipedia articles (Northern) (Inari)
+Cyrillic test (Kildin)",,#N/A,,#N/A,#N/A
+Initial,Sanskrit (1),,"Combined Sanskrit Dictionary Search [TRM] [ENG] [E]
+Sanskrit - Dictionary [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SAN] [E]
+Sanskritdictionary [TRM] [ENG] [E]
+Andhrabharati [TRM] [ENG] [P]
+Monier Williams [TRM] [ENG] [P]
+Glosbe [TRM] [ENG] [P]
+Amara [TRM] [ENG] [E]
+Sanscritdictionary.org [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.?!।॥,,u0900-\u0963\u0966-\u097F\U00011000-\U00011046\U00011052-\U0001107F\u0980-\u09FF\u0A80-\u0AFF,Sample text (Brahmi) | Sample text (Bengali and Gujarati),"Ambuda [TRM] [ENG] [SAN] [E]
+Goldendict Dictionary 
+University of Cologne Dictionaries
+https://sanskritdocuments.org/dict/",,,"as-Beng, Bali, Beng, Bhks, Brah, Mymr, xwo-Mong, Deva, Gujr, Guru, Gran, Hani, Java, Kthi, Knda, Kawi, Khar, Khmr, Laoo, Mlym, mnc-Mong, Marc, Modi, Mong, Nand, Newa, Orya, Phag, Ranj, Saur, Shrd, Sidd, Sinh, Soyo, Lana, Takr, Taml, Tang, Telu, Thai, Tibt, Tutg, Tirh, Zanb",sa
+Initial,Sanskrit (2),,"Combined Sanskrit Dictionary Search [TRM] [ENG] [E]
+Sanskrit - Dictionary [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SAN] [E]
+Sanskritdictionary [TRM] [ENG] [E]
+Andhrabharati [TRM] [ENG] [P]
+Monier Williams [TRM] [ENG] [P]
+Glosbe [TRM] [ENG] [P]
+Amara [TRM] [ENG] [E]
+Sanscritdictionary.org [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.?!।॥,श.|ई.|स.|अ.|ए.|उ.|च.कि.मी.|मी.|ई.पू.|इ.|p.|ऐ.|ओ.|च.|B.|C.|आ.|ड.|वा.|S.,u0900-\u0963\u0966-\u097F\u0B00-\u0B7F\u0C80-\u0CFF,Sample text (Oriya and Kannada),"Ambuda [TRM] [ENG] [SAN] [E]
+Goldendict Dictionary 
+University of Cologne Dictionaries
+https://sanskritdocuments.org/dict/",,,"as-Beng, Bali, Beng, Bhks, Brah, Mymr, xwo-Mong, Deva, Gujr, Guru, Gran, Hani, Java, Kthi, Knda, Kawi, Khar, Khmr, Laoo, Mlym, mnc-Mong, Marc, Modi, Mong, Nand, Newa, Orya, Phag, Ranj, Saur, Shrd, Sidd, Sinh, Soyo, Lana, Takr, Taml, Tang, Telu, Thai, Tibt, Tutg, Tirh, Zanb",sa
+Initial,Sanskrit (3),,"Combined Sanskrit Dictionary Search [TRM] [ENG] [E]
+Sanskrit - Dictionary [TRM] [ENG] [E]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SAN] [E]
+Sanskritdictionary [TRM] [ENG] [E]
+Andhrabharati [TRM] [ENG] [P]
+Monier Williams [TRM] [ENG] [P]
+Glosbe [TRM] [ENG] [P]
+Amara [TRM] [ENG] [E]
+Sanscritdictionary.org [TRM] [ENG] [E]
+Tatoeba [TRM] [ENG] [P]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.?!।॥,श.|ई.|स.|अ.|ए.|उ.|च.कि.मी.|मी.|ई.पू.|इ.|p.|ऐ.|ओ.|च.|B.|C.|आ.|ड.|वा.|S.,u0900-\u0963\u0966-\u097F\u0C00-\u0C7F\u0D00-\u0D7F\u0A00-\u0A7F,"Sample text (Telugu, Malayam and Gurmukhi)","Ambuda [TRM] [ENG] [SAN] [E]
+Goldendict Dictionary 
+University of Cologne Dictionaries
+https://sanskritdocuments.org/dict/",,,"as-Beng, Bali, Beng, Bhks, Brah, Mymr, xwo-Mong, Deva, Gujr, Guru, Gran, Hani, Java, Kthi, Knda, Kawi, Khar, Khmr, Laoo, Mlym, mnc-Mong, Marc, Modi, Mong, Nand, Newa, Orya, Phag, Ranj, Saur, Shrd, Sidd, Sinh, Soyo, Lana, Takr, Taml, Tang, Telu, Thai, Tibt, Tutg, Tirh, Zanb",sa
+Initial,Saraiki,*,Wiktionary [TRM] [ENG] [E],-,TRUE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0620-\u065F\u066E-\u06D3\u0750-\u077F\u06FA-\u0FFF\uFE70-\uFEFF\u06DC,Wikipedia article,,"Siraiki, Seraiki",,"pa-Arab, Mult, Deva",skr
+Initial,Sardinian,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,sc
+Initial,Saterland Frisian,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia article,,"East Frisian, Eastern Frisian",,Latn,stq
+Initial,Scots,*,"Wiktionary [TRM] [ENG] [E]
+Wikipedia [TRM] [SCO] [E]
+Glosbe [TRM] [ENG] [P]
+Dictionars o the Scots Leid [TRM]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,Lowland Scots,,Latn,sco
+Initial,Scottish Gaelic,,"Multidict [TYPE]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [GLA] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|Mgh.|Mgr.|Urr.|An t-Urr.|Oll.|a' Bh.|Bh-Ph.|a' Mh.|Mh.|Mh.U.|Bh-Uas.|,a-zA-ZàèìòùáéóÀÈÌÒÙÁÉÓ'-,UDHR | An Litir Bheag | Wikipedia article,,"Gaelic, Gàidhlig, Scots Gaelic, Scottish, Argyll Gaelic, Arran Scottish Gaelic, Canadian Gaelic, Canadian Scottish Gaelic, Cape Breton Gaelic, East Sutherland Gaelic, Galwegian Gaelic, Gallovidian Gaelic, Gallowegian Gaelic, Galloway Gaelic, Hebridean Gaelic, Highland Gaelic",,"Latn, Latg",gd
+Initial,Sicilian,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SCN] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia article 1 | Wikipedia article 2,,,,Latn,scn
+Initial,Silesian,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia article,,"Upper Silesian, Silesian Polish, Upper Silesian Polish",,Latn,szl
+Initial,Sindhi,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SND] [E]",Google Translate,TRUE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?؟۔‎,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0900-\u0963\U00011200-\U00011237\U0000001123E-\U00011241\u0971-\u097F\u0600-\u066F\u066E-\u06D3\uFB50-\uFDFF\U000112B0-\U000112EA\u06FE\u0A01-\u0A5E\u0A01-\u0A76,Wikipedia article (Arabic),,,,"sd-Arab, Deva, Sind, Khoj",sd
+Initial,Sinhalese,*,"Madura Online [TRM]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SIN] [E]
+A Sinhalese Dictionary [TRM]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0D81-\u0DDF\u0DF2-\u0DF4\u0DE6-\u0DEF\u200D,Wikipedia article | News article,,"Singhalese, Sinhala",,Sinh,si
+Initial,Somali,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SOM] [E]
+Glosbe [TRM] [ENG] [P]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | News article,,,,"Latn, Arab, Osma",so
+Initial,Sorbian,,"Wiktionary (Upper Sorbian) [TRM] [ENG] [E]
+Wiktionary (Lower Sorbian) [TRM] [ENG] [E]
+Wiktionary [TRM] [WEN] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article 1 (Lower) | Wikipedia article 2 (Upper),,#N/A,,#N/A,#N/A
+Initial,Sotho / Southern Sotho,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,#N/A,,#N/A,#N/A
+Initial,Southern Ndebele,*,-,-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia article,,South Ndebele,,Latn,nr
+Initial,Sumerian,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,-,\U00012000-\U000123FF\U00012400-\U0001247F\U00012480-\U0001254F,Sample 1,,,,"Xsux, Latn",sux
+Initial,Sundanese,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [SUN] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ\u1B80-\u1BAF\u1BBA-\uaBBF,UDHR (Latin) | Wikipedia article (Latin) | Wikipedia article (Sunda),,,,"Latn, Sund",su
+Initial,Swazi,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,Swati,,Latn,ss
+Initial,Syriac,,Wiktionary [TRM] [ENG] [E],-,TRUE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0710-\u074F\u2069\u0308\u0307,Peshitta sample 1 | Peshitta sample 2,,#N/A,,#N/A,#N/A
+Initial,Tagalog,*,"Pinoy Dictionary [TYPE]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [TGL] [E]
+Bohol.ph [TYPE]
+Tagalog.com [TYPE]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'\u1700-\u171F,UDHR (Latin) | Samples (Baybayin),,,,"Latn, Tglg",tl
+Initial,Tahitian,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,ty
+Initial,Tamil,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [TAM] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0B80-\u0BFF,UDHR | Wikipedia article,,,,Taml,ta
+Initial,Tatar,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [TTR] [E]
+Bab.la [TRM] [P] | Glosbe [TRM] [ENG] [P]
+Tatoeba [TRM] [P] | Verbix [FRM] [E]","Google Translate [P]
+Bing Translate [E]
+Promt [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZА-Яа-яЁёĞğİıÄäÖöÜüÇçŞşÑñƢƣƵƶƏəƟɵꞐꞑÂâ,UDHR | Wikipedia article (Lat.) | Wikipedia article (Cyr.),,,,"Cyrl, Latn, tt-Arab",tt
+Initial,Telugu,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [TEL] [E]
+A Telugu-English Dictionary (DSAL) [TYPE]
+Shabdkosh [TYPE]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0C00-\u0C63\u0C66-\u0C7F\u200C,UDHR (Wikipedia) | News article,Andhrabharati,,,Telu,te
+Initial,Tigrinya,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u1200-\u135F,Wikipedia article 1 | Wikipedia article 2,,Tigrigna,,Ethi,ti
+Initial,Tiwi,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Bible,https://ausil.org.au/Dictionary/Tiwi/lexicon/main.htm,,,Latn,tiw
+Initial,Tok Pisin,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [TPI] [E]
+Tok-pisin.com [TYPE]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article | News article,,"Melanesian Pidgin English, Neo-Melanesian, New Guinea Pidgin",,Latn,tpi
+Initial,Tongan,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,to
+Initial,Tsonga,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [TSO] [E]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia article,,Xitsonga,,Latn,ts
+Initial,Tswana,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [TSN] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'ÊêÔôŠš-,UDHR | Wikipedia article,,Setswana,,Latn,tn
+Initial,Tuvan,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,А-Яа-яЁёүҮңҢӨө,UDHR | Wikipedia article,,Tyvan,,Cyrl,tyv
+Initial,Tzeltal,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,,,Latn,tzh
+Initial,Tzotzil,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,,,Latn,tzo
+Initial,Urdu,*,"UrduWord [TYPE]
+Rekhta [TYPE]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [URD] [E]",Google Translate,TRUE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?؟۔‎,[A-Z].|ہے.|ہیں.|ہوں.|گا.|تھا.|تھی.|نہیں.|گی.|ہو.|گے.|بیٹے.|ج.|سے.,\u0600-\u06FF\uFE70-\uFEFC,Wikipedia article | News article,,,,"ur-Arab, Hebr",ur
+Initial,Uyghur,,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ'\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\u200C\u0400-\u04FF,Wikipedia article (Latin) | Wikipedia article (Cyrillic) | Wikipedia article (Arabic),,"Uigur, Uighur, Uygur",,"ug-Arab, Latn, Cyrl",ug
+Initial,Uzbek,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [UZB] [E]","Google Translate [P]
+Bing [E]
+Promt [P]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZА-Яа-яЁёҲҳҚқЎўҒғƏəÇçƵƶЗзƢƣŞş'ʻ,Wikipedia (latin) | Wikipedia (cyrillic) | Book sample,,"Northern Uzbek, Southern Uzbek",,"Latn, Cyrl, fa-Arab",uz
+Initial,Venda,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑḓḒṱṰḽḼṋṊṅṄ',Wikipedia samples,,,,Latn,ve
+Initial,Venetian,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,Venetan,,Latn,vec
+Initial,Veps,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,Vepsian,,Latn,vep
+Initial,Vilamovian,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Wikipedia article 1 | Wikipedia article 2 | Wikipedia article 3 | Songs and Poems,,"Wilamowicean, Vilamovicean, Wymysorys",,Latn,wym
+Initial,Walloon,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [WLN] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,"Liégeois, Namurois, Wallo-Picard, Wallo-Lorrain",,Latn,wa
+Initial,Warlpiri,*,AuSIL [TYPE] [ENG] [?],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Bible (Genesis),,,,Latn,wbp
+Initial,Wayuu,,"Wiktionary [TRM] [ENG] [E]
+TalkingDictionary [TRM] [ENG] [E]
+Webonary [TRM] [ENG] [E]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,PDF [Spanish],"Guajiro, Goajiro, Uagiro",,Latn,guc
+Initial,Welsh,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [CYM] [E]
+University of Wales [TYPE]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,a.|adf.|bnth.|eb.|eg.|Parch.|Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,"Cofi Welsh, Dyfedeg, Dyfed Welsh, Demetian, Gwenhwyseg, Gwent Welsh, Gwentian, Gwyndodeg, Gwynedd Welsh, Venedotian, North Wales Welsh, Powyseg, Powys Welsh, Powysian, South Wales Welsh, Patagonian Welsh",,Latn,cy
+Initial,West Frisian,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,Western Frisian,,Latn,fy
+Initial,Wik-Mungkan,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Bible,https://ausil.org.au/Dictionary/Wik-Mungkan/lexicon/main.htm,,,Latn,wim
+Initial,Wolof,*,"Wiktionary [TRM] [ENG] [E]
+Glosbe [TRM] [ENG] [P]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,Gambian Wolof,,"Latn, Arab, Gara",wo
+Initial,Xhosa,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,xh
+Initial,Yakut,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0400-\u04FF,UDHR,,Sakha,,Cyrl,sah
+Initial,Yiddish,*,Wiktionary [TRM] [ENG] [E],-,TRUE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,אבגדהוזחטיךכלםמןנסעףפץצקרשתװוּױײ׳״יִײַשׁשׂאַאָבּכּפּתּבֿכֿפֿ,UDHR,,"American Yiddish, Daytshmerish Yiddish, Mideastern Yiddish, Galitzish, Northeastern Yiddish, Litvish, Lithuanian Yiddish, Northwestern Yiddish, Netherlandic Yiddish, Polish Yiddish, Poylish, South African Yiddish, Southeastern Yiddish, Ukrainian Yiddish, Ukrainish, Southwestern Yiddish, Judeo-Alsatian, Udmurtish",,Hebr,yi
+Initial,Yoruba,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,abbl.|b.a.,a-zA-ZÁáÀàÉéÈèẸẹẸ́ẹ́Ẹ̀ẹ̀ÍíÌìŃńǸǹÓóÒòỌọỌ́ọ́Ọ̀ọ̀ṢṣÚúÙùƐɛƆɔ',UDHR | Wikipedia article,,,,"Latn, Arab",yo
+Initial,Yucatec Maya,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,,,Latn,yua
+Initial,Yup'ik,,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',Sample text 1 (Central Alaskan) | Sample text 2 (Central Siberian) | Sample 3 (Alutiiq),"http://www.alutiiqlanguage.org/dictionary
+https://www.freelang.net/online/yupik.php?lg=gb",,,Latn,esu
+Initial,Zapotec,,"Wiktionary (Zoogocho) [TRM] [ENG] [E]
+Wiktionary (Isthmus) [TRM] [ENG] [E]
+Wiktionary (San Juan Guelavía) {TRM] [ENG] [E}
+Wiktionary (Yatzachi) [TRM] [ENG] [E}",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR,,,,Latn,zap
+Initial,Zulu,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,a-zA-ZÀ-ÖØ-öø-ȳáéíóúÁÉÍÓÚñÑ',UDHR | Wikipedia article,,isiZulu,,Latn,zu
+Parser needed,Burmese,*,Wiktionary [TYPE],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u1000-\u108F,UDHR,,"Myanmar, Mandalay Burmese, Myeik Burmese, Palaw Burmese, Rangoon Burmese, Yangon Burmese, Yaw Burmese",,Mymr,my
+Parser needed,Khmer,,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [KHM] [E]
+Keng [TRM]
+Glosbe [TRM] [ENG] [P]",Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?។៕,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u1780-\u17D3\u17D6-\u17DD\u17F0-\u17FF,UDHR | Wikipedia article 1 | Wikipedia article 2,,"Cambodian, Central Khmer, Modern Khmer",,Khmr,km
+Parser needed,Korean,*,"Daum [TYPE] [E] | Naver [TYPE] [E]
+Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [KOR] [E]
+Learners Dictionary [TRM] [KOR] [P]
+ZKorean [TRM] [E]
+Glosbe [TRM] [P]
+Bab.la [TRM] [P]
+Trex [TRM] [P]
+Reverso [TRM] [P]
+Reverso context [TRM] [E]
+Tatoeba [TRM] [P]
+Verbix [FRM] [E]","Naver [P]
+Google Translate [P]
+DeepL Translator [P]
+Reverso [E]
+Yandex [P]
+Promt [P]
+Bing [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?:;。！？：；,것.|Q.|A.|씨.|원.|해.|터.|곳.|돼.|일.|등.|법.|다.|뿐.|셈.|명.|봐.|점.|F.|네.,가-힣ᄀ-ᇂ,UDHR | Wikipedia article | News article | Book sample,,Modern Korean,,"Kore, Brai",ko
+Parser needed,Lao,*,Wiktionary [TRM] [ENG] [E],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0E81-\u0ECE\u0EDC-\u0EDF,UDHR,,Laotian,,Laoo,lo
+Parser needed,Malayalam,*,Wiktionary [TYPE],Google Translate,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u0D00-\u0D57\u0D5F-\u0D63\u0D7A-\u0D7F,UDHR (Wikipedia) | Wikipedia article,,,,Mlym,ml
+Parser needed,Shan,*,Wiktionary [TRM] [ENG] [E],-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,\u1000-\u108F\u109A-\u109F,Wikipedia article,,"Kwam Tai, Kam Tai, Tai Yai",,Mymr,shn
+Parser needed,Thai,*,"Wiktionary [TRM] [ENG] [E]
+Wiktionary [TRM] [THA] [E]
+Thaitux [TYPE]
+Longdo Dict [TYPE]","Google Translate [P]
+Reverso [E]",FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?,Mr.|Mrs.|Dr.|[A-Z].|Vd.|Vds.,ก-๛,UDHR (Wikipedia),,"Central Thai, Siamese",,"Thai, Brai",th
+Pending,Pali,*,"Wiktionary [TRM] [ENG] [E]
+PTS (DSAL) [TYPE]",-,FALSE,Space Delimited,´='|`='|’='|‘='|...=…|..=‥,.!?;𑁈𑁇।॥,[A-Z].|[\u0900-\u0963].|[\u0972-\u097F\].|[\U00011000-\U00011046].|bh.|dh.|sn.,a-zA-Zāīūṃṇñṭḍṅḷṁ\u0900-\u0963\u0972-\u097F\U00011000-\U00011046,"Tipitaka.org (Latin, Devanagari) | Brahmi",Goldendict (Software) | Sutta |  budasasana | Concise Pali dictionary | Concise Pali dictionary (PDF) | Lexilogos | Pali Text Society's dictionary (PDF),,,"Latn, Brah, Deva, Beng, Sinh, Mymr, Thai, Lana, Laoo, Khmr, Cakm",pi

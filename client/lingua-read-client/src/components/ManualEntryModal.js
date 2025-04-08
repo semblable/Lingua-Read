@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
-import { getLanguages, logManualActivity } from '../utils/api'; // Use named imports
+import { getAllLanguages, logManualActivity } from '../utils/api'; // Use named imports
 
 function ManualEntryModal({ show, onHide, onSubmitSuccess }) {
     const [languages, setLanguages] = useState([]);
@@ -19,7 +19,7 @@ function ManualEntryModal({ show, onHide, onSubmitSuccess }) {
                 setIsFetchingLanguages(true);
                 setError('');
                 try {
-                    const response = await getLanguages(); // Use imported function
+                    const response = await getAllLanguages(); // Use imported function
                     // console.log('[ManualEntryModal] Raw languages response:', response); // DEBUG REMOVED
                     const languagesData = response || []; // FIX: Use response directly as it's the array
                     // console.log('[ManualEntryModal] Setting languages state with:', languagesData); // DEBUG REMOVED

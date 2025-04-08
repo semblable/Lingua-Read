@@ -1,64 +1,195 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using LinguaReadApi.Data;
 using LinguaReadApi.Models;
+using LinguaReadApi.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore; // <-- Add this for DbUpdateException
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace LinguaReadApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // Require authentication for language management
     public class LanguagesController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ILanguageService _languageService; // Placeholder for the actual service
 
-        public LanguagesController(AppDbContext context)
+        // Constructor injection for the service
+        public LanguagesController(ILanguageService languageService)
         {
-            _context = context;
+            _languageService = languageService;
         }
 
         // GET: api/languages
+        /// <summary>
+        /// Gets a list of all configured languages with their details.
+        /// </summary>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<LanguageDto>>> GetLanguages()
+        public async Task<ActionResult<IEnumerable<Language>>> GetAllLanguages()
         {
-            var languages = await _context.Languages
-                .Select(l => new LanguageDto
-                {
-                    LanguageId = l.LanguageId,
-                    Name = l.Name,
-                    Code = l.Code
-                })
-                .ToListAsync();
-                
-            return languages;
+            try
+            {
+                var languages = await _languageService.GetAllLanguagesAsync();
+                return Ok(languages);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (consider using a proper logging framework)
+                Console.WriteLine($"Error getting all languages: {ex.Message}");
+                return StatusCode(500, "An error occurred while retrieving languages.");
+            }
         }
-        
-        // GET: api/languages/5
+
+        // GET: api/languages/{id}
+        /// <summary>
+        /// Gets a specific language by its ID.
+        /// </summary>
         [HttpGet("{id}")]
-        public async Task<ActionResult<LanguageDto>> GetLanguage(int id)
+        public async Task<ActionResult<Language>> GetLanguageById(int id)
         {
-            var language = await _context.Languages.FindAsync(id);
-            
+            try
+            {
+                var language = await _languageService.GetLanguageByIdAsync(id);
+                if (language == null)
+                {
+                    return NotFound($"Language with ID {id} not found.");
+                }
+                return Ok(language);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting language by ID {id}: {ex.Message}");
+                return StatusCode(500, "An error occurred while retrieving the language.");
+            }
+        }
+
+        // POST: api/languages
+        /// <summary>
+        /// Creates a new language configuration.
+        /// </summary>
+        [HttpPost]
+        public async Task<ActionResult<Language>> CreateLanguage([FromBody] Language language) // Use a DTO later if needed
+        {
             if (language == null)
             {
-                return NotFound();
+                return BadRequest("Language data is required.");
             }
-            
-            return new LanguageDto
+
+            // Basic validation (could be expanded or moved to service/DTOs)
+            if (string.IsNullOrWhiteSpace(language.Name) || string.IsNullOrWhiteSpace(language.Code))
             {
-                LanguageId = language.LanguageId,
-                Name = language.Name,
-                Code = language.Code
-            };
+                return BadRequest("Language Name and Code are required.");
+            }
+
+            try
+            {
+                // Ensure LanguageId is 0 for creation
+                language.LanguageId = 0;
+                var createdLanguage = await _languageService.CreateLanguageAsync(language);
+                // Return 201 Created with the location of the new resource and the created object
+                return CreatedAtAction(nameof(GetLanguageById), new { id = createdLanguage.LanguageId }, createdLanguage);
+            }
+            catch (DbUpdateException ex) // Catch potential unique constraint violations
+            {
+                 Console.WriteLine($"Error creating language: {ex.InnerException?.Message ?? ex.Message}");
+                 // Check if it's a unique constraint violation (specific error code/message depends on DB)
+                 if (ex.InnerException?.Message.Contains("duplicate key value violates unique constraint") ?? false)
+                 {
+                     return Conflict("A language with the same Name or Code already exists.");
+                 }
+                 return StatusCode(500, "An error occurred while creating the language.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating language: {ex.Message}");
+                return StatusCode(500, "An error occurred while creating the language.");
+            }
+        }
+
+        // PUT: api/languages/{id}
+        /// <summary>
+        /// Updates an existing language configuration.
+        /// </summary>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateLanguage(int id, [FromBody] Language language) // Use a DTO later
+        {
+            if (id != language?.LanguageId)
+            {
+                return BadRequest("Language ID mismatch in request body vs URL.");
+            }
+            if (language == null)
+            {
+                return BadRequest("Language data is required.");
+            }
+
+            // Basic validation (could be expanded)
+            if (string.IsNullOrWhiteSpace(language.Name) || string.IsNullOrWhiteSpace(language.Code))
+            {
+                return BadRequest("Language Name and Code are required.");
+            }
+
+            try
+            {
+                var success = await _languageService.UpdateLanguageAsync(id, language);
+                if (!success)
+                {
+                    // The service returns false if the language wasn't found
+                    return NotFound($"Language with ID {id} not found.");
+                }
+                // Return 204 No Content on successful update
+                return NoContent();
+            }
+            catch (DbUpdateException ex) // Catch potential unique constraint violations on update
+            {
+                 Console.WriteLine($"Error updating language {id}: {ex.InnerException?.Message ?? ex.Message}");
+                 if (ex.InnerException?.Message.Contains("duplicate key value violates unique constraint") ?? false)
+                 {
+                     return Conflict("A language with the same Name or Code already exists.");
+                 }
+                 return StatusCode(500, "An error occurred while updating the language.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating language {id}: {ex.Message}");
+                return StatusCode(500, "An error occurred while updating the language.");
+            }
+        }
+
+        // DELETE: api/languages/{id}
+        /// <summary>
+        /// Deletes a language configuration.
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteLanguage(int id)
+        {
+            try
+            {
+                var success = await _languageService.DeleteLanguageAsync(id);
+                if (!success)
+                {
+                    // The service returns false if the language wasn't found
+                    return NotFound($"Language with ID {id} not found.");
+                }
+                // Return 204 No Content on successful deletion
+                return NoContent();
+            }
+            catch (DbUpdateException ex) // Catch potential constraint violations on delete
+            {
+                 Console.WriteLine($"Error deleting language {id}: {ex.InnerException?.Message ?? ex.Message}");
+                 // Check if it's a foreign key constraint violation
+                 if (ex.InnerException is Npgsql.PostgresException pgEx && pgEx.SqlState == "23503") // 23503 = foreign_key_violation
+                 {
+                     return Conflict($"Cannot delete language {id} because it is still referenced by other entities (e.g., Books, Texts, Words).");
+                 }
+                 return StatusCode(500, "An error occurred while deleting the language due to database constraints.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting language {id}: {ex.Message}");
+                return StatusCode(500, "An error occurred while deleting the language.");
+            }
         }
     }
-    
-    public class LanguageDto
-    {
-        public int LanguageId { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Code { get; set; } = string.Empty;
-    }
-} 
+}

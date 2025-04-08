@@ -42,7 +42,8 @@ const Navigation = () => {
           <Nav>
             {token ? (
               <NavDropdown title="Account" id="account-dropdown" align="end">
-                <NavDropdown.Item as={Link} to="/settings">Settings</NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/settings">User Settings</NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/settings/languages">Languages</NavDropdown.Item> {/* <-- Add Languages link */}
                 <NavDropdown.Divider />
                 <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
               </NavDropdown>

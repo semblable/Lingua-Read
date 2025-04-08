@@ -13,10 +13,8 @@ const getToken = () => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.log('No token found in storage');
       return null;
     }
-    console.log('Token retrieved from storage:', token.length + ' chars');
     return token;
   } catch (error) {
     console.error('Error retrieving token:', error);
@@ -33,8 +31,6 @@ const fetchApi = async (endpoint, options = {}) => {
 
   try {
     const token = getToken();
-    console.log('[API Debug] Endpoint:', endpoint);
-    console.log('[API Debug] Base URL:', API_URL);
 
     const headers = {
       'Accept': 'application/json',
@@ -45,9 +41,8 @@ const fetchApi = async (endpoint, options = {}) => {
     if (token && typeof token === 'string' && token.trim() !== '') {
       const cleanToken = token.trim();
       headers.Authorization = `Bearer ${cleanToken}`;
-      console.log('[API Debug] Authorization header added');
+      // Authorization header added
     } else {
-      console.log('[API Debug] No token available for request');
       if (endpoint !== '/api/auth/login' && endpoint !== '/api/auth/register' && endpoint !== '/api/languages') {
         throw new Error('Authentication required');
       }
@@ -67,17 +62,8 @@ const fetchApi = async (endpoint, options = {}) => {
 
     // Construct the full URL properly
     const fullUrl = new URL(endpoint, API_URL);
-    console.log('[API Debug] Full URL:', fullUrl.toString());
-    console.log('[API Debug] Request config:', {
-      method: requestConfig.method || 'GET',
-      headers: requestConfig.headers,
-      credentials: requestConfig.credentials,
-      mode: requestConfig.mode
-    });
 
     const response = await fetch(fullUrl.toString(), requestConfig);
-    console.log('[API Debug] Response status:', response.status);
-    console.log('[API Debug] Response headers:', Object.fromEntries(response.headers.entries()));
 
     // Handle response
     if (!response.ok) {
@@ -106,11 +92,9 @@ const fetchApi = async (endpoint, options = {}) => {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json();
-      console.log('[API Debug] Response data:', data);
       return data;
     } else {
       const text = await response.text();
-      console.log('[API Debug] Non-JSON response:', text);
       return { message: text || response.statusText };
     }
   } catch (error) {
@@ -234,7 +218,44 @@ export const register = (email, password) => {
 
 // Languages API
 export const getLanguages = () => {
+  // Note: This might be fetching the translation-specific list.
+  // Keep it for now, but the new functions below target the full config endpoint.
+  return fetchApi('/api/translation/languages'); // Assuming this is what it was intended for
+};
+
+// --- Language Configuration API ---
+
+// Gets ALL languages with full configuration details
+export const getAllLanguages = () => {
   return fetchApi('/api/languages');
+};
+
+// Gets a single language by ID with full configuration
+export const getLanguage = (languageId) => {
+  return fetchApi(`/api/languages/${languageId}`);
+};
+
+// Creates a new language configuration
+export const createLanguage = (languageData) => {
+  return fetchApi('/api/languages', {
+    method: 'POST',
+    body: JSON.stringify(languageData)
+  });
+};
+
+// Updates an existing language configuration
+export const updateLanguage = (languageId, languageData) => {
+  return fetchApi(`/api/languages/${languageId}`, {
+    method: 'PUT',
+    body: JSON.stringify(languageData)
+  });
+};
+
+// Deletes a language configuration
+export const deleteLanguage = (languageId) => {
+  return fetchApi(`/api/languages/${languageId}`, {
+    method: 'DELETE'
+  });
 };
 
 // Texts API

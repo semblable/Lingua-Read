@@ -24,6 +24,7 @@ import BookDetail from './pages/BookDetail';
 import Statistics from './pages/Statistics';
 import UserSettings from './pages/UserSettings';
 import CreateAudioLesson from './pages/CreateAudioLesson';
+import LanguagesPage from './components/settings/LanguagesPage'; // <-- Import the new component
 import BatchAudioCreate from './pages/BatchAudioCreate'; // Import the batch create page
 
 function App() {
@@ -117,6 +118,7 @@ function App() {
 
               {/* Settings route */}
               <Route path="/settings" element={token ? <UserSettings /> : <Navigate to="/login" />} />
+              <Route path="/settings/languages" element={token ? <LanguagesPage /> : <Navigate to="/login" />} /> {/* <-- Add route for Languages page */}
             </Routes>
           </div>
         </div>
