@@ -6,10 +6,10 @@
   --light-grey-light: #adb5bd;
 
   /* Dark theme colors */
-  --background-color-dark: #48484a;
-  --font-color-dark: #c4c8ce;
-  --dark-grey-dark: #333333;
-  --light-grey-dark: #c4c8ce;
+  --background-color-dark: #343a40; /* Made slightly lighter (Bootstrap dark) */
+  --font-color-dark: #adb5bd; /* Made slightly darker */
+  --dark-grey-dark: #3a3f44; /* Made slightly lighter */
+  --light-grey-dark: #adb5bd; /* Adjusted to match new font color */
 
   /* Status colors - light theme */
   --status-0-color-light: rgba(173, 216, 230, 0.5); /* Lighter blue with opacity */
@@ -215,4 +215,9 @@ body, html {
 /* Ensure known words inherit the correct dark theme font color */
 .dark-theme .word-status-5 {
   color: var(--font-color-dark) !important;
+}
+
+/* Custom class for wider translation modal */
+.modal-dialog.translation-modal-wide { /* Corrected selector */
+  max-width: 90%; /* Adjust percentage as needed */
 }

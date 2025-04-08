@@ -35,4 +35,15 @@
   to {
     transform: rotate(360deg);
   }
-} 
+}
+
+/* Custom Audiobook Player Background */
+.audiobook-player-custom-bg {
+  /* background-color: #dee2e6; /* Slightly darker gray for light mode */
+  background-color: #adb5bd; /* Even darker gray for light mode (Bootstrap $gray-500) */
+}
+
+[data-bs-theme="dark"] .audiobook-player-custom-bg {
+  /* background-color: #212529; /* Darker gray for dark mode */
+  background-color: #1c1f23; /* Even darker gray for dark mode */
+}

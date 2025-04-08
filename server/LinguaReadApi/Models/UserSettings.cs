@@ -14,7 +14,8 @@ namespace LinguaReadApi.Models
         public string Theme { get; set; } = "light"; // light, dark, system
         public int TextSize { get; set; } = 16; // font size for reading
         public string TextFont { get; set; } = "default"; // font family for reading
-        
+        public int LeftPanelWidth { get; set; } = 85; // Reading panel width percentage (default 85%)
+
         // Reading Preferences
         public bool AutoTranslateWords { get; set; } = true; // automatically translate words on click
         public bool HighlightKnownWords { get; set; } = true; // highlight words based on knowledge level

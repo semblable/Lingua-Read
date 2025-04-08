@@ -34,56 +34,164 @@ namespace LinguaReadApi.Controllers
             public int LanguageId { get; set; }
             public int DurationSeconds { get; set; }
         }
+[HttpPost("logListening")]
+public async Task<IActionResult> LogListeningActivity([FromBody] LogListeningRequest request)
+{
+    _logger.LogInformation("Received request to log listening activity. LanguageId: {LanguageId}, DurationSeconds: {DurationSeconds}", request.LanguageId, request.DurationSeconds);
 
-        [HttpPost("logListening")]
-        public async Task<IActionResult> LogListeningActivity([FromBody] LogListeningRequest request)
+    if (request.DurationSeconds <= 0)
+    {
+        _logger.LogWarning("Invalid duration received: {DurationSeconds}. Returning BadRequest.", request.DurationSeconds);
+        return BadRequest("Duration must be positive.");
+    }
+
+    // Get the current user's ID
+    var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
+    {
+         _logger.LogWarning("Could not parse UserId from token for NameIdentifier claim.");
+         return Unauthorized("User ID not found in token.");
+    }
+    _logger.LogInformation("Attempting to log activity for UserId: {UserId}", userId);
+
+    var activity = new UserActivity
+    {
+        UserId = userId,
+        LanguageId = request.LanguageId,
+        ActivityType = "Listening", // Specific type for listening
+        WordCount = 0, // Not applicable for listening
+        ListeningDurationSeconds = request.DurationSeconds,
+        Timestamp = DateTime.UtcNow
+    };
+
+    try
+    {
+        _context.UserActivities.Add(activity);
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Successfully saved listening activity for UserId: {UserId}, ActivityId: {ActivityId}", userId, activity.ActivityId);
+        return Ok(new { message = "Listening activity logged successfully.", activityId = activity.ActivityId }); // Indicate success
+    }
+    catch (DbUpdateException dbEx) // Catch specific DB exceptions first
+    {
+        _logger.LogError(dbEx, "Database error saving listening activity for UserId: {UserId}. InnerException: {InnerMessage}", userId, dbEx.InnerException?.Message);
+        return StatusCode(500, $"A database error occurred while saving the activity: {dbEx.InnerException?.Message ?? dbEx.Message}");
+    }
+    catch (Exception ex) // Catch general exceptions
+    {
+        _logger.LogError(ex, "Unexpected error saving listening activity for UserId: {UserId}", userId);
+        return StatusCode(500, $"An unexpected error occurred while saving the activity: {ex.Message}");
+    }
+}
+
+// DTO for manual activity logging
+public class LogManualActivityRequest
+{
+    [Required]
+    public int LanguageId { get; set; }
+    public int? WordCount { get; set; } // Nullable for listening-only entries
+    public int? ListeningDurationSeconds { get; set; } // Nullable for reading-only entries
+}
+
+[HttpPost("logManual")]
+public async Task<IActionResult> LogManualActivity([FromBody] LogManualActivityRequest request)
+{
+    _logger.LogInformation("Received request to log manual activity. LanguageId: {LanguageId}, WordCount: {WordCount}, DurationSeconds: {DurationSeconds}",
+        request.LanguageId, request.WordCount, request.ListeningDurationSeconds);
+
+    // Basic Validation
+    if (request.WordCount == null && request.ListeningDurationSeconds == null)
+    {
+        _logger.LogWarning("Manual activity log request received with no WordCount or DurationSeconds.");
+        return BadRequest("Either WordCount or ListeningDurationSeconds must be provided.");
+    }
+    if (request.WordCount.HasValue && request.WordCount <= 0)
+    {
+        _logger.LogWarning("Invalid manual WordCount received: {WordCount}.", request.WordCount);
+        return BadRequest("WordCount must be positive if provided.");
+    }
+    if (request.ListeningDurationSeconds.HasValue && request.ListeningDurationSeconds <= 0)
+    {
+        _logger.LogWarning("Invalid manual ListeningDurationSeconds received: {DurationSeconds}.", request.ListeningDurationSeconds);
+        return BadRequest("ListeningDurationSeconds must be positive if provided.");
+    }
+
+    // Check if LanguageId exists (optional but good practice)
+    var languageExists = await _context.Languages.AnyAsync(l => l.LanguageId == request.LanguageId);
+    if (!languageExists)
+    {
+        _logger.LogWarning("Attempted to log manual activity for non-existent LanguageId: {LanguageId}.", request.LanguageId);
+        return BadRequest($"Language with ID {request.LanguageId} not found.");
+    }
+
+    // Get User ID
+    var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (!Guid.TryParse(userIdString, out Guid userId))
+    {
+        _logger.LogWarning("Could not parse UserId from token for manual activity log.");
+        return Unauthorized("User ID not found in token.");
+    }
+    _logger.LogInformation("Attempting to log manual activity for UserId: {UserId}", userId);
+
+    var activitiesToAdd = new List<UserActivity>();
+    var now = DateTime.UtcNow;
+
+    // Create Reading Activity if WordCount provided
+    if (request.WordCount.HasValue && request.WordCount > 0)
+    {
+        activitiesToAdd.Add(new UserActivity
         {
-            _logger.LogInformation("Received request to log listening activity. LanguageId: {LanguageId}, DurationSeconds: {DurationSeconds}", request.LanguageId, request.DurationSeconds);
+            UserId = userId,
+            LanguageId = request.LanguageId,
+            ActivityType = "ManualReading",
+            WordCount = request.WordCount.Value,
+            ListeningDurationSeconds = 0,
+            Timestamp = now
+        });
+        _logger.LogInformation("Prepared ManualReading activity for UserId: {UserId}, LanguageId: {LanguageId}, WordCount: {WordCount}", userId, request.LanguageId, request.WordCount.Value);
+    }
 
-            if (request.DurationSeconds <= 0)
-            {
-                _logger.LogWarning("Invalid duration received: {DurationSeconds}. Returning BadRequest.", request.DurationSeconds);
-                return BadRequest("Duration must be positive.");
-            }
+    // Create Listening Activity if Duration provided
+    if (request.ListeningDurationSeconds.HasValue && request.ListeningDurationSeconds > 0)
+    {
+        activitiesToAdd.Add(new UserActivity
+        {
+            UserId = userId,
+            LanguageId = request.LanguageId,
+            ActivityType = "ManualListening",
+            WordCount = 0,
+            ListeningDurationSeconds = request.ListeningDurationSeconds.Value,
+            Timestamp = now
+        });
+        _logger.LogInformation("Prepared ManualListening activity for UserId: {UserId}, LanguageId: {LanguageId}, Duration: {Duration}", userId, request.LanguageId, request.ListeningDurationSeconds.Value);
+    }
 
-            // Get the current user's ID
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
-            {
-                 _logger.LogWarning("Could not parse UserId from token for NameIdentifier claim.");
-                 return Unauthorized("User ID not found in token.");
-            }
-            _logger.LogInformation("Attempting to log activity for UserId: {UserId}", userId);
+    if (!activitiesToAdd.Any())
+    {
+        // Should have been caught by earlier validation, but good to double-check
+        _logger.LogWarning("No valid manual activities to add for UserId: {UserId} despite passing initial validation.", userId);
+        return BadRequest("No valid activity data provided.");
+    }
 
-            var activity = new UserActivity
-            {
-                UserId = userId,
-                LanguageId = request.LanguageId,
-                ActivityType = "Listening", // Specific type for listening
-                WordCount = 0, // Not applicable for listening
-                ListeningDurationSeconds = request.DurationSeconds,
-                Timestamp = DateTime.UtcNow
-            };
+    try
+    {
+        _context.UserActivities.AddRange(activitiesToAdd);
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Successfully saved {Count} manual activity record(s) for UserId: {UserId}", activitiesToAdd.Count, userId);
+        return Ok(new { message = "Manual activity logged successfully." });
+    }
+    catch (DbUpdateException dbEx)
+    {
+        _logger.LogError(dbEx, "Database error saving manual activity for UserId: {UserId}. InnerException: {InnerMessage}", userId, dbEx.InnerException?.Message);
+        return StatusCode(500, $"A database error occurred while saving the manual activity: {dbEx.InnerException?.Message ?? dbEx.Message}");
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Unexpected error saving manual activity for UserId: {UserId}", userId);
+        return StatusCode(500, $"An unexpected error occurred while saving the manual activity: {ex.Message}");
+    }
+}
 
-            try
-            {
-                _context.UserActivities.Add(activity);
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Successfully saved listening activity for UserId: {UserId}, ActivityId: {ActivityId}", userId, activity.ActivityId);
-                return Ok(new { message = "Listening activity logged successfully.", activityId = activity.ActivityId }); // Indicate success
-            }
-            catch (DbUpdateException dbEx) // Catch specific DB exceptions first
-            {
-                _logger.LogError(dbEx, "Database error saving listening activity for UserId: {UserId}. InnerException: {InnerMessage}", userId, dbEx.InnerException?.Message);
-                return StatusCode(500, $"A database error occurred while saving the activity: {dbEx.InnerException?.Message ?? dbEx.Message}");
-            }
-            catch (Exception ex) // Catch general exceptions
-            {
-                _logger.LogError(ex, "Unexpected error saving listening activity for UserId: {UserId}", userId);
-                return StatusCode(500, $"An unexpected error occurred while saving the activity: {ex.Message}");
-            }
-        }
-
+// --- Endpoint for fetching statistics will be added later --- // This comment is now outdated
         // --- Endpoint for fetching statistics will be added later ---
 
         // DTO for updating audiobook progress
@@ -187,7 +295,7 @@ namespace LinguaReadApi.Controllers
             }
         }
 
-        // --- Endpoint for GETTING audiobook progress will be added next ---
+        // --- Endpoint for GETTING audiobook progress ---
 
         // GET endpoint now requires bookId
         [HttpGet("audiobookprogress/{bookId}")]

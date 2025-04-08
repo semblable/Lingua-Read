@@ -861,6 +861,15 @@ export const logListeningActivity = async (languageId, durationSeconds) => {
     body: JSON.stringify(payload)
   });
 };
+
+// Add logManualActivity function
+export const logManualActivity = async (payload) => {
+  console.log('[API] Logging manual activity:', payload);
+  return await fetchApi('/api/activity/logManual', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+};
 // Add near other translation functions
 
 export const batchTranslateWords = async (words, targetLanguageCode, sourceLanguageCode = null) => {

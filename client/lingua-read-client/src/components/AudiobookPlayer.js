@@ -520,12 +520,12 @@ const AudiobookPlayer = ({ book }) => {
 
   // --- Ultra-Compact Dark-Mode Player (Fixed) ---
   return (
-    <div className="audiobook-player p-2 rounded-2 w-100 bg-body-secondary">
+    <div className="audiobook-player p-1 rounded-2 w-100 audiobook-player-custom-bg"> {/* Reduced padding */}
       {error && <Alert variant="danger" className="mb-1 p-1 small">{error}</Alert>}
       <audio ref={audioRef} style={{ display: 'none' }} />
 
       {/* Top Row: Track Info + Progress */}
-      <div className="d-flex align-items-center mb-1 gap-2">
+      <div className="d-flex align-items-center mb-0 gap-2"> {/* Reduced margin-bottom */}
          <small className="text-muted text-nowrap">
              Trk {currentTrackIndex + 1}/{audiobookTracks.length}
          </small>
@@ -534,7 +534,7 @@ const AudiobookPlayer = ({ book }) => {
           now={duration ? (currentTime / duration) * 100 : 0}
           className="flex-grow-1"
           style={{
-            height: '6px',
+            height: '4px',
             cursor: 'pointer',
             '--bs-progress-bar-bg': 'var(--bs-primary)',
             '--bs-progress-bg': 'var(--bs-secondary-bg)'
@@ -594,7 +594,7 @@ const AudiobookPlayer = ({ book }) => {
             variant="outline-primary" // Changed to primary for emphasis
             size="sm"
             onClick={togglePlayPause}
-            className="px-2 py-1" // Slightly more padding for main button
+            className="px-1 py-0" // Reduced padding
             title={isPlaying ? 'Pause (` key)' : 'Play (` key)'}
             style={{ minWidth: '40px' }} // Ensure it's slightly larger
             disabled={isLoadingAudio} // Disable button while loading audio
@@ -602,7 +602,7 @@ const AudiobookPlayer = ({ book }) => {
             {isLoadingAudio ? (
               <Spinner animation="border" size="sm" />
             ) : (
-              <i className={`bi ${isPlaying ? 'bi-pause-fill' : 'bi-play-fill'}`} style={{ fontSize: '1.1rem' }} />
+              <i className={`bi ${isPlaying ? 'bi-pause-fill' : 'bi-play-fill'}`} style={{ fontSize: '1.0rem' }} />
             )}
           </Button>
           <Button

@@ -134,7 +134,8 @@ namespace LinguaReadApi.Controllers
                 _logger.LogDebug("Fetching activities from {StartDate} for user {UserId}", startDate, userId);
 
                 var activities = await _context.UserActivities
-                    .Where(a => a.UserId == userId && a.Timestamp >= startDate)
+                    .Where(a => a.UserId == userId && a.Timestamp >= startDate &&
+                                (a.ActivityType == "LessonCompleted" || a.ActivityType == "BookFinished" || a.ActivityType == "ManualReading")) // Filter for reading activities
                     .Include(a => a.Language) // Include Language for grouping
                     .OrderBy(a => a.Timestamp)
                     .ToListAsync();
@@ -219,8 +220,8 @@ namespace LinguaReadApi.Controllers
 
                 var activities = await _context.UserActivities
                     .Where(a => a.UserId == userId
-                                && a.ActivityType == "Listening"
-                                && a.ListeningDurationSeconds.HasValue // Ensure we only count listening activities with duration
+                                && (a.ActivityType == "Listening" || a.ActivityType == "ManualListening") // Include manual listening
+                                && a.ListeningDurationSeconds.HasValue && a.ListeningDurationSeconds > 0 // Ensure we only count activities with positive duration
                                 && a.Timestamp >= startDate)
                     .Include(a => a.Language) // Include Language for grouping by name
                     .OrderBy(a => a.Timestamp)
