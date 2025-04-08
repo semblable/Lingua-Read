@@ -33,8 +33,9 @@ namespace LinguaReadApi.Services
             _logger = logger;
 
             // Read API key and throw if missing
-            _apiKey = _configuration["DeepLApiKey"] ?? throw new InvalidOperationException("DeepL API Key (DeepLApiKey) is not configured in environment variables or app settings.");
-            _apiUrl = _configuration["DeepLApiUrl"] ?? "https://api-free.deepl.com/v2/translate"; // Default to free API
+            _apiKey = _configuration["DeepL:ApiKey"] ?? throw new InvalidOperationException("DeepL API Key (DeepL:ApiKey) is not configured. Check .env (DeepL__ApiKey) or appsettings.json.");
+            // Use a specific config key for the translate endpoint to avoid conflicts. Default to free API translate endpoint.
+            _apiUrl = _configuration["DeepL:TranslateUrl"] ?? "https://api-free.deepl.com/v2/translate";
 
             // The check below is now redundant because of the null-coalescing throw above,
             // but it doesn't hurt to leave it commented for future reference.
@@ -58,23 +59,26 @@ namespace LinguaReadApi.Services
             try
             {
                  // DeepL Free API expects form data, Pro API supports JSON. Assuming Free for default URL.
-                 // Adjust content type and serialization if using Pro API with JSON.
-                var formContent = new List<KeyValuePair<string, string>>
-                {
-                    new KeyValuePair<string, string>("target_lang", targetLang)
-                };
+                 // DeepL Free API expects form data (application/x-www-form-urlencoded).
+                 // Create the key-value pairs for the form data.
+                 // Note: Each word needs its own 'text' key.
+                var formData = new List<KeyValuePair<string, string>>();
                 foreach (var word in words)
                 {
-                    formContent.Add(new KeyValuePair<string, string>("text", word));
+                    formData.Add(new KeyValuePair<string, string>("text", word));
                 }
+                formData.Add(new KeyValuePair<string, string>("target_lang", targetLang));
+
                 if (!string.IsNullOrEmpty(sourceLang))
                 {
-                    formContent.Add(new KeyValuePair<string, string>("source_lang", sourceLang));
+                    formData.Add(new KeyValuePair<string, string>("source_lang", sourceLang));
                 }
 
-                var requestContent = new FormUrlEncodedContent(formContent);
+                // Create FormUrlEncodedContent. HttpClient sets the Content-Type header.
+                var requestContent = new FormUrlEncodedContent(formData);
 
-                _logger.LogInformation($"Sending {words.Count} words to DeepL for translation to {targetLang}");
+
+                // Removed previous detailed debug logging
 
                 var response = await _httpClient.PostAsync(_apiUrl, requestContent);
 
