@@ -22,6 +22,34 @@ namespace LinguaReadApi.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("LinguaReadApi.Models.AudiobookTrack", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BookId")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("Duration")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TrackNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
+
+                    b.ToTable("AudiobookTracks");
+                });
+
             modelBuilder.Entity("LinguaReadApi.Models.Book", b =>
                 {
                     b.Property<int>("BookId")
@@ -81,6 +109,21 @@ namespace LinguaReadApi.Migrations
                     b.ToTable("Books");
                 });
 
+            modelBuilder.Entity("LinguaReadApi.Models.BookTag", b =>
+                {
+                    b.Property<int>("BookId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("BookId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("BookTags");
+                });
+
             modelBuilder.Entity("LinguaReadApi.Models.Language", b =>
                 {
                     b.Property<int>("LanguageId")
@@ -105,6 +148,27 @@ namespace LinguaReadApi.Migrations
                     b.HasKey("LanguageId");
 
                     b.ToTable("Languages");
+                });
+
+            modelBuilder.Entity("LinguaReadApi.Models.Tag", b =>
+                {
+                    b.Property<int>("TagId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TagId"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("TagId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("LinguaReadApi.Models.Text", b =>
@@ -289,6 +353,32 @@ namespace LinguaReadApi.Migrations
                     b.ToTable("UserActivities");
                 });
 
+            modelBuilder.Entity("LinguaReadApi.Models.UserBookProgress", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("BookId")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("CurrentAudiobookPosition")
+                        .HasColumnType("double precision");
+
+                    b.Property<int?>("CurrentAudiobookTrackId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId", "BookId");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("CurrentAudiobookTrackId");
+
+                    b.ToTable("UserBookProgresses");
+                });
+
             modelBuilder.Entity("LinguaReadApi.Models.UserSettings", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -303,11 +393,20 @@ namespace LinguaReadApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<double?>("CurrentAudiobookPosition")
+                        .HasColumnType("double precision");
+
+                    b.Property<int?>("CurrentAudiobookTrackId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("DefaultLanguageId")
                         .HasColumnType("integer");
 
                     b.Property<bool>("HighlightKnownWords")
                         .HasColumnType("boolean");
+
+                    b.Property<int>("LeftPanelWidth")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("ShowProgressStats")
                         .HasColumnType("boolean");
@@ -385,6 +484,17 @@ namespace LinguaReadApi.Migrations
                     b.ToTable("WordTranslations");
                 });
 
+            modelBuilder.Entity("LinguaReadApi.Models.AudiobookTrack", b =>
+                {
+                    b.HasOne("LinguaReadApi.Models.Book", "Book")
+                        .WithMany("AudiobookTracks")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+                });
+
             modelBuilder.Entity("LinguaReadApi.Models.Book", b =>
                 {
                     b.HasOne("LinguaReadApi.Models.Language", "Language")
@@ -411,12 +521,31 @@ namespace LinguaReadApi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("LinguaReadApi.Models.BookTag", b =>
+                {
+                    b.HasOne("LinguaReadApi.Models.Book", "Book")
+                        .WithMany("BookTags")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LinguaReadApi.Models.Tag", "Tag")
+                        .WithMany("BookTags")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("Tag");
+                });
+
             modelBuilder.Entity("LinguaReadApi.Models.Text", b =>
                 {
                     b.HasOne("LinguaReadApi.Models.Book", "Book")
                         .WithMany("Texts")
                         .HasForeignKey("BookId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("LinguaReadApi.Models.Language", "Language")
                         .WithMany("Texts")
@@ -467,6 +596,32 @@ namespace LinguaReadApi.Migrations
                     b.Navigation("Language");
                 });
 
+            modelBuilder.Entity("LinguaReadApi.Models.UserBookProgress", b =>
+                {
+                    b.HasOne("LinguaReadApi.Models.Book", "Book")
+                        .WithMany()
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LinguaReadApi.Models.AudiobookTrack", "CurrentAudiobookTrack")
+                        .WithMany()
+                        .HasForeignKey("CurrentAudiobookTrackId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("LinguaReadApi.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("CurrentAudiobookTrack");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("LinguaReadApi.Models.UserSettings", b =>
                 {
                     b.HasOne("LinguaReadApi.Models.User", "User")
@@ -510,6 +665,10 @@ namespace LinguaReadApi.Migrations
 
             modelBuilder.Entity("LinguaReadApi.Models.Book", b =>
                 {
+                    b.Navigation("AudiobookTracks");
+
+                    b.Navigation("BookTags");
+
                     b.Navigation("Texts");
                 });
 
@@ -520,6 +679,11 @@ namespace LinguaReadApi.Migrations
                     b.Navigation("Texts");
 
                     b.Navigation("Words");
+                });
+
+            modelBuilder.Entity("LinguaReadApi.Models.Tag", b =>
+                {
+                    b.Navigation("BookTags");
                 });
 
             modelBuilder.Entity("LinguaReadApi.Models.Text", b =>

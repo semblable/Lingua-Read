@@ -3,7 +3,9 @@ using LinguaReadApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore; // Added for DbUpdateException
 using System;
+using System.ComponentModel.DataAnnotations; // Added for [Required] attribute
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging; // Add logger namespace
@@ -32,51 +34,306 @@ namespace LinguaReadApi.Controllers
             public int LanguageId { get; set; }
             public int DurationSeconds { get; set; }
         }
+[HttpPost("logListening")]
+public async Task<IActionResult> LogListeningActivity([FromBody] LogListeningRequest request)
+{
+    _logger.LogInformation("Received request to log listening activity. LanguageId: {LanguageId}, DurationSeconds: {DurationSeconds}", request.LanguageId, request.DurationSeconds);
 
-        [HttpPost("logListening")]
-        public async Task<IActionResult> LogListeningActivity([FromBody] LogListeningRequest request)
+    if (request.DurationSeconds <= 0)
+    {
+        _logger.LogWarning("Invalid duration received: {DurationSeconds}. Returning BadRequest.", request.DurationSeconds);
+        return BadRequest("Duration must be positive.");
+    }
+
+    // Get the current user's ID
+    var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
+    {
+         _logger.LogWarning("Could not parse UserId from token for NameIdentifier claim.");
+         return Unauthorized("User ID not found in token.");
+    }
+    _logger.LogInformation("Attempting to log activity for UserId: {UserId}", userId);
+
+    var activity = new UserActivity
+    {
+        UserId = userId,
+        LanguageId = request.LanguageId,
+        ActivityType = "Listening", // Specific type for listening
+        WordCount = 0, // Not applicable for listening
+        ListeningDurationSeconds = request.DurationSeconds,
+        Timestamp = DateTime.UtcNow
+    };
+
+    try
+    {
+        _context.UserActivities.Add(activity);
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Successfully saved listening activity for UserId: {UserId}, ActivityId: {ActivityId}", userId, activity.ActivityId);
+        return Ok(new { message = "Listening activity logged successfully.", activityId = activity.ActivityId }); // Indicate success
+    }
+    catch (DbUpdateException dbEx) // Catch specific DB exceptions first
+    {
+        _logger.LogError(dbEx, "Database error saving listening activity for UserId: {UserId}. InnerException: {InnerMessage}", userId, dbEx.InnerException?.Message);
+        return StatusCode(500, $"A database error occurred while saving the activity: {dbEx.InnerException?.Message ?? dbEx.Message}");
+    }
+    catch (Exception ex) // Catch general exceptions
+    {
+        _logger.LogError(ex, "Unexpected error saving listening activity for UserId: {UserId}", userId);
+        return StatusCode(500, $"An unexpected error occurred while saving the activity: {ex.Message}");
+    }
+}
+
+// DTO for manual activity logging
+public class LogManualActivityRequest
+{
+    [Required]
+    public int LanguageId { get; set; }
+    public int? WordCount { get; set; } // Nullable for listening-only entries
+    public int? ListeningDurationSeconds { get; set; } // Nullable for reading-only entries
+}
+
+[HttpPost("logManual")]
+public async Task<IActionResult> LogManualActivity([FromBody] LogManualActivityRequest request)
+{
+    _logger.LogInformation("Received request to log manual activity. LanguageId: {LanguageId}, WordCount: {WordCount}, DurationSeconds: {DurationSeconds}",
+        request.LanguageId, request.WordCount, request.ListeningDurationSeconds);
+
+    // Basic Validation
+    if (request.WordCount == null && request.ListeningDurationSeconds == null)
+    {
+        _logger.LogWarning("Manual activity log request received with no WordCount or DurationSeconds.");
+        return BadRequest("Either WordCount or ListeningDurationSeconds must be provided.");
+    }
+    if (request.WordCount.HasValue && request.WordCount <= 0)
+    {
+        _logger.LogWarning("Invalid manual WordCount received: {WordCount}.", request.WordCount);
+        return BadRequest("WordCount must be positive if provided.");
+    }
+    if (request.ListeningDurationSeconds.HasValue && request.ListeningDurationSeconds <= 0)
+    {
+        _logger.LogWarning("Invalid manual ListeningDurationSeconds received: {DurationSeconds}.", request.ListeningDurationSeconds);
+        return BadRequest("ListeningDurationSeconds must be positive if provided.");
+    }
+
+    // Check if LanguageId exists (optional but good practice)
+    var languageExists = await _context.Languages.AnyAsync(l => l.LanguageId == request.LanguageId);
+    if (!languageExists)
+    {
+        _logger.LogWarning("Attempted to log manual activity for non-existent LanguageId: {LanguageId}.", request.LanguageId);
+        return BadRequest($"Language with ID {request.LanguageId} not found.");
+    }
+
+    // Get User ID
+    var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (!Guid.TryParse(userIdString, out Guid userId))
+    {
+        _logger.LogWarning("Could not parse UserId from token for manual activity log.");
+        return Unauthorized("User ID not found in token.");
+    }
+    _logger.LogInformation("Attempting to log manual activity for UserId: {UserId}", userId);
+
+    var activitiesToAdd = new List<UserActivity>();
+    var now = DateTime.UtcNow;
+
+    // Create Reading Activity if WordCount provided
+    if (request.WordCount.HasValue && request.WordCount > 0)
+    {
+        activitiesToAdd.Add(new UserActivity
         {
-            _logger.LogInformation("Received request to log listening activity. LanguageId: {LanguageId}, DurationSeconds: {DurationSeconds}", request.LanguageId, request.DurationSeconds);
+            UserId = userId,
+            LanguageId = request.LanguageId,
+            ActivityType = "ManualReading",
+            WordCount = request.WordCount.Value,
+            ListeningDurationSeconds = 0,
+            Timestamp = now
+        });
+        _logger.LogInformation("Prepared ManualReading activity for UserId: {UserId}, LanguageId: {LanguageId}, WordCount: {WordCount}", userId, request.LanguageId, request.WordCount.Value);
+    }
 
-            if (request.DurationSeconds <= 0)
+    // Create Listening Activity if Duration provided
+    if (request.ListeningDurationSeconds.HasValue && request.ListeningDurationSeconds > 0)
+    {
+        activitiesToAdd.Add(new UserActivity
+        {
+            UserId = userId,
+            LanguageId = request.LanguageId,
+            ActivityType = "ManualListening",
+            WordCount = 0,
+            ListeningDurationSeconds = request.ListeningDurationSeconds.Value,
+            Timestamp = now
+        });
+        _logger.LogInformation("Prepared ManualListening activity for UserId: {UserId}, LanguageId: {LanguageId}, Duration: {Duration}", userId, request.LanguageId, request.ListeningDurationSeconds.Value);
+    }
+
+    if (!activitiesToAdd.Any())
+    {
+        // Should have been caught by earlier validation, but good to double-check
+        _logger.LogWarning("No valid manual activities to add for UserId: {UserId} despite passing initial validation.", userId);
+        return BadRequest("No valid activity data provided.");
+    }
+
+    try
+    {
+        _context.UserActivities.AddRange(activitiesToAdd);
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Successfully saved {Count} manual activity record(s) for UserId: {UserId}", activitiesToAdd.Count, userId);
+        return Ok(new { message = "Manual activity logged successfully." });
+    }
+    catch (DbUpdateException dbEx)
+    {
+        _logger.LogError(dbEx, "Database error saving manual activity for UserId: {UserId}. InnerException: {InnerMessage}", userId, dbEx.InnerException?.Message);
+        return StatusCode(500, $"A database error occurred while saving the manual activity: {dbEx.InnerException?.Message ?? dbEx.Message}");
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Unexpected error saving manual activity for UserId: {UserId}", userId);
+        return StatusCode(500, $"An unexpected error occurred while saving the manual activity: {ex.Message}");
+    }
+}
+
+// --- Endpoint for fetching statistics will be added later --- // This comment is now outdated
+        // --- Endpoint for fetching statistics will be added later ---
+
+        // DTO for updating audiobook progress
+        public class UpdateAudiobookProgressRequest
+        {
+            [Required] // BookId is now required to identify the progress record
+            public int BookId { get; set; }
+            public int? CurrentAudiobookTrackId { get; set; }
+            public double? CurrentAudiobookPosition { get; set; }
+        }
+
+        [HttpPut("audiobookprogress")]
+        public async Task<IActionResult> UpdateAudiobookProgress([FromBody] UpdateAudiobookProgressRequest request)
+        {
+            // Enhanced Logging
+            _logger.LogInformation("---- BEGIN UpdateAudiobookProgress ----");
+            _logger.LogInformation("Received request body: BookId={BookId}, TrackId={TrackId}, Position={Position}", request?.BookId, request?.CurrentAudiobookTrackId, request?.CurrentAudiobookPosition);
+
+            if (request == null)
             {
-                _logger.LogWarning("Invalid duration received: {DurationSeconds}. Returning BadRequest.", request.DurationSeconds);
-                return BadRequest("Duration must be positive.");
+                 _logger.LogWarning("Request body is null.");
+                 return BadRequest("Request body cannot be null.");
             }
+             if (request.CurrentAudiobookTrackId == null)
+             {
+                 _logger.LogWarning("CurrentAudiobookTrackId is null in the request.");
+                 // Decide if this is acceptable or should be a BadRequest
+             }
+             if (request.CurrentAudiobookPosition == null)
+             {
+                 _logger.LogWarning("CurrentAudiobookPosition is null in the request.");
+                 // Decide if this is acceptable or should be a BadRequest
+             }
 
-            // Get the current user's ID
+
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
+             _logger.LogInformation("Attempting to parse UserId from token claim: {UserIdString}", userIdString);
+            if (!Guid.TryParse(userIdString, out Guid userId))
             {
-                 _logger.LogWarning("Could not parse UserId from token for NameIdentifier claim.");
-                 return Unauthorized("User ID not found in token.");
+                _logger.LogWarning("Failed to parse UserId from token claim '{UserIdString}'.", userIdString);
+                 _logger.LogInformation("---- END UpdateAudiobookProgress (Unauthorized) ----");
+                return Unauthorized("User ID not found or invalid in token.");
             }
-            _logger.LogInformation("Attempting to log activity for UserId: {UserId}", userId);
-
-            var activity = new UserActivity
-            {
-                UserId = userId,
-                LanguageId = request.LanguageId,
-                ActivityType = "Listening", // Specific type for listening
-                WordCount = 0, // Not applicable for listening
-                ListeningDurationSeconds = request.DurationSeconds,
-                Timestamp = DateTime.UtcNow
-            };
+            _logger.LogInformation("Successfully parsed UserId: {UserId}", userId);
+            _logger.LogInformation("Attempting to find UserBookProgress for UserId: {UserId}, BookId: {BookId}", userId, request.BookId);
 
             try
             {
-                _context.UserActivities.Add(activity);
+                // Find the most recent activity record for the user. This is flawed.
+                // var latestActivity = await _context.UserActivities
+                //     .Where(ua => ua.UserId == userId)
+                //     .OrderByDescending(ua => ua.Timestamp)
+                //     .FirstOrDefaultAsync();
+
+                // --- Use UserBookProgress table ---
+                var progressRecord = await _context.UserBookProgresses.FindAsync(userId, request.BookId);
+
+                if (progressRecord == null)
+                {
+                    _logger.LogInformation("UserBookProgress record not found for UserId: {UserId}, BookId: {BookId}. Creating new record.", userId, request.BookId);
+                    progressRecord = new UserBookProgress
+                    {
+                        UserId = userId,
+                        BookId = request.BookId,
+                        CurrentAudiobookTrackId = request.CurrentAudiobookTrackId,
+                        CurrentAudiobookPosition = request.CurrentAudiobookPosition,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _context.UserBookProgresses.Add(progressRecord);
+                    _logger.LogInformation("Added new UserBookProgress to context for UserId: {UserId}, BookId: {BookId}", userId, request.BookId);
+                }
+                else
+                {
+                    _logger.LogInformation("Found existing UserBookProgress for UserId: {UserId}, BookId: {BookId}. Updating.", userId, request.BookId);
+                    _logger.LogInformation("Updating UserBookProgress: Old TrackId={OldTrackId}, Old Position={OldPosition}", progressRecord.CurrentAudiobookTrackId, progressRecord.CurrentAudiobookPosition);
+                    progressRecord.CurrentAudiobookTrackId = request.CurrentAudiobookTrackId;
+                    progressRecord.CurrentAudiobookPosition = request.CurrentAudiobookPosition;
+                    progressRecord.UpdatedAt = DateTime.UtcNow;
+                    _logger.LogInformation("Updating UserBookProgress: New TrackId={NewTrackId}, New Position={NewPosition}", progressRecord.CurrentAudiobookTrackId, progressRecord.CurrentAudiobookPosition);
+                    // EF Core tracks changes on the found entity, no need for explicit Update call
+                }
+
+                _logger.LogInformation("Calling SaveChangesAsync...");
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Successfully saved listening activity for UserId: {UserId}, ActivityId: {ActivityId}", userId, activity.ActivityId);
-                return Ok(new { message = "Listening activity logged successfully.", activityId = activity.ActivityId }); // Indicate success
+                _logger.LogInformation("SaveChangesAsync completed successfully for UserId: {UserId}, BookId: {BookId}", userId, request.BookId);
+                 _logger.LogInformation("---- END UpdateAudiobookProgress (Success) ----");
+                return Ok(new { message = "Audiobook progress updated successfully." });
+
+            }
+            catch (DbUpdateException dbEx) // Catch specific DB exceptions
+            {
+                 _logger.LogError(dbEx, "Database error updating audiobook progress for UserId: {UserId}, BookId: {BookId}. InnerException: {InnerMessage}", userId, request.BookId, dbEx.InnerException?.Message);
+                 _logger.LogInformation("---- END UpdateAudiobookProgress (DB Error) ----");
+                 return StatusCode(500, $"A database error occurred while updating progress: {dbEx.Message}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving listening activity for UserId: {UserId}", userId);
-                return StatusCode(500, "An error occurred while saving the activity.");
+                _logger.LogError(ex, "Unexpected error updating audiobook progress for UserId: {UserId}, BookId: {BookId}", userId, request.BookId);
+                 _logger.LogInformation("---- END UpdateAudiobookProgress (Error) ----");
+                return StatusCode(500, $"An unexpected error occurred while updating progress: {ex.Message}");
             }
         }
 
-        // --- Endpoint for fetching statistics will be added later ---
+        // --- Endpoint for GETTING audiobook progress ---
+
+        // GET endpoint now requires bookId
+        [HttpGet("audiobookprogress/{bookId}")]
+        public async Task<IActionResult> GetAudiobookProgress(int bookId)
+        {
+            _logger.LogInformation("Received request to get audiobook progress for BookId: {BookId}", bookId);
+
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdString, out Guid userId))
+            {
+                _logger.LogWarning("Could not parse UserId from token for getting audiobook progress for BookId: {BookId}.", bookId);
+                return Unauthorized("User ID not found in token.");
+            }
+            _logger.LogInformation("Attempting to get progress for UserId: {UserId}, BookId: {BookId}", userId, bookId);
+
+            try
+            {
+                var progressRecord = await _context.UserBookProgresses.FindAsync(userId, bookId);
+
+                if (progressRecord == null)
+                {
+                    _logger.LogInformation("UserBookProgress record not found for UserId: {UserId}, BookId: {BookId}. Returning default progress.", userId, bookId);
+                    // Return default/empty progress if no record found
+                    return Ok(new { currentAudiobookTrackId = (int?)null, currentAudiobookPosition = (double?)null });
+                }
+
+                _logger.LogInformation("Successfully retrieved audiobook progress from UserBookProgress for UserId: {UserId}, BookId: {BookId}. TrackId: {TrackId}, Position: {Position}", userId, bookId, progressRecord.CurrentAudiobookTrackId, progressRecord.CurrentAudiobookPosition);
+                return Ok(new
+                {
+                    currentAudiobookTrackId = progressRecord.CurrentAudiobookTrackId,
+                    currentAudiobookPosition = progressRecord.CurrentAudiobookPosition
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving audiobook progress for UserId: {UserId}, BookId: {BookId}", userId, bookId);
+                return StatusCode(500, "An error occurred while retrieving audiobook progress.");
+            }
+        }
     }
 }

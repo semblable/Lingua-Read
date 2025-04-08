@@ -1,15 +1,17 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo, useContext } from 'react'; // Added useContext
 import { Container, Card, Spinner, Alert, Button, Modal, Form, Row, Col, Badge, ProgressBar, OverlayTrigger, Tooltip, ButtonGroup } from 'react-bootstrap';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // Removed unused Link import
 import { FixedSizeList as List } from 'react-window';
 import {
   getText, createWord, updateWord, updateLastRead, completeLesson, getBook,
-  translateText, /*translateSentence,*/ translateFullText, getUserSettings, // Removed unused translateSentence
+  translateText, /*translateSentence,*/ translateFullText, updateUserSettings, // Added updateUserSettings, removed unused getUserSettings
   batchTranslateWords, addTermsBatch,
   API_URL
 } from '../utils/api';
 import TranslationPopup from '../components/TranslationPopup';
+import AudiobookPlayer from '../components/AudiobookPlayer'; // Import AudiobookPlayer
 import './TextDisplay.css';
+import { SettingsContext } from '../contexts/SettingsContext'; // Import SettingsContext
 
 // --- SRT Parsing Utilities ---
 const parseSrtTime = (timeString) => {
@@ -127,7 +129,7 @@ const TextDisplay = () => {
   const textContentRef = useRef(null);
   const audioRef = useRef(null);
   const listRef = useRef(null);
-  const resizeDividerRef = useRef(null);
+  // Removed resizeDividerRef
   const lastSaveTimeRef = useRef(Date.now()); // Ref for throttling position saves
   const saveInterval = 5000; // Save position every 5 seconds
   const startTimeRef = useRef(null); // Ref for tracking listening start time
@@ -157,12 +159,15 @@ const TextDisplay = () => {
   const [showTranslationPopup, setShowTranslationPopup] = useState(false);
   const [fullTextTranslation, setFullTextTranslation] = useState('');
   const [isFullTextTranslating, setIsFullTextTranslating] = useState(false);
-  const [userSettings, setUserSettings] = useState({
-    textSize: 16, textFont: 'default', autoTranslateWords: true,
-    highlightKnownWords: true, autoAdvanceToNextLesson: false, showProgressStats: true
-  });
-  const [leftPanelWidth, setLeftPanelWidth] = useState(85);
-  const [isDragging, setIsDragging] = useState(false);
+  // Use SettingsContext instead of local state for settings that are now global
+  const { settings: globalSettings, updateSetting } = useContext(SettingsContext);
+  // Local state only for panel width, as it's specific to this component's layout control
+  const [leftPanelWidth, setLeftPanelWidth] = useState(globalSettings.leftPanelWidth || 85);
+  // Local state for userSettings specific to TextDisplay (like textSize) if needed, or use globalSettings directly
+  // For simplicity, let's assume textSize is also managed globally via context now.
+  // If TextDisplay needs its own independent textSize, keep a local state for it.
+  // Let's use globalSettings directly for textSize for now.
+  // Removed isDragging state
   const [isAudioLesson, setIsAudioLesson] = useState(false);
   const [audioSrc, setAudioSrc] = useState(null);
   const [srtLines, setSrtLines] = useState([]);
@@ -206,7 +211,8 @@ const TextDisplay = () => {
 
   const getWordStyle = useCallback((wordStatus) => {
     const baseStyle = { cursor: 'pointer', padding: '2px 0', margin: '0 2px', borderRadius: '3px', transition: 'all 0.2s' };
-    if (!userSettings?.highlightKnownWords && wordStatus === 5) return { ...baseStyle, backgroundColor: 'transparent', color: 'inherit' };
+    // Use globalSettings from context
+    if (!globalSettings?.highlightKnownWords && wordStatus === 5) return { ...baseStyle, backgroundColor: 'transparent', color: 'inherit' };
     if (wordStatus === 5) return { ...baseStyle, backgroundColor: 'transparent', color: 'inherit' };
     const statusStyles = {
       0: { backgroundColor: 'var(--status-0-color, #e0e0e0)', color: '#000' },
@@ -216,10 +222,11 @@ const TextDisplay = () => {
       4: { backgroundColor: 'var(--status-4-color, #99dd66)', color: '#000' },
     };
     return { ...baseStyle, ...(statusStyles[wordStatus] || statusStyles[0]) };
-  }, [userSettings?.highlightKnownWords]);
+  }, [globalSettings?.highlightKnownWords]); // Use globalSettings from context
 
   const triggerAutoTranslation = useCallback(async (termToTranslate) => {
-    if (!termToTranslate || !userSettings.autoTranslateWords || !text?.languageCode) return;
+    // Use globalSettings from context
+    if (!termToTranslate || !globalSettings.autoTranslateWords || !text?.languageCode) return;
     setIsTranslating(true);
     setWordTranslationError('');
     try {
@@ -236,7 +243,7 @@ const TextDisplay = () => {
     } finally {
       setIsTranslating(false);
     }
-  }, [userSettings.autoTranslateWords, text?.languageCode, setTranslation, setDisplayedWord, setIsTranslating, setWordTranslationError]);
+  }, [globalSettings.autoTranslateWords, text?.languageCode, setTranslation, setDisplayedWord, setIsTranslating, setWordTranslationError]); // Use globalSettings from context
 
   const handleWordClick = useCallback((word) => {
     setSelectedWord(word);
@@ -253,7 +260,7 @@ const TextDisplay = () => {
       setTranslation('');
       triggerAutoTranslation(word);
     }
-  }, [getWordData, triggerAutoTranslation, setSelectedWord, setTranslation, setWordTranslationError, setDisplayedWord]);
+  }, [getWordData, triggerAutoTranslation, setSelectedWord, setTranslation, setWordTranslationError, setDisplayedWord]); // Dependencies using globalSettings don't need it listed if context handles updates
 
   // ** Define handleTextSelection HERE, before the useEffect that uses it **
   const handleTextSelection = useCallback((selectedTextRaw) => {
@@ -299,19 +306,20 @@ const TextDisplay = () => {
 
 
   const getFontFamilyForList = useCallback(() => {
-    switch (userSettings.textFont) {
+    switch (globalSettings.textFont) { // Use globalSettings from context
       case 'serif': return "'Georgia', serif";
       case 'sans-serif': return "'Arial', sans-serif";
       case 'monospace': return "'Courier New', monospace";
       case 'dyslexic': return "'OpenDyslexic', sans-serif";
       default: return "inherit";
     }
-  }, [userSettings.textFont]);
+  }, [globalSettings.textFont]); // Use globalSettings from context
 
+  // Use globalSettings from context
   const getFontStyling = useCallback(() => ({
-      fontSize: `${userSettings.textSize}px`,
-      fontFamily: getFontFamilyForList(),
-  }), [userSettings.textSize, getFontFamilyForList]);
+      fontSize: `${globalSettings.textSize}px`,
+      fontFamily: getFontFamilyForList(), // Assumes getFontFamilyForList uses globalSettings.textFont
+  }), [globalSettings.textSize, getFontFamilyForList]);
 
   const handleLineClick = useCallback((startTime) => {
       console.log(`[handleLineClick] Attempting seek to: ${startTime} (Type: ${typeof startTime})`);
@@ -338,16 +346,7 @@ const TextDisplay = () => {
 
   // --- Effect Hooks ---
 
-  // Fetch User Settings
-  useEffect(() => {
-    const fetchUserSettings = async () => {
-      try {
-        const settings = await getUserSettings();
-        setUserSettings(prev => ({ ...prev, ...settings }));
-      } catch (err) { console.error('Failed to load user settings:', err); }
-    };
-    fetchUserSettings();
-  }, []);
+  // Removed separate fetchUserSettings effect, handled by SettingsContext
 
   // Fetch Text Data, Restore Audio Time & Playback Rate
   useEffect(() => {
@@ -360,6 +359,11 @@ const TextDisplay = () => {
         console.log(`[Playback Rate Restore] Restored rate: ${rate}`);
     }
     // --- End Restore Playback Rate ---
+
+    // --- Set initial panel width from global settings ---
+    // This ensures panel width resets if global settings change while component is mounted
+    setLeftPanelWidth(globalSettings.leftPanelWidth || 85);
+    // --- End Set initial panel width ---
 
     const fetchText = async () => {
       setLoading(true); setError(''); setBook(null); setNextTextId(null); setInitialAudioTime(null); // Reset initial time
@@ -396,21 +400,28 @@ const TextDisplay = () => {
               const currentPartIndex = bookData.parts.findIndex(part => part.textId === parseInt(textId));
               setNextTextId(currentPartIndex >= 0 && currentPartIndex < bookData.parts.length - 1 ? bookData.parts[currentPartIndex + 1].textId : null);
             }
-          } catch (err) { console.error('Failed to update last read or get book data:', err); }
+          } catch (bookErr) {
+               console.error('Failed to get book data:', bookErr);
+               // Don't block text display if book fetch fails, but player won't show
+          }
         }
       } catch (err) { setError(err.message || 'Failed to load text'); }
       finally { setLoading(false); }
     };
     fetchText();
+
+    // Store audioRef.current in a variable inside the effect scope
+    const currentAudioElement = audioRef.current;
+
     // Cleanup function to save time and log duration on unmount
     return () => {
       console.log('[TextDisplay Cleanup] Running cleanup function...');
       // Log critical state values *at the time of cleanup*
       console.log(`[TextDisplay Cleanup] State at cleanup: isAudioLesson=${isAudioLesson}, text exists=${!!text}, languageId=${text?.languageId}`);
       try {
-        // Save Current Playback Position
-        if (audioRef.current && isAudioLesson) {
-          const currentTime = audioRef.current.currentTime;
+        // Save Current Playback Position using the variable captured in the effect scope
+        if (currentAudioElement && isAudioLesson) {
+          const currentTime = currentAudioElement.currentTime;
           if (currentTime > 0) {
             console.log(`[Audio Save - Unmount] Saving position: ${currentTime} for textId: ${textId}`);
             localStorage.setItem(`audioTime-${textId}`, currentTime.toString());
@@ -482,7 +493,8 @@ const TextDisplay = () => {
           console.log('[TextDisplay Cleanup] Finished cleanup function and reset refs.');
       }
     }; // End of return function
-  }, [textId, fetchAllLanguageWords, isAudioLesson, text?.languageId]); // End of useEffect dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [textId, fetchAllLanguageWords, isAudioLesson]); // 'text' is intentionally omitted to prevent loops; cleanup captures correct 'text' via closure.
 
 
   // Audio Sync & Scroll
@@ -499,28 +511,7 @@ const TextDisplay = () => {
   }, [audioCurrentTime, srtLines, isAudioLesson, currentSrtLineId, displayMode]);
 
   // Resizable Panel
-  useEffect(() => {
-    const handleMouseDown = (e) => { setIsDragging(true); document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none'; };
-    const handleMouseMove = (e) => {
-        if (!isDragging) return;
-        const container = document.querySelector('.resizable-container');
-        if (!container) return;
-        const containerRect = container.getBoundingClientRect();
-        const newWidthPercent = ((e.clientX - containerRect.left) / container.offsetWidth) * 100;
-        setLeftPanelWidth(Math.min(Math.max(newWidthPercent, 20), 80));
-     };
-    const handleMouseUp = () => { if (isDragging) { setIsDragging(false); document.body.style.cursor = 'default'; document.body.style.userSelect = 'auto'; } };
-    const divider = resizeDividerRef.current;
-    if (divider) divider.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      if (divider) divider.removeEventListener('mousedown', handleMouseDown);
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-       if (isDragging) { document.body.style.cursor = 'default'; document.body.style.userSelect = 'auto'; }
-    };
-  }, [isDragging]);
+  // Removed useEffect for drag-to-resize functionality
 
   // --- Apply Playback Rate ---
   useEffect(() => {
@@ -587,7 +578,7 @@ const TextDisplay = () => {
              createWord(text.textId, hoveredWordTerm, key, '')
                 .then(newWordData => {
                     setWords(prevWords => [...prevWords, newWordData]);
-                    if(userSettings.autoTranslateWords) triggerAutoTranslation(hoveredWordTerm);
+                    if(globalSettings.autoTranslateWords) triggerAutoTranslation(hoveredWordTerm); // Use globalSettings
                 })
                 .catch(err => console.error(`[Keyboard Shortcut] Failed to create word ${hoveredWordTerm}:`, err));
           }
@@ -596,7 +587,7 @@ const TextDisplay = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hoveredWordTerm, processingWord, isTranslating, getWordData, setWords, selectedWord, displayedWord, text?.textId, userSettings.autoTranslateWords, triggerAutoTranslation]);
+  }, [hoveredWordTerm, processingWord, isTranslating, getWordData, setWords, selectedWord, displayedWord, text?.textId, globalSettings.autoTranslateWords, triggerAutoTranslation]); // Use globalSettings
   // --- End Keyboard Shortcuts ---
 
   // Text selection listener (for phrases)
@@ -693,8 +684,8 @@ const TextDisplay = () => {
       setCompleting(true);
       try {
         const bookStats = await completeLesson(text.bookId, text.textId);
-        if (userSettings.showProgressStats) { setStats(bookStats); setShowStatsModal(true); }
-        else if (userSettings.autoAdvanceToNextLesson && nextTextId) { navigate(`/texts/${nextTextId}`); }
+        if (globalSettings.showProgressStats) { setStats(bookStats); setShowStatsModal(true); } // Use globalSettings
+        else if (globalSettings.autoAdvanceToNextLesson && nextTextId) { navigate(`/texts/${nextTextId}`); } // Use globalSettings
         else { navigate(`/books/${text.bookId}`); }
       } catch (error) { alert(`Failed to complete lesson: ${error.message}`); }
       finally { setCompleting(false); }
@@ -805,7 +796,7 @@ const TextDisplay = () => {
     if (!text?.content) return null;
     const paragraphs = text.content.split(/(\n\s*){2,}/g).filter(p => p?.trim().length > 0);
     return (
-       <div className="text-content" style={{ fontSize: `${userSettings.textSize}px`, lineHeight: '1.6', fontFamily: getFontFamilyForList(), padding: '15px' }}>
+       <div className="text-content" style={{ fontSize: `${globalSettings.textSize}px`, lineHeight: '1.6', fontFamily: getFontFamilyForList(), padding: '15px' }}> {/* Use globalSettings */}
         {paragraphs.map((paragraph, index) => (
           <p key={`para-${index}`} className="mb-3" style={{ textIndent: '1.5em' }}>
             {processTextContent(paragraph)}
@@ -853,6 +844,12 @@ const TextDisplay = () => {
                <p className="text-muted mb-0 small">Lang: {text.languageName || 'N/A'} | Words: {words.length}</p>
              </div>
              <div className="d-flex gap-2 flex-wrap mt-2 mt-md-0 align-items-center">
+               {/* Audiobook Player Integration */}
+               {book && book.audiobookTracks && book.audiobookTracks.length > 0 && (
+                 <div className="flex-grow-1 mx-2" style={{ minWidth: '450px' }}> {/* Increased minWidth significantly */}
+                    <AudiobookPlayer book={book} />
+                 </div>
+               )}
                {/* Playback Speed Controls */}
                {isAudioLesson && displayMode === 'audio' && (
                  <ButtonGroup size="sm" className="me-1" title={`Playback Speed: ${playbackRate.toFixed(2)}x`}>
@@ -863,12 +860,38 @@ const TextDisplay = () => {
                )}
                {/* Existing Controls */}
                <ButtonGroup size="sm" className="me-1">
-                 <Button variant="outline-secondary" onClick={() => setUserSettings(p => ({...p, textSize: Math.max(12, p.textSize - 2)}))} title="Decrease text size">A-</Button>
-                 <Button variant="outline-secondary" onClick={() => setUserSettings(p => ({...p, textSize: Math.min(32, p.textSize + 2)}))} title="Increase text size">A+</Button>
+                  {/* Update font size via API and context */}
+                  <Button variant="outline-secondary" onClick={() => {
+                      const newSize = Math.max(12, globalSettings.textSize - 2);
+                      console.log('[Save Settings] Saving Text Size via API:', newSize);
+                      updateSetting('textSize', newSize); // Update context immediately
+                      updateUserSettings({ textSize: newSize }) // Call API
+                          .catch(err => console.error('[Save Settings] Failed to save text size via API:', err));
+                  }} title="Decrease text size">A-</Button>
+                  <Button variant="outline-secondary" onClick={() => {
+                      const newSize = Math.min(32, globalSettings.textSize + 2);
+                      console.log('[Save Settings] Saving Text Size via API:', newSize);
+                      updateSetting('textSize', newSize); // Update context immediately
+                      updateUserSettings({ textSize: newSize }) // Call API
+                          .catch(err => console.error('[Save Settings] Failed to save text size via API:', err));
+                  }} title="Increase text size">A+</Button>
                </ButtonGroup>
+               {/* Re-added Panel resize buttons */}
                <ButtonGroup size="sm" className="me-1">
-                 <Button variant="outline-secondary" onClick={() => setLeftPanelWidth(w => Math.min(w + 5, 85))} title="Increase reading area">◀</Button>
-                 <Button variant="outline-secondary" onClick={() => setLeftPanelWidth(w => Math.max(w - 5, 15))} title="Decrease reading area">▶</Button>
+                 <Button variant="outline-secondary" onClick={() => {
+                     const newWidth = Math.min(leftPanelWidth + 5, 85); // Increase width, max 85
+                     setLeftPanelWidth(newWidth);
+                     updateSetting('leftPanelWidth', newWidth); // Update context
+                     updateUserSettings({ leftPanelWidth: newWidth }) // Save via API
+                         .catch(err => console.error('[Save Settings] Failed to save panel width via API:', err));
+                 }} title="Increase reading area (Wider)">◀</Button>
+                 <Button variant="outline-secondary" onClick={() => {
+                     const newWidth = Math.max(leftPanelWidth - 5, 20); // Decrease width, min 20
+                     setLeftPanelWidth(newWidth);
+                     updateSetting('leftPanelWidth', newWidth); // Update context
+                     updateUserSettings({ leftPanelWidth: newWidth }) // Save via API
+                         .catch(err => console.error('[Save Settings] Failed to save panel width via API:', err));
+                 }} title="Decrease reading area (Narrower)">▶</Button>
                </ButtonGroup>
                {isAudioLesson && ( <Button variant="outline-info" size="sm" onClick={() => setDisplayMode(p => p === 'audio' ? 'text' : 'audio')} title={displayMode === 'audio' ? 'Text View' : 'Audio View'} className="me-1">{displayMode === 'audio' ? 'Text' : 'Audio'} View</Button> )}
                {text && !loading && ( <Button variant="info" size="sm" onClick={handleFullTextTranslation} className="me-1">Translate Text</Button> )}
@@ -881,6 +904,8 @@ const TextDisplay = () => {
            {translateUnknownError && <Alert variant="danger" className="mt-1 mb-0 p-1 small">{translateUnknownError}</Alert>}
         </Card.Body>
       </Card>
+
+      {/* Audiobook Player rendering removed from here to fix duplication */}
 
       {/* Audio Player */}
       {isAudioLesson && audioSrc && displayMode === 'audio' && (
@@ -901,6 +926,8 @@ const TextDisplay = () => {
         </div>
       )}
 
+      {/* Audiobook Player rendering removed from here to fix duplication */}
+
       {/* Main Content Area */}
       <div className="resizable-container">
         {/* Left Panel (Reading Area) */}
@@ -919,8 +946,7 @@ const TextDisplay = () => {
            </div>
         </div>
 
-        {/* Resize Divider */}
-        <div ref={resizeDividerRef} className="resize-divider" title="Drag to resize panels"></div>
+        {/* Removed Resize Divider */}
 
         {/* Right Panel (Word Info) */}
         <div className="right-panel" style={{ width: `${100 - leftPanelWidth}%`, height: 'calc(100vh - 130px)', overflowY: 'auto', padding: '6px', position: 'relative' }}>

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Alert, Spinner, ProgressBar, Table, /*Badge,*/ Form, Button } from 'react-bootstrap'; // Removed unused Badge
-import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Alert, Spinner, ProgressBar, Table, Form, Button } from 'react-bootstrap';
+// import { useNavigate } from 'react-router-dom'; // Removed unused import
 import { getUserStatistics, getReadingActivity, getListeningActivity } from '../utils/api';
 import { formatDate } from '../utils/helpers';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer
 } from 'recharts';
+import ManualEntryModal from '../components/ManualEntryModal'; // Import the modal component
 
 // Custom colors for charts
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
-
 const Statistics = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +25,7 @@ const Statistics = () => {
   const [usingFallbackData, setUsingFallbackData] = useState(false);
   const [networkStatus, setNetworkStatus] = useState('connecting');
   // const navigate = useNavigate(); // Removed unused navigate
+  const [showManualEntryModal, setShowManualEntryModal] = useState(false); // State for modal visibility
 
   // Check API connectivity
   useEffect(() => {
@@ -187,154 +188,84 @@ const Statistics = () => {
     fetchStats();
   }, []);
 
-  useEffect(() => {
-    const fetchReadingActivity = async () => {
-      setLoadingActivity(true);
-      try {
-        console.log(`Starting reading activity fetch in Statistics component for period: ${activityPeriod}`);
-        const data = await getReadingActivity(activityPeriod);
+  // --- Refactored Data Fetching ---
+  const fetchReadingActivityData = async (period) => {
+    setLoadingActivity(true);
+    try {
+      console.log(`Starting reading activity fetch for period: ${period}`);
+      const data = await getReadingActivity(period);
+      console.log('Reading activity data received:', data);
 
-        // Debug output for the raw data
-        console.log('Reading activity data received in component:', data);
-
-        if (!data) {
-          console.error('No activity data returned from getReadingActivity');
-          setReadingActivity({
-            TotalWordsRead: 0,
-            ActivityByDate: {},
-            ActivityByLanguage: {}
-          });
-          return;
-        }
-
-        // Normalize data if it exists
-        if (data) {
-          // Ensure ActivityByDate exists
-          data.ActivityByDate = data.ActivityByDate || data.activityByDate || {};
-
-          // Ensure ActivityByLanguage exists
-          data.ActivityByLanguage = data.ActivityByLanguage || data.activityByLanguage || {};
-
-          // Ensure TotalWordsRead exists
-          data.TotalWordsRead = data.TotalWordsRead || data.totalWordsRead || 0;
-
-          console.log('Normalized reading activity data:', data);
-        }
-
-        setReadingActivity(data);
-      } catch (err) {
-        console.error('Failed to load reading activity', err);
-        // Provide a fallback data structure
-        setReadingActivity({
-          TotalWordsRead: 0,
-          ActivityByDate: {},
-          ActivityByLanguage: {}
-        });
-      } finally {
-        setLoadingActivity(false);
+      if (!data) {
+        console.error('No activity data returned from getReadingActivity');
+        setReadingActivity({ TotalWordsRead: 0, ActivityByDate: {}, ActivityByLanguage: {} });
+        return;
       }
-    };
 
-    fetchReadingActivity();
+      // Normalize data
+      data.ActivityByDate = data.ActivityByDate || data.activityByDate || {};
+      data.ActivityByLanguage = data.ActivityByLanguage || data.activityByLanguage || {};
+      data.TotalWordsRead = data.TotalWordsRead || data.totalWordsRead || 0;
+      console.log('Normalized reading activity data:', data);
+      setReadingActivity(data);
+    } catch (err) {
+      console.error('Failed to load reading activity', err);
+      setReadingActivity({ TotalWordsRead: 0, ActivityByDate: {}, ActivityByLanguage: {} });
+    } finally {
+      setLoadingActivity(false);
+    }
+  };
+
+  const fetchListeningActivityData = async (period) => {
+    setLoadingListeningActivity(true);
+    try {
+      console.log(`Starting listening activity fetch for period: ${period}`);
+      const data = await getListeningActivity(period);
+      console.log('Raw listening activity data received:', data);
+
+      if (!data || data.error) {
+        console.error('No listening activity data or error in response:', data?.error);
+        setListeningActivity({ TotalListeningSeconds: 0, ListeningByDate: {}, ListeningByLanguage: [] });
+      } else {
+        // Normalize data
+        data.TotalListeningSeconds = data.TotalListeningSeconds || data.totalListeningSeconds || 0;
+        data.ListeningByDate = data.ListeningByDate || data.listeningByDate || {};
+        let langData = data.ListeningByLanguage || data.listeningByLanguage || [];
+        if (!Array.isArray(langData)) langData = [];
+        data.ListeningByLanguage = langData.map(item => ({
+          languageId: item.LanguageId || item.languageId,
+          languageName: item.LanguageName || item.languageName || 'Unknown',
+          totalSeconds: item.TotalSeconds || item.totalSeconds || 0
+        }));
+        console.log('Normalized listening activity data:', JSON.stringify(data));
+        setListeningActivity(data);
+      }
+    } catch (err) {
+      console.error('ERROR loading listening activity:', err);
+      setListeningActivity({ TotalListeningSeconds: 0, ListeningByDate: {}, ListeningByLanguage: [] });
+    } finally {
+      setLoadingListeningActivity(false);
+    }
+  };
+
+  // Fetch activity data on initial load and when period changes
+  useEffect(() => {
+    fetchReadingActivityData(activityPeriod);
+    fetchListeningActivityData(activityPeriod);
   }, [activityPeriod]);
 
- // Fetch Listening Activity Data
- useEffect(() => {
-   console.log('[Stats Fetch useEffect] Triggered.'); // Log hook trigger
-   const fetchListeningActivity = async () => {
-     setLoadingListeningActivity(true);
-     try {
-       console.log(`[Stats Fetch] Starting INITIAL listening activity fetch for period: ${activityPeriod}`);
-       const data = await getListeningActivity(activityPeriod);
-       console.log('[Stats Fetch] Raw listening activity data received:', data);
+  // --- End Refactored Data Fetching ---
 
-       if (!data || data.error) {
-         console.error('[Stats Fetch] No listening activity data or error in response:', data?.error);
-         setListeningActivity({ // Provide fallback structure
-           TotalListeningSeconds: 0,
-           ListeningByDate: {},
-           ListeningByLanguage: []
-         });
-       } else {
-          // Normalize data to ensure properties exist
-          data.TotalListeningSeconds = data.TotalListeningSeconds || data.totalListeningSeconds || 0;
-          data.ListeningByDate = data.ListeningByDate || data.listeningByDate || {};
-          // Ensure ListeningByLanguage is an array and normalize properties within it
-          let langData = data.ListeningByLanguage || data.listeningByLanguage || [];
-          if (!Array.isArray(langData)) {
-              console.warn("ListeningByLanguage was not an array, attempting conversion or defaulting to empty array.");
-              langData = []; // Default to empty if not array
-          }
-          data.ListeningByLanguage = langData.map(item => ({
-              languageId: item.LanguageId || item.languageId,
-              languageName: item.LanguageName || item.languageName || 'Unknown',
-              totalSeconds: item.TotalSeconds || item.totalSeconds || 0
-          }));
 
-          console.log('[Stats Fetch] Normalized listening activity data:', JSON.stringify(data));
-          console.log('[Stats Fetch] Setting listening activity state...');
-          setListeningActivity(data);
-          console.log('[Stats Fetch] Listening activity state SET.');
-       }
-     } catch (err) {
-       console.error('[Stats Fetch] ERROR loading listening activity:', err);
-       setListeningActivity({ // Provide fallback structure on error
-           TotalListeningSeconds: 0,
-           ListeningByDate: {},
-           ListeningByLanguage: []
-       });
-     } finally {
-       console.log('[Stats Fetch] Finished INITIAL listening activity fetch.');
-       setLoadingListeningActivity(false);
-     }
-   };
-
-   fetchListeningActivity();
- }, [activityPeriod]); // Initial fetch and fetch on period change
-
-  // Re-fetch data when the page becomes visible again
+  // Re-fetch data when the page becomes visible again (keep existing logic)
   useEffect(() => {
     console.log('[Stats Visibility useEffect] Setting up visibility listener.'); // Log hook trigger
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         console.log('[Stats Visibility] Page became visible, triggering re-fetch...');
-        // Re-trigger the fetch function (ensure it's defined or accessible)
-        // We need to wrap the fetch logic in a callable function
-        const fetchListeningActivity = async () => {
-          console.log('[Stats Visibility Fetch] Starting re-fetch...');
-          setLoadingListeningActivity(true);
-          try {
-            console.log(`[Stats Visibility Fetch] Re-fetching listening activity for period: ${activityPeriod}`);
-            const data = await getListeningActivity(activityPeriod);
-            console.log('[Stats Visibility Fetch] Raw re-fetched listening activity data received:', data);
-            // Normalization logic copied from the other useEffect
-            if (!data || data.error) {
-              console.error('[Stats Visibility Fetch] Re-fetch: No listening activity data or error in response:', data?.error);
-              setListeningActivity({ TotalListeningSeconds: 0, ListeningByDate: {}, ListeningByLanguage: [] });
-            } else {
-               data.TotalListeningSeconds = data.TotalListeningSeconds || data.totalListeningSeconds || 0;
-               data.ListeningByDate = data.ListeningByDate || data.listeningByDate || {};
-               let langData = data.ListeningByLanguage || data.listeningByLanguage || [];
-               if (!Array.isArray(langData)) langData = [];
-               data.ListeningByLanguage = langData.map(item => ({
-                   languageId: item.LanguageId || item.languageId,
-                   languageName: item.LanguageName || item.languageName || 'Unknown',
-                   totalSeconds: item.TotalSeconds || item.totalSeconds || 0
-               }));
-               console.log('[Stats Visibility Fetch] Re-fetch: Normalized listening activity data:', JSON.stringify(data));
-               console.log('[Stats Visibility Fetch] Setting listening activity state...');
-               setListeningActivity(data);
-               console.log('[Stats Visibility Fetch] Listening activity state SET.');
-            }
-          } catch (err) {
-            console.error('[Stats Visibility Fetch] ERROR loading listening activity on re-fetch:', err);
-            setListeningActivity({ TotalListeningSeconds: 0, ListeningByDate: {}, ListeningByLanguage: [] });
-          } finally {
-            console.log('[Stats Visibility Fetch] Finished re-fetch.');
-            setLoadingListeningActivity(false);
-          }
-        };
-        fetchListeningActivity(); // Call the fetch function
+        // Re-trigger the fetch functions using the current activityPeriod
+        fetchReadingActivityData(activityPeriod);
+        fetchListeningActivityData(activityPeriod);
       }
     };
 
@@ -344,9 +275,20 @@ const Statistics = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [activityPeriod]); // Re-run if activityPeriod changes, to ensure the fetch uses the correct period
- 
-  // Function to initialize languages if none exist
+  }, [activityPeriod]); // Re-run if activityPeriod changes
+
+  // Callback function for successful manual entry
+  const handleManualSubmitSuccess = () => {
+    console.log("Manual entry successful, refreshing activity data...");
+    // Re-fetch data for the current period
+    fetchReadingActivityData(activityPeriod);
+    fetchListeningActivityData(activityPeriod);
+    // Optionally, could also re-fetch general stats if manual entry affects them
+    // fetchStats(); // Uncomment if needed
+  };
+
+
+  // Function to initialize languages if none exist (Original - Keep this one)
   const handleInitializeLanguages = async () => {
     try {
       setInitializingLanguages(true);
@@ -398,21 +340,21 @@ const Statistics = () => {
   };
 
   // Helper function to prepare language statistics data for charts
-  const prepareLanguageStatsData = () => {
-    if (!stats?.LanguageStatistics) return [];
-
-    return stats.LanguageStatistics.map(lang => {
-      const langName = lang.LanguageName || lang.languageName;
-      const wordCount = lang.WordCount || lang.wordCount || 0;
-      const wordsRead = lang.TotalWordsRead || lang.totalWordsRead || 0;
-
-      return {
-        name: langName,
-        wordCount,
-        wordsRead
-      };
-    }).sort((a, b) => b.wordCount - a.wordCount); // Sort by word count descending
-  };
+  // const prepareLanguageStatsData = () => { // Removed unused function
+  //   if (!stats?.LanguageStatistics) return [];
+  //
+  //   return stats.LanguageStatistics.map(lang => {
+  //     const langName = lang.LanguageName || lang.languageName;
+  //     const wordCount = lang.WordCount || lang.wordCount || 0;
+  //     const wordsRead = lang.TotalWordsRead || lang.totalWordsRead || 0;
+  //
+  //     return {
+  //       name: langName,
+  //       wordCount,
+  //       wordsRead
+  //     };
+  //   }).sort((a, b) => b.wordCount - a.wordCount); // Sort by word count descending
+  // };
 
  // Helper function to format duration in seconds to HH:MM:SS or similar
  const formatDuration = (totalSeconds) => {
@@ -514,7 +456,7 @@ const Statistics = () => {
 
   if (!stats) {
     return (
-      <Container className="mt-4">
+      <Container className="mt-4 pb-5"> {/* Added padding-bottom */}
         {renderNetworkBanner()}
         <Alert variant="warning">
           <Alert.Heading>No Statistics Available</Alert.Heading>
@@ -544,7 +486,7 @@ const Statistics = () => {
   const totalLanguages = stats?.TotalLanguages || stats?.totalLanguages || 0;
 
   // Calculate total words read safely
-  const totalWordsRead = calculateTotalWordsRead(stats);
+  // const totalWordsRead = calculateTotalWordsRead(stats); // Removed unused variable assignment
 
   // Filter language statistics if a specific language is selected
   const filteredLanguageStats = selectedLanguage === 'all'
@@ -558,378 +500,412 @@ const Statistics = () => {
   const vocabularyData = [
     { name: 'Known', value: stats.KnownWords },
     { name: 'Learning', value: stats.LearningWords },
-    { name: 'Unknown', value: stats.TotalWords - stats.KnownWords - stats.LearningWords }
-  ].filter(item => item.value > 0);
+  ];
 
   // Prepare data for books chart
   const booksData = [
     { name: 'Finished', value: stats.FinishedBooks },
-    { name: 'In Progress', value: stats.TotalBooks - stats.FinishedBooks }
-  ].filter(item => item.value > 0);
+    { name: 'In Progress', value: stats.TotalBooks - stats.FinishedBooks },
+  ];
 
-  // Activity by date data
-  const activityByDateData = prepareActivityByDateData();
-
-  // Activity by language data
-  const activityByLanguageData = prepareActivityByLanguageData();
-
-  // Language statistics data for chart
-  const languageStatsData = prepareLanguageStatsData();
-
-   // Listening activity data
-   const listeningByDateData = prepareListeningActivityByDateData();
-   const listeningByLanguageData = prepareListeningActivityByLanguageData();
-   const totalListeningTimeFormatted = formatDuration(listeningActivity?.TotalListeningSeconds || 0);
+  // Prepare data for activity charts
+  const readingActivityByDate = prepareActivityByDateData();
+  const readingActivityByLanguage = prepareActivityByLanguageData();
+  const listeningActivityByDate = prepareListeningActivityByDateData();
+  const listeningActivityByLanguage = prepareListeningActivityByLanguageData();
 
 
   return (
-    <Container className="mt-4">
+    <Container className="mt-4 pb-5"> {/* Added padding-bottom */}
       {renderNetworkBanner()}
-      <h1 className="mb-4">Learning Statistics</h1>
 
-      <Row className="mb-4">
-        <Col md={8} className="mb-4">
-          <Card>
-            <Card.Header as="h4">Overall Progress</Card.Header>
-            <Card.Body>
-              <h5>Vocabulary Knowledge</h5>
-              <ProgressBar now={completionPercentage} label={`${completionPercentage}%`} className="mb-3" />
-
-              <Row className="text-center mt-4">
-                <Col xs={4}>
-                  <div className="border rounded p-3 h-100">
-                    <h2 className="mb-0">{stats.TotalWords}</h2>
-                    <p className="text-muted">Total Words</p>
-                  </div>
-                </Col>
-                <Col xs={4}>
-                  <div className="border rounded p-3 h-100 bg-success bg-opacity-10">
-                    <h2 className="mb-0">{stats.KnownWords}</h2>
-                    <p className="text-muted">Known Words</p>
-                  </div>
-                </Col>
-                <Col xs={4}>
-                  <div className="border rounded p-3 h-100 bg-warning bg-opacity-10">
-                    <h2 className="mb-0">{stats.LearningWords}</h2>
-                    <p className="text-muted">Learning Words</p>
-                  </div>
-                </Col>
-              </Row>
-
-              {/* Vocabulary Pie Chart */}
-              {vocabularyData.length > 0 && (
-                <div className="mt-4">
-                  <h5>Vocabulary Distribution</h5>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={vocabularyData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={true}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {vocabularyData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => value} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
+      {/* Header Row */}
+      <Row className="mb-4 align-items-center justify-content-between">
+        <Col md="auto">
+          <h2>Statistics</h2>
         </Col>
-
-        <Col md={4} className="mb-4">
-          <Card>
-            <Card.Header as="h4">Reading Summary</Card.Header>
-            <Card.Body>
-              <Row className="text-center">
-                <Col xs={6} className="mb-3">
-                  <div className="border rounded p-3">
-                    <h2 className="mb-0">{stats.TotalBooks}</h2>
-                    <p className="text-muted">Total Books</p>
-                  </div>
-                </Col>
-                <Col xs={6} className="mb-3">
-                  <div className="border rounded p-3">
-                    <h2 className="mb-0">{stats.FinishedBooks}</h2>
-                    <p className="text-muted">Finished Books</p>
-                  </div>
-                </Col>
-                <Col xs={6}>
-                  <div className="border rounded p-3">
-                    <h2 className="mb-0">{totalWordsRead}</h2>
-                    <p className="text-muted">Words Read</p>
-                  </div>
-                </Col>
-                <Col xs={6}>
-                  <div className="border rounded p-3">
-                    <h2 className="mb-0">{totalLanguages}</h2>
-                    <p className="text-muted">Languages</p>
-                  </div>
-                </Col>
-              </Row>
-
-              {/* Books Pie Chart */}
-              {booksData.length > 0 && (
-                <div className="mt-4">
-                  <h5>Book Status</h5>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={booksData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, value }) => `${name}: ${value}`}
-                        outerRadius={60}
-                        fill="#82ca9d"
-                        dataKey="value"
-                      >
-                        {booksData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index + 2 % COLORS.length]} /> // Offset colors
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => value} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Activity Section */}
-      <Row className="mb-4">
-        <Col>
-          <Card>
-            <Card.Header as="h4" className="d-flex justify-content-between align-items-center">
-              <span>Activity Overview</span>
-              <Form.Select size="sm" style={{ width: 'auto' }} value={activityPeriod} onChange={(e) => setActivityPeriod(e.target.value)}>
-                <option value="all">All Time</option>
-                <option value="last_180">Last 180 Days</option>
-                <option value="last_90">Last 90 Days</option>
-                <option value="last_month">Last 30 Days</option>
-                <option value="last_week">Last 7 Days</option>
+        <Col md="auto">
+          <div className="d-flex align-items-center"> {/* Flex container for period select and button */}
+            <Form.Group controlId="activityPeriodSelect" className="me-3"> {/* Add margin */}
+              <Form.Label className="me-2 visually-hidden">Activity Period:</Form.Label> {/* Hide label visually */}
+              <Form.Select
+                style={{ width: 'auto' }}
+                value={activityPeriod}
+                onChange={(e) => setActivityPeriod(e.target.value)}
+                aria-label="Select activity period"
+              >
                 <option value="last_day">Today</option>
+                <option value="last_week">Last 7 Days</option>
+                <option value="last_month">Last 30 Days</option>
+                <option value="last_90">Last 90 Days</option>
+                <option value="last_180">Last 180 Days</option>
+                <option value="all">All Time</option>
               </Form.Select>
-            </Card.Header>
-            <Card.Body>
-              {loadingActivity ? (
-                <div className="text-center"><Spinner animation="border" size="sm" /> Loading activity data...</div>
-              ) : readingActivity ? (
-                <>
-                  <h5 className="text-center mb-3">Total Words Read ({activityPeriod === 'all' ? 'All Time' : `Last ${activityPeriod.split('_')[1]}`}): {readingActivity.TotalWordsRead}</h5>
-                  <Row>
-                    {/* Reading Activity by Date (Line Chart) */}
-                    <Col md={6} className="mb-4">
-                      <h6>Words Read per Day</h6>
-                      {activityByDateData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={300}>
-                          <LineChart data={activityByDateData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                            <YAxis tick={{ fontSize: 12 }} />
-                            <Tooltip />
-                            <Legend />
-                            <Line type="monotone" dataKey="wordsRead" name="Words Read" stroke="#8884d8" activeDot={{ r: 8 }} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      ) : (<p className="text-muted text-center">No reading activity recorded for this period.</p>)}
-                    </Col>
+            </Form.Group>
+            {/* Add Manual Entry Button */}
+            <Button variant="outline-primary" onClick={() => setShowManualEntryModal(true)}>
+              Log Manual Activity
+            </Button>
+          </div>
+        </Col>
+      </Row>
 
-                    {/* Reading Activity by Language (Bar Chart) */}
-                    <Col md={6} className="mb-4">
-                      <h6>Words Read per Language</h6>
-                      {activityByLanguageData.length > 0 ? (
-                         <ResponsiveContainer width="100%" height={300}>
-                           <BarChart data={activityByLanguageData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }}>
-                             <CartesianGrid strokeDasharray="3 3" />
-                             <XAxis type="number" tick={{ fontSize: 12 }} />
-                             <YAxis dataKey="language" type="category" width={80} tick={{ fontSize: 12 }} />
-                             <Tooltip />
-                             <Legend />
-                             <Bar dataKey="wordsRead" name="Words Read" fill="#82ca9d">
-                               {activityByLanguageData.map((entry, index) => (
-                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                               ))}
-                             </Bar>
-                           </BarChart>
-                         </ResponsiveContainer>
-                      ) : (<p className="text-muted text-center">No reading activity recorded for this period.</p>)}
-                    </Col>
-                  </Row>
-                </>
-              ) : (
-                <Alert variant="warning">Could not load reading activity data.</Alert>
+      {/* General Stats Cards */}
+      <Row className="mb-4">
+        {/* Total Words Card */}
+        <Col md={3}>
+          <Card className="text-center h-100">
+            <Card.Body>
+              <Card.Title>Total Words Encountered</Card.Title>
+              <Card.Text className="fs-2">{stats.TotalWords}</Card.Text>
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* Known Words Card */}
+        <Col md={3}>
+          <Card className="text-center h-100">
+            <Card.Body>
+              <Card.Title>Known Words</Card.Title>
+              <Card.Text className="fs-2">{stats.KnownWords}</Card.Text>
+              <ProgressBar
+                now={completionPercentage}
+                label={`${completionPercentage}%`}
+                variant="success"
+              />
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* Books Card */}
+        <Col md={3}>
+          <Card className="text-center h-100">
+            <Card.Body>
+              <Card.Title>Books</Card.Title>
+              <Card.Text className="fs-2">{stats.TotalBooks}</Card.Text>
+              <p>{stats.FinishedBooks} Finished</p>
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* Languages Card */}
+        <Col md={3}>
+          <Card className="text-center h-100">
+            <Card.Body>
+              <Card.Title>Languages</Card.Title>
+              <Card.Text className="fs-2">{totalLanguages}</Card.Text>
+              {/* Add language initialization button if no languages */}
+              {totalLanguages === 0 && (
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={handleInitializeLanguages}
+                  disabled={initializingLanguages}
+                >
+                  {initializingLanguages ? <Spinner size="sm" /> : 'Initialize Languages'}
+                </Button>
               )}
             </Card.Body>
           </Card>
         </Col>
       </Row>
 
-      {/* Listening Activity Section */}
+      {/* Activity Summary Cards */}
       <Row className="mb-4">
-         <Col>
-           <Card>
-             <Card.Header as="h4">Listening Activity ({activityPeriod === 'all' ? 'All Time' : `Last ${activityPeriod.split('_')[1]}`})</Card.Header>
+         {/* Total Words Read Card */}
+         <Col md={6}>
+           <Card className="text-center h-100">
              <Card.Body>
-               {loadingListeningActivity ? (
-                 <div className="text-center"><Spinner animation="border" size="sm" /> Loading listening data...</div>
-               ) : listeningActivity ? (
-                 <>
-                   <h5 className="text-center mb-3">Total Listening Time: {totalListeningTimeFormatted}</h5>
-                   <Row>
-                     {/* Listening Time by Date (Line Chart) */}
-                     <Col md={6} className="mb-4">
-                       <h6>Listening Time per Day (Minutes)</h6>
-                       {listeningByDateData.length > 0 ? (
-                         <ResponsiveContainer width="100%" height={300}>
-                           <LineChart data={listeningByDateData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                             <CartesianGrid strokeDasharray="3 3" />
-                             <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                             <YAxis tick={{ fontSize: 12 }} />
-                             <Tooltip formatter={(value) => `${value} min`} />
-                             <Legend />
-                             <Line type="monotone" dataKey="minutesListened" name="Minutes Listened" stroke="#8884d8" activeDot={{ r: 8 }} />
-                           </LineChart>
-                         </ResponsiveContainer>
-                       ) : (<p className="text-muted text-center">No listening activity recorded for this period.</p>)}
-                     </Col>
-
-                     {/* Listening Time by Language (Bar Chart) */}
-                     <Col md={6} className="mb-4">
-                       <h6>Listening Time per Language (Minutes)</h6>
-                       {listeningByLanguageData.length > 0 ? (
-                          <ResponsiveContainer width="100%" height={300}>
-                            {/* Removed layout="vertical" and swapped X/Y Axis */}
-                            <BarChart data={listeningByLanguageData} margin={{ top: 5, right: 20, left: 0, bottom: 20 }}>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="language" tick={{ fontSize: 12 }} angle={-15} textAnchor="end" interval={0} />
-                              <YAxis tick={{ fontSize: 12 }} />
-                              <Tooltip formatter={(value) => `${value} min`} />
-                              <Legend />
-                              <Bar dataKey="minutesListened" name="Minutes Listened" fill="#82ca9d">
-                                {listeningByLanguageData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
-                       ) : (<p className="text-muted text-center">No listening activity recorded for this period.</p>)}
-                     </Col>
-                   </Row>
-                 </>
-               ) : (
-                 <Alert variant="warning">Could not load listening activity data.</Alert>
-               )}
+               <Card.Title>Total Words Read ({activityPeriod === 'all' ? 'All Time' : `Last ${activityPeriod.split('_')[1]} Days`})</Card.Title>
+               {loadingActivity ? <Spinner animation="border" size="sm" /> : <Card.Text className="fs-2">{readingActivity?.TotalWordsRead ?? 0}</Card.Text>}
+             </Card.Body>
+           </Card>
+         </Col>
+         {/* Total Time Listened Card */}
+         <Col md={6}>
+           <Card className="text-center h-100">
+             <Card.Body>
+               <Card.Title>Total Time Listened ({activityPeriod === 'all' ? 'All Time' : `Last ${activityPeriod.split('_')[1]} Days`})</Card.Title>
+               {loadingListeningActivity ? <Spinner animation="border" size="sm" /> : <Card.Text className="fs-2">{formatDuration(listeningActivity?.TotalListeningSeconds ?? 0)}</Card.Text>}
              </Card.Body>
            </Card>
          </Col>
       </Row>
 
-      {/* Language Specific Statistics */}
-      <Row className="mb-4">
-        <Col>
-          <Card>
-            <Card.Header as="h4" className="d-flex justify-content-between align-items-center">
-              <span>Language Specific Statistics</span>
-              {languageStats.length > 0 ? (
-                <Form.Select size="sm" style={{ width: 'auto' }} value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)}>
-                  <option value="all">All Languages</option>
-                  {languageStats.map(lang => (
-                    <option key={lang.LanguageId || lang.languageId} value={lang.LanguageId || lang.languageId}>
-                      {lang.LanguageName || lang.languageName}
-                    </option>
-                  ))}
-                </Form.Select>
-              ) : (
-                <Button variant="primary" size="sm" onClick={handleInitializeLanguages} disabled={initializingLanguages}>
-                  {initializingLanguages ? <Spinner animation="border" size="sm" /> : 'Initialize Languages'}
-                </Button>
-              )}
-            </Card.Header>
-            <Card.Body>
-              {filteredLanguageStats.length > 0 ? (
-                <>
-                  {/* Language Stats Bar Chart */}
-                  <Row className="mb-4">
-                    <Col md={6}>
-                      <h6>Vocabulary Count per Language</h6>
-                       <ResponsiveContainer width="100%" height={300}>
-                         <BarChart data={languageStatsData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }}>
-                           <CartesianGrid strokeDasharray="3 3" />
-                           <XAxis type="number" tick={{ fontSize: 12 }} />
-                           <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
-                           <Tooltip />
-                           <Legend />
-                           <Bar dataKey="wordCount" name="Total Words" fill="#8884d8">
-                             {languageStatsData.map((entry, index) => (
-                               <Cell key={`cell-vocab-${index}`} fill={COLORS[index % COLORS.length]} />
-                             ))}
-                           </Bar>
-                         </BarChart>
-                       </ResponsiveContainer>
-                    </Col>
-                    <Col md={6}>
-                      <h6>Words Read per Language</h6>
-                       <ResponsiveContainer width="100%" height={300}>
-                         <BarChart data={languageStatsData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }}>
-                           <CartesianGrid strokeDasharray="3 3" />
-                           <XAxis type="number" tick={{ fontSize: 12 }} />
-                           <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 12 }} />
-                           <Tooltip />
-                           <Legend />
-                           <Bar dataKey="wordsRead" name="Words Read" fill="#82ca9d">
-                             {languageStatsData.map((entry, index) => (
-                               <Cell key={`cell-read-${index}`} fill={COLORS[index % COLORS.length]} />
-                             ))}
-                           </Bar>
-                         </BarChart>
-                       </ResponsiveContainer>
-                    </Col>
-                  </Row>
 
-                  {/* Language Stats Table */}
-                  <Table striped bordered hover responsive size="sm">
-                    <thead>
-                      <tr>
-                        <th>Language</th>
-                        <th>Total Words</th>
-                        <th>Words Read</th>
-                        <th>Books</th>
-                        <th>Finished Books</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredLanguageStats.map(lang => (
-                        <tr key={lang.LanguageId || lang.languageId}>
-                          <td>{lang.LanguageName || lang.languageName}</td>
-                          <td>{lang.WordCount || lang.wordCount || 0}</td>
-                          <td>{lang.TotalWordsRead || lang.totalWordsRead || 0}</td>
-                          <td>{lang.BookCount || lang.bookCount || 0}</td>
-                          <td>{lang.FinishedBookCount || lang.finishedBookCount || 0}</td>
-                        </tr>
+      {/* Charts Section */}
+      <Row className="mb-4">
+        {/* Vocabulary Breakdown Chart */}
+        <Col md={6}>
+          <Card>
+            <Card.Body>
+              <Card.Title>Vocabulary Breakdown</Card.Title>
+              {stats.TotalWords > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={vocabularyData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {vocabularyData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
-                    </tbody>
-                  </Table>
-                </>
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
               ) : (
-                <p className="text-muted">No language-specific statistics available{selectedLanguage !== 'all' ? ' for the selected language' : ''}.</p>
+                <p>No vocabulary data yet.</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* Books Status Chart */}
+        <Col md={6}>
+          <Card>
+            <Card.Body>
+              <Card.Title>Books Status</Card.Title>
+              {stats.TotalBooks > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={booksData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#82ca9d"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {booksData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index + 2 % COLORS.length]} /> // Offset colors
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p>No book data yet.</p>
               )}
             </Card.Body>
           </Card>
         </Col>
       </Row>
+
+      {/* Reading Activity Over Time Chart */}
+      <Row className="mb-4">
+        <Col>
+          <Card>
+            <Card.Body>
+              <Card.Title>Words Read Over Time ({activityPeriod === 'all' ? 'All Time' : `Last ${activityPeriod.split('_')[1]} Days`})</Card.Title>
+              {loadingActivity ? <Spinner animation="border" size="sm" /> : readingActivityByDate.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={readingActivityByDate}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="wordsRead" name="Words Read" stroke="#8884d8" activeDot={{ r: 8 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p>No reading activity data for this period.</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Listening Activity Over Time Chart */}
+      <Row className="mb-4">
+        <Col>
+          <Card>
+            <Card.Body>
+              <Card.Title>Minutes Listened Over Time ({activityPeriod === 'all' ? 'All Time' : `Last ${activityPeriod.split('_')[1]} Days`})</Card.Title>
+              {loadingListeningActivity ? <Spinner animation="border" size="sm" /> : listeningActivityByDate.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={listeningActivityByDate}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="minutesListened" name="Minutes Listened" stroke="#82ca9d" activeDot={{ r: 8 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p>No listening activity data for this period.</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+
+      {/* Language Specific Charts */}
+      <Row className="mb-4">
+        {/* Words Read by Language Chart */}
+        <Col md={6}>
+          <Card>
+            <Card.Body>
+              <Card.Title>Words Read by Language ({activityPeriod === 'all' ? 'All Time' : `Last ${activityPeriod.split('_')[1]} Days`})</Card.Title>
+              {loadingActivity ? <Spinner animation="border" size="sm" /> : readingActivityByLanguage.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={readingActivityByLanguage} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" />
+                    <YAxis dataKey="language" type="category" width={80} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="wordsRead" name="Words Read" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p>No reading activity data by language for this period.</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* Listening Time by Language Chart */}
+        <Col md={6}>
+          <Card>
+            <Card.Body>
+              <Card.Title>Listening Time by Language ({activityPeriod === 'all' ? 'All Time' : `Last ${activityPeriod.split('_')[1]} Days`})</Card.Title>
+              {loadingListeningActivity ? <Spinner animation="border" size="sm" /> : listeningActivityByLanguage.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                   <BarChart data={listeningActivityByLanguage} layout="vertical">
+                     <CartesianGrid strokeDasharray="3 3" />
+                     <XAxis type="number" />
+                     <YAxis dataKey="language" type="category" width={80} />
+                     <Tooltip formatter={(value) => `${value} min`} /> {/* Show minutes in tooltip */}
+                     <Legend />
+                     <Bar dataKey="minutesListened" name="Minutes Listened" fill="#82ca9d" />
+                   </BarChart>
+                 </ResponsiveContainer>
+              ) : (
+                <p>No listening activity data by language for this period.</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+
+      {/* Language Statistics Table */}
+      <Row className="mb-4">
+        <Col>
+          <Card>
+            <Card.Body>
+              <Card.Title>Language Details</Card.Title>
+              {/* Language Filter Dropdown */}
+              <Form.Group as={Row} className="mb-3 align-items-center">
+                <Form.Label column sm="auto">Filter by Language:</Form.Label>
+                <Col sm="auto">
+                  <Form.Select
+                    value={selectedLanguage}
+                    onChange={(e) => setSelectedLanguage(e.target.value)}
+                    style={{ width: 'auto' }}
+                  >
+                    <option value="all">All Languages</option>
+                    {languageStats.map(lang => (
+                      <option key={lang.LanguageId || lang.languageId} value={lang.LanguageId || lang.languageId}>
+                        {lang.LanguageName || lang.languageName}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Col>
+              </Form.Group>
+
+              {filteredLanguageStats.length > 0 ? (
+                <Table striped bordered hover responsive size="sm">
+                  <thead>
+                    <tr>
+                      <th>Language</th>
+                      <th>Words Encountered</th>
+                      <th>Words Read (All Time)</th>
+                      <th>Books</th>
+                      <th>Finished Books</th>
+                    </tr>
+                  </thead>
+                  <tbody>{/* Ensure no whitespace */}
+                    {filteredLanguageStats.map((lang, index) => (<tr key={index}><td>{lang.LanguageName || lang.languageName}</td><td>{lang.WordCount || lang.wordCount || 0}</td><td>{lang.TotalWordsRead || lang.totalWordsRead || 0}</td><td>{lang.BookCount || lang.bookCount || 0}</td><td>{lang.FinishedBookCount || lang.finishedBookCount || 0}</td></tr>
+                    ))}
+                  </tbody>{/* Ensure no whitespace */}
+                </Table>
+              ) : (
+                <p>No language data available{selectedLanguage !== 'all' ? ' for the selected language' : ''}.</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Reading Activity Table */}
+      {readingActivityByDate.length > 0 && (
+         <Row className="mt-4">
+           <Col>
+             <Card>
+               <Card.Body>
+                 <Card.Title>Reading Activity by Date ({activityPeriod === 'all' ? 'All Time' : `Last ${activityPeriod.split('_')[1]} Days`})</Card.Title>
+                 <Table striped bordered hover responsive size="sm">
+                   <thead>
+                     <tr>
+                       <th>Date</th>
+                       <th>Words Read</th>
+                     </tr>
+                   </thead>
+                   <tbody>{/* Ensure no whitespace */}
+                     {readingActivityByDate.map((item, index) => (<tr key={index}><td>{formatDate(item.date)}</td><td>{item.wordsRead}</td></tr>
+                     ))}
+                   </tbody>
+                 </Table>
+               </Card.Body>
+             </Card>
+           </Col>
+         </Row>
+      )}
+
+      {/* Listening Activity Table */}
+      {prepareListeningActivityByLanguageData().length > 0 && (
+        <Row className="mt-4">
+          <Col>
+            <Card>
+              <Card.Body>
+                <Card.Title>Listening Time by Language ({activityPeriod === 'all' ? 'All Time' : `Last ${activityPeriod.split('_')[1]} Days`})</Card.Title>
+                 <Table striped bordered hover responsive size="sm">
+                   <thead>
+                     <tr>
+                       <th>Language</th>
+                       <th>Total Time Listened</th>
+                     </tr>
+                   </thead>
+                   <tbody>{/* Ensure no whitespace */}
+                     {prepareListeningActivityByLanguageData().map((item, index) => (<tr key={index}><td>{item.language}</td><td>{formatDuration(item.minutesListened * 60)}</td></tr>
+                     ))}
+                   </tbody>
+                 </Table>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
+
+      {/* Render the Manual Entry Modal */}
+      <ManualEntryModal
+        show={showManualEntryModal}
+        onHide={() => setShowManualEntryModal(false)}
+        onSubmitSuccess={handleManualSubmitSuccess}
+      />
 
     </Container>
   );

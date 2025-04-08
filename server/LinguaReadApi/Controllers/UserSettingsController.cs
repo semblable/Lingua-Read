@@ -45,7 +45,8 @@ namespace LinguaReadApi.Controllers
                     DefaultLanguageId = 0,
                     AutoAdvanceToNextLesson = false,
                     ShowProgressStats = true,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    LeftPanelWidth = 85 // Set default panel width
                 };
                 
                 _context.UserSettings.Add(settings);
@@ -61,7 +62,10 @@ namespace LinguaReadApi.Controllers
                 HighlightKnownWords = settings.HighlightKnownWords,
                 DefaultLanguageId = settings.DefaultLanguageId,
                 AutoAdvanceToNextLesson = settings.AutoAdvanceToNextLesson,
-                ShowProgressStats = settings.ShowProgressStats
+                ShowProgressStats = settings.ShowProgressStats,
+                CurrentAudiobookTrackId = settings.CurrentAudiobookTrackId, // Added
+                CurrentAudiobookPosition = settings.CurrentAudiobookPosition, // Added
+                LeftPanelWidth = settings.LeftPanelWidth // Map panel width to DTO
             };
         }
 
@@ -99,6 +103,7 @@ namespace LinguaReadApi.Controllers
             settings.DefaultLanguageId = updateDto.DefaultLanguageId ?? settings.DefaultLanguageId;
             settings.AutoAdvanceToNextLesson = updateDto.AutoAdvanceToNextLesson ?? settings.AutoAdvanceToNextLesson;
             settings.ShowProgressStats = updateDto.ShowProgressStats ?? settings.ShowProgressStats;
+            settings.LeftPanelWidth = updateDto.LeftPanelWidth ?? settings.LeftPanelWidth; // Update panel width
             settings.UpdatedAt = DateTime.UtcNow;
             
             await _context.SaveChangesAsync();
@@ -112,8 +117,58 @@ namespace LinguaReadApi.Controllers
                 HighlightKnownWords = settings.HighlightKnownWords,
                 DefaultLanguageId = settings.DefaultLanguageId,
                 AutoAdvanceToNextLesson = settings.AutoAdvanceToNextLesson,
-                ShowProgressStats = settings.ShowProgressStats
+                ShowProgressStats = settings.ShowProgressStats,
+                LeftPanelWidth = settings.LeftPanelWidth // Map panel width to DTO
             };
+        }
+
+        // PUT: api/usersettings/audiobook-progress
+        [HttpPut("audiobook-progress")]
+        public async Task<IActionResult> UpdateAudiobookProgress([FromBody] UpdateAudiobookProgressDto updateDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var userId = GetUserId();
+            var settings = await _context.UserSettings.FirstOrDefaultAsync(s => s.UserId == userId);
+
+            if (settings == null)
+            {
+                // Optionally create settings if they don't exist, or return NotFound/BadRequest
+                 return NotFound("User settings not found.");
+                // Or create default:
+                // settings = new UserSettings { UserId = userId, CreatedAt = DateTime.UtcNow };
+                // _context.UserSettings.Add(settings);
+            }
+
+            // Optional: Validate if the trackId exists and belongs to the user
+            if (updateDto.CurrentAudiobookTrackId.HasValue)
+            {
+                 var trackExists = await _context.AudiobookTracks
+                     .AnyAsync(at => at.Id == updateDto.CurrentAudiobookTrackId.Value && at.Book.UserId == userId);
+                 if (!trackExists)
+                 {
+                     return BadRequest("Invalid Audiobook Track ID or track does not belong to user.");
+                 }
+            }
+             else // If trackId is null, position should also be null
+             {
+                 if (updateDto.CurrentAudiobookPosition.HasValue)
+                 {
+                     return BadRequest("Audiobook position cannot be set without a valid Track ID.");
+                 }
+             }
+
+
+            settings.CurrentAudiobookTrackId = updateDto.CurrentAudiobookTrackId;
+            settings.CurrentAudiobookPosition = updateDto.CurrentAudiobookPosition;
+            settings.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // Indicate success without returning data
         }
 
         private Guid GetUserId()
@@ -133,11 +188,14 @@ namespace LinguaReadApi.Controllers
         public string Theme { get; set; } = "light";
         public int TextSize { get; set; } = 16;
         public string TextFont { get; set; } = "default";
+        public int LeftPanelWidth { get; set; } // Already added in previous step, ensure it's correct
         public bool AutoTranslateWords { get; set; } = true;
         public bool HighlightKnownWords { get; set; } = true;
         public int DefaultLanguageId { get; set; } = 0;
         public bool AutoAdvanceToNextLesson { get; set; } = false;
         public bool ShowProgressStats { get; set; } = true;
+        public int? CurrentAudiobookTrackId { get; set; } // Added
+        public double? CurrentAudiobookPosition { get; set; } // Added
     }
 
     public class UpdateUserSettingsDto
@@ -148,10 +206,23 @@ namespace LinguaReadApi.Controllers
         public int? TextSize { get; set; }
         
         public string? TextFont { get; set; }
+
+        [Range(20, 85)] // Increased max width to 85%
+        public int? LeftPanelWidth { get; set; } // Already added in previous step, ensure it's correct
         public bool? AutoTranslateWords { get; set; }
         public bool? HighlightKnownWords { get; set; }
         public int? DefaultLanguageId { get; set; }
         public bool? AutoAdvanceToNextLesson { get; set; }
         public bool? ShowProgressStats { get; set; }
+    }
+
+    public class UpdateAudiobookProgressDto
+    {
+        // Nullable to allow clearing the current track
+        public int? CurrentAudiobookTrackId { get; set; }
+
+        // Nullable, should only be non-null if TrackId is non-null
+        [Range(0, double.MaxValue)]
+        public double? CurrentAudiobookPosition { get; set; } // Position in seconds
     }
 } 

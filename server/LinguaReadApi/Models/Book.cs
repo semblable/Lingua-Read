@@ -48,5 +48,7 @@ namespace LinguaReadApi.Models
         public virtual Language Language { get; set; } = null!;
         public virtual Text LastReadText { get; set; } = null!;
         public virtual ICollection<Text> Texts { get; set; } = new List<Text>();
+        public virtual ICollection<BookTag> BookTags { get; set; } = new List<BookTag>();
+        public virtual ICollection<AudiobookTrack> AudiobookTracks { get; set; } = new List<AudiobookTrack>(); // Added for Audiobook feature
     }
 } 

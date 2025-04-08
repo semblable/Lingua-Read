@@ -242,9 +242,9 @@ namespace LinguaReadApi.Controllers
                 return BadRequest("Invalid language ID");
             }
 
-            string audioFilePath = null;
-            string srtContent = null;
-            string transcript = null;
+            string? audioFilePath = null;
+            string? srtContent = null;
+            string? transcript = null;
 
             try
             {
@@ -435,7 +435,7 @@ namespace LinguaReadApi.Controllers
                         _logger.LogInformation("Processing pair for normalized name: '{NormalizedName}'. MP3: {Mp3Name}, SRT: {SrtName}",
                             normalizedName, mp3Info.OriginalName, srtInfo.OriginalName);
 
-                        string audioFilePath = null;
+                        string? audioFilePath = null;
                         try
                         {
                             // --- 1. Save Audio File ---

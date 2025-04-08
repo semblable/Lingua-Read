@@ -27,6 +27,10 @@ namespace LinguaReadApi.Models
 
         // Duration for listening activities
         public int? ListeningDurationSeconds { get; set; }
+
+        // Audiobook progress tracking is handled in UserSettings model
+        // public int? CurrentAudiobookTrackId { get; set; } // Foreign key to AudiobookTrack
+        // public double? CurrentAudiobookPosition { get; set; } // Position in seconds within the current track
         
         // Navigation properties
         public virtual Language? Language { get; set; }

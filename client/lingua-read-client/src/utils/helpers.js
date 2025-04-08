@@ -25,4 +25,25 @@ export const calculateReadingTime = (content) => {
   const minutes = Math.max(1, Math.ceil(wordCount / 200));
   
   return `${minutes} min read`;
+};
+
+// Format seconds into MM:SS or HH:MM:SS format
+export const formatTime = (totalSeconds) => {
+  if (isNaN(totalSeconds) || totalSeconds < 0) {
+    return '00:00';
+  }
+
+  const seconds = Math.floor(totalSeconds % 60);
+  const minutes = Math.floor((totalSeconds / 60) % 60);
+  const hours = Math.floor(totalSeconds / 3600);
+
+  const paddedSeconds = seconds.toString().padStart(2, '0');
+  const paddedMinutes = minutes.toString().padStart(2, '0');
+
+  if (hours > 0) {
+    const paddedHours = hours.toString().padStart(2, '0');
+    return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+  } else {
+    return `${paddedMinutes}:${paddedSeconds}`;
+  }
 }; 

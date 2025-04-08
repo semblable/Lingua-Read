@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react'; // Add useCallback
 import { Container, Row, Col, Card, Button, Alert, Spinner, ListGroup, Badge, ProgressBar, Modal, Form, InputGroup } from 'react-bootstrap'; // Add Form, InputGroup
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getBook, finishBook, updateBook, deleteBook, getText, updateText, deleteText } from '../utils/api'; // Import new API functions
+import { getBook, finishBook, updateBook, deleteBook, getText, updateText, deleteText, uploadAudiobookTracks, logListeningActivity } from '../utils/api'; // Import new API functions + uploadAudiobookTracks + logListeningActivity
 import { formatDate, /*calculateReadingTime*/ } from '../utils/helpers'; // Removed unused calculateReadingTime
-
+// Removed AudiobookPlayer import
 const BookDetail = () => {
   const { bookId } = useParams();
   const [book, setBook] = useState(null);
@@ -21,6 +21,12 @@ const BookDetail = () => {
   const [editingText, setEditingText] = useState(null); // Holds { textId, title, content, tag }
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState('');
+
+  // State for Audiobook Upload
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState('');
 
 
   const fetchBook = useCallback(async () => { // Wrap in useCallback
@@ -172,6 +178,46 @@ const BookDetail = () => {
 
   // --- End Edit/Delete Handlers ---
 
+  // --- Audiobook Upload Handlers ---
+  const handleFileChange = (event) => {
+    setSelectedFiles(Array.from(event.target.files)); // Convert FileList to Array
+    setUploadError(''); // Clear previous errors on new selection
+    setUploadSuccess('');
+  };
+
+  const handleAudioUpload = async () => {
+    if (selectedFiles.length === 0) {
+      setUploadError('Please select one or more MP3 files to upload.');
+      return;
+    }
+
+    setUploadingAudio(true);
+    setUploadError('');
+    setUploadSuccess('');
+
+    const formData = new FormData();
+    selectedFiles.forEach(file => {
+      formData.append('Files', file); // Match the backend DTO property name 'Files'
+    });
+
+    try {
+      await uploadAudiobookTracks(bookId, formData);
+      setUploadSuccess(`Successfully uploaded ${selectedFiles.length} audio track(s).`);
+      setSelectedFiles([]); // Clear selection after successful upload
+      // Refresh book data to show the new tracks
+      await fetchBook(); // <-- Uncommented this line
+    } catch (err) {
+      setUploadError(err.message || 'Failed to upload audiobook tracks.');
+    } finally {
+      setUploadingAudio(false);
+      // Clear the file input visually (important for UX)
+      const fileInput = document.getElementById('audiobook-upload-input');
+      if (fileInput) {
+          fileInput.value = '';
+      }
+    }
+  };
+  // --- End Audiobook Upload Handlers ---
 
   if (loading) {
     return (
@@ -308,6 +354,46 @@ const BookDetail = () => {
           ))}
         </ListGroup>
       </Card>
+
+      {/* Audiobook Upload Section */}
+      <Card className="shadow-sm mb-4">
+        <Card.Header as="h5">Audiobook</Card.Header>
+        <Card.Body>
+          {uploadError && <Alert variant="danger">{uploadError}</Alert>}
+          {uploadSuccess && <Alert variant="success">{uploadSuccess}</Alert>}
+          <Form>
+            <Form.Group controlId="audiobook-upload-input" className="mb-3">
+              <Form.Label>Upload MP3 Tracks</Form.Label>
+              <Form.Control
+                type="file"
+                multiple
+                accept=".mp3"
+                onChange={handleFileChange}
+                disabled={uploadingAudio}
+              />
+              <Form.Text className="text-muted">
+                Select one or more MP3 files for the audiobook. They will be ordered based on upload sequence or filename (ensure consistent naming for correct order if needed).
+              </Form.Text>
+            </Form.Group>
+            <Button
+              variant="info"
+              onClick={handleAudioUpload}
+              disabled={uploadingAudio || selectedFiles.length === 0}
+            >
+              {uploadingAudio ? (
+                <>
+                  <Spinner size="sm" animation="border" className="me-2" />
+                  Uploading...
+                </>
+              ) : (
+                'Upload Selected Tracks'
+              )}
+            </Button>
+          </Form>
+        </Card.Body>
+      </Card>
+
+      {/* Removed Audiobook Player integration */}
 
       {book.parts.length === 0 && (
         <Alert variant="info">

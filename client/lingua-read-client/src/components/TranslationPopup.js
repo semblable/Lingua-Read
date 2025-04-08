@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Button, Spinner } from 'react-bootstrap';
+import { Modal, Button, Spinner, Row, Col } from 'react-bootstrap';
 
 const TranslationPopup = ({ 
   show, 
@@ -14,9 +14,10 @@ const TranslationPopup = ({
     <Modal
       show={show}
       onHide={handleClose}
-      size="lg"
+      size="xl" /* Made modal wider */
       aria-labelledby="translation-popup"
       centered
+      dialogClassName="translation-modal-wide" /* Custom class for wider modal */
     >
       <Modal.Header closeButton>
         <Modal.Title id="translation-popup">
@@ -24,26 +25,27 @@ const TranslationPopup = ({
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <div className="mb-3">
-          <h6>Original Text:</h6>
-          <div className="p-3 border rounded">
-            {originalText}
-          </div>
-        </div>
-        
-        <div>
-          <h6>Translation:</h6>
-          {isTranslating ? (
-            <div className="d-flex justify-content-center align-items-center p-4">
-              <Spinner animation="border" className="me-2" />
-              <span>Translating text...</span>
+        <Row>
+          <Col md={6}>
+            <h6>Original Text:</h6>
+            <div className="p-3 border rounded h-100" style={{ minHeight: '200px', overflowY: 'auto', lineHeight: '1.8' }}> {/* Increased lineHeight */}
+              {originalText}
             </div>
-          ) : (
-            <div className="p-3 border rounded bg-light">
-              {translatedText}
-            </div>
-          )}
-        </div>
+          </Col>
+          <Col md={6}>
+            <h6>Translation:</h6>
+            {isTranslating ? (
+              <div className="d-flex justify-content-center align-items-center p-4 border rounded h-100" style={{ minHeight: '200px' }}> {/* Added h-100 and minHeight */}
+                <Spinner animation="border" className="me-2" />
+                <span>Translating text...</span>
+              </div>
+            ) : (
+              <div className="p-3 border rounded h-100" style={{ minHeight: '200px', overflowY: 'auto', lineHeight: '1.8' }}> {/* Increased lineHeight */}
+                {translatedText}
+              </div>
+            )}
+          </Col>
+        </Row>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={handleClose}>

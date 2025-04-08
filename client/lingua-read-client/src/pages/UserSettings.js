@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react'; // Added useRef
+import React, { useState, useEffect, useRef, useContext } from 'react'; // Added useRef, useContext
 import { Container, Card, Form, Button, Alert, Spinner, Row, Col } from 'react-bootstrap';
 import {
     getUserSettings, updateUserSettings, getLanguages,
     backupDatabase, restoreDatabase // Import new API functions
 } from '../utils/api';
-
+import { SettingsContext } from '../contexts/SettingsContext'; // Import SettingsContext
 const UserSettings = () => {
   const [settings, setSettings] = useState({
     theme: 'light',
     textSize: 16,
     textFont: 'default',
+    leftPanelWidth: 85, // Added initial state
     autoTranslateWords: true,
     highlightKnownWords: true,
     defaultLanguageId: 0,
@@ -33,8 +34,10 @@ const UserSettings = () => {
   const fileInputRef = useRef(null); // Ref for file input
   // --- End Backup/Restore State ---
 
-  // TODO: Add state and logic to check if the user is an admin
-  const isAdmin = true; // Placeholder - Replace with actual role check
+  // Removed unused isAdmin placeholder
+
+  // Get updateSetting function from context
+  const { updateSetting } = useContext(SettingsContext);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -44,6 +47,7 @@ const UserSettings = () => {
            theme: data.theme || 'light',
            textSize: data.textSize || 16,
            textFont: data.textFont || 'default',
+           leftPanelWidth: data.leftPanelWidth || 85, // Fetch panel width
            autoTranslateWords: data.autoTranslateWords ?? true,
            highlightKnownWords: data.highlightKnownWords ?? true,
            defaultLanguageId: data.defaultLanguageId || 0,
@@ -103,8 +107,19 @@ const UserSettings = () => {
          document.body.classList.toggle('dark-theme', prefersDark);
          document.body.classList.toggle('light-theme', !prefersDark);
        }
-       setSuccess(true);
+       
+       // Update global context after successful API save
+       updateSetting('theme', settings.theme);
+       updateSetting('textSize', settings.textSize);
+       updateSetting('textFont', settings.textFont);
+       updateSetting('leftPanelWidth', settings.leftPanelWidth);
+       updateSetting('autoTranslateWords', settings.autoTranslateWords);
+       updateSetting('highlightKnownWords', settings.highlightKnownWords);
+       updateSetting('defaultLanguageId', settings.defaultLanguageId);
+       updateSetting('autoAdvanceToNextLesson', settings.autoAdvanceToNextLesson);
+       updateSetting('showProgressStats', settings.showProgressStats);
 
+       setSuccess(true);
        // Hide success message after 3 seconds
        setTimeout(() => {
          setSuccess(false);
@@ -250,6 +265,22 @@ const UserSettings = () => {
                  <option value="monospace">Monospace</option>
                  <option value="dyslexic">OpenDyslexic</option>
                </Form.Select>
+             </Form.Group>
+
+             {/* Added Left Panel Width Slider */}
+             <Form.Group className="mb-4" controlId="leftPanelWidth">
+               <Form.Label>Reading Panel Width ({settings.leftPanelWidth}%)</Form.Label>
+               <Form.Range
+                 name="leftPanelWidth"
+                 min={20}
+                 max={85} // Increased max width to 85%
+                 value={settings.leftPanelWidth}
+                 onChange={handleChange}
+               />
+               <div className="d-flex justify-content-between">
+                 <small>Narrow</small>
+                 <small>Wide</small>
+               </div>
              </Form.Group>
 
 

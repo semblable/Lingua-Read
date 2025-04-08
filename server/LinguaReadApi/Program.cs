@@ -25,19 +25,19 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     // Set a higher limit for the request body size (e.g., 100 MB)
     // Adjust this value based on expected maximum file sizes
-    serverOptions.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
+    serverOptions.Limits.MaxRequestBodySize = 600 * 1024 * 1024; // 600 MB (Increased significantly)
 });
 
 // --- Add Form Options Configuration ---
 builder.Services.Configure<FormOptions>(options =>
 {
     // Ensure this limit is also high enough for multipart requests
-    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 100 MB
+    options.MultipartBodyLengthLimit = 600 * 1024 * 1024; // 600 MB (Increased significantly)
     // You might need to adjust other limits depending on your form data
     options.ValueLengthLimit = int.MaxValue; // Or a specific large value
     options.KeyLengthLimit = int.MaxValue;   // Or a specific large value
     options.ValueCountLimit = int.MaxValue; // Or a specific large value
-    options.MemoryBufferThreshold = int.MaxValue; // Buffer large uploads to disk
+    // options.MemoryBufferThreshold = int.MaxValue; // REMOVED - Use default disk buffering for large files
 });
 
 // Add services to the container.
@@ -131,16 +131,42 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClientApp", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:19006")
-              .AllowAnyMethod()
-              .AllowAnyHeader() // Revert back to AllowAnyHeader
-              //.WithHeaders("Authorization", "Content-Type") // Remove specific headers for now
-              .AllowCredentials();
+        // Restore specific CORS policy
+        policy.WithOrigins("http://localhost:3000", "http://localhost:19006") // Allow specific frontend origins
+              .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Explicitly allow needed methods + OPTIONS for preflight
+              .WithHeaders("Content-Type", "Authorization", "Accept") // Explicitly allow common headers + Authorization
+              .AllowCredentials(); // Allow cookies/auth headers
               //.SetIsOriginAllowed(origin => true); // Rely on WithOrigins explicitly
     });
 });
 
 var app = builder.Build();
+
+// --- Add early exception logging middleware ---
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next.Invoke();
+    }
+    catch (Exception ex)
+    {
+        // Log the exception details
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Unhandled exception caught early in pipeline for request {Path}", context.Request.Path);
+
+        // Optionally re-throw or handle the response
+        // For now, just log and let the default error handling potentially take over
+        // (or return a generic 500 if needed)
+        if (!context.Response.HasStarted) // Avoid writing if response already started
+        {
+             context.Response.StatusCode = 500;
+             await context.Response.WriteAsync("An unexpected server error occurred.");
+        }
+        // Do not re-throw if you handle the response here
+    }
+});
+// --- End early exception logging middleware ---
 
 // Seed the database
 using (var scope = app.Services.CreateScope())
@@ -148,7 +174,7 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        DbInitializer.Initialize(services);
+        DbInitializer.Initialize(services); // Restore seeding call
     }
     catch (Exception ex)
     {
@@ -168,10 +194,10 @@ if (app.Environment.IsDevelopment())
 }
 
 // IMPORTANT: Order matters for middleware
-app.UseRouting();
-
-// Apply CORS policy early, before endpoints that need it
+// Apply CORS policy *very* early, before routing
 app.UseCors("AllowClientApp");
+
+app.UseRouting();
 
 // Serve static files from wwwroot (e.g., uploaded audio)
 // Use default UseStaticFiles for general wwwroot content
@@ -182,6 +208,16 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(
         Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "audio_lessons")),
     RequestPath = "/audio_lessons" // Map requests starting with /audio_lessons
+});
+// Ensure the base audiobooks directory exists before configuring static files for it
+var audiobooksBasePath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "audiobooks");
+Directory.CreateDirectory(audiobooksBasePath); // This does nothing if the directory already exists
+
+// Explicitly serve audiobooks directory
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(audiobooksBasePath), // Use the ensured path
+    RequestPath = "/audiobooks" // Map requests starting with /audiobooks
 });
 
 // Apply CORS before authentication - Redundant comment, UseCors moved up

@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
+// Removed redundant Router import
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { /*Container*/ } from 'react-bootstrap'; // Removed unused Container
 import { useAuthStore } from './utils/store';
 import { jwtDecode } from 'jwt-decode';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
+import { SettingsProvider } from './contexts/SettingsContext'; // Import SettingsProvider
 
 // Components
 import Navigation from './components/Navigation';
@@ -86,35 +88,39 @@ function App() {
     };
   }, []);
 
+  // Wrap the main content with SettingsProvider
+  // Also ensure Router is wrapping the provider and content
   return (
-    <div className="App">
-      <Navigation />
-      <div className="container-fluid p-0 m-0">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={!token ? <Login /> : <Navigate to="/books" />} />
-          <Route path="/register" element={!token ? <Register /> : <Navigate to="/books" />} />
-          
-          {/* Book routes */}
-          <Route path="/books" element={token ? <BookList /> : <Navigate to="/login" />} />
-          <Route path="/books/create" element={token ? <BookCreate /> : <Navigate to="/login" />} />
-          <Route path="/books/:bookId" element={token ? <BookDetail /> : <Navigate to="/login" />} />
-          
-          {/* Text routes */}
-          <Route path="/texts" element={token ? <TextList /> : <Navigate to="/login" />} />
-          <Route path="/texts/create" element={token ? <TextCreate /> : <Navigate to="/login" />} />
-          <Route path="/texts/:textId" element={token ? <TextDisplay /> : <Navigate to="/login" />} />
-          <Route path="/texts/create-audio" element={token ? <CreateAudioLesson /> : <Navigate to="/login" />} />
-          <Route path="/texts/create-batch-audio" element={token ? <BatchAudioCreate /> : <Navigate to="/login" />} /> {/* Add route for batch audio creation */}
-          
-          {/* Statistics route */}
-          <Route path="/statistics" element={token ? <Statistics /> : <Navigate to="/login" />} />
-          
-          {/* Settings route */}
-          <Route path="/settings" element={token ? <UserSettings /> : <Navigate to="/login" />} />
-        </Routes>
-      </div>
-    </div>
+      <SettingsProvider>
+        <div className="App">
+          <Navigation />
+          <div className="container-fluid p-0 m-0">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={!token ? <Login /> : <Navigate to="/books" />} />
+              <Route path="/register" element={!token ? <Register /> : <Navigate to="/books" />} />
+
+              {/* Book routes */}
+              <Route path="/books" element={token ? <BookList /> : <Navigate to="/login" />} />
+              <Route path="/books/create" element={token ? <BookCreate /> : <Navigate to="/login" />} />
+              <Route path="/books/:bookId" element={token ? <BookDetail /> : <Navigate to="/login" />} />
+
+              {/* Text routes */}
+              <Route path="/texts" element={token ? <TextList /> : <Navigate to="/login" />} />
+              <Route path="/texts/create" element={token ? <TextCreate /> : <Navigate to="/login" />} />
+              <Route path="/texts/:textId" element={token ? <TextDisplay /> : <Navigate to="/login" />} />
+              <Route path="/texts/create-audio" element={token ? <CreateAudioLesson /> : <Navigate to="/login" />} />
+              <Route path="/texts/create-batch-audio" element={token ? <BatchAudioCreate /> : <Navigate to="/login" />} /> {/* Add route for batch audio creation */}
+
+              {/* Statistics route */}
+              <Route path="/statistics" element={token ? <Statistics /> : <Navigate to="/login" />} />
+
+              {/* Settings route */}
+              <Route path="/settings" element={token ? <UserSettings /> : <Navigate to="/login" />} />
+            </Routes>
+          </div>
+        </div>
+      </SettingsProvider>
   );
 }
 

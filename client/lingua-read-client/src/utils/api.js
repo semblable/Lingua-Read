@@ -374,7 +374,8 @@ export const getBook = (bookId) => {
   return fetchApi(`/api/books/${bookId}`);
 };
 
-export const createBook = (title, description, languageId, content, splitMethod = 'paragraph', maxSegmentSize = 3000) => {
+// Modified createBook to include tags
+export const createBook = (title, description, languageId, content, splitMethod = 'paragraph', maxSegmentSize = 3000, tags = []) => {
   return fetchApi('/api/books', {
     method: 'POST',
     body: JSON.stringify({
@@ -383,19 +384,144 @@ export const createBook = (title, description, languageId, content, splitMethod 
       languageId,
       content,
       splitMethod,
-      maxSegmentSize
+      maxSegmentSize,
+      tags // Add tags array to payload
     })
   });
 };
 
-// Add updateBook function
-export const updateBook = (bookId, { title }) => {
-  // Only updating title as per backend implementation
-  const payload = { title };
+// Added uploadBook function for file uploads
+export const uploadBook = async (formData) => {
+  const endpoint = '/api/books/upload';
+  console.log(`[API] Uploading book file...`);
+
+  try {
+    const token = getToken();
+    const headers = {
+      'Accept': 'application/json',
+      // Content-Type is NOT set for FormData, browser handles it
+    };
+
+    if (token && typeof token === 'string' && token.trim() !== '') {
+      headers.Authorization = `Bearer ${token.trim()}`;
+    } else {
+       throw new Error('Authentication required for book upload');
+    }
+
+    const requestConfig = {
+      method: 'POST',
+      headers,
+      body: formData, // FormData object
+      credentials: 'include',
+      mode: 'cors'
+    };
+
+    const fullUrl = new URL(endpoint, API_URL);
+    console.log('[API Debug] Full URL for book upload:', fullUrl.toString());
+
+    const response = await fetch(fullUrl.toString(), requestConfig);
+    console.log('[API Debug] Book upload response status:', response.status);
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! Status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.title || errorMessage;
+      } catch (e) {
+         try { const text = await response.text(); errorMessage = text || errorMessage; } catch (textError) {}
+      }
+      console.error('[API Error] Book upload failed:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      console.log('[API Debug] Book upload response data:', data);
+      return data; // Should be the created BookDto
+    } else {
+      console.log('[API Debug] Non-JSON response for book upload.');
+      return { message: response.statusText };
+    }
+
+  } catch (error) {
+    console.error('[API Error] Failed to upload book:', error);
+    throw error;
+  }
+};
+
+// Modified updateBook to include tags and description
+export const updateBook = (bookId, { title, description, tags }) => {
+  const payload = { title, description, tags }; // Include description and tags
   return fetchApi(`/api/books/${bookId}`, {
     method: 'PUT',
     body: JSON.stringify(payload)
   });
+};
+
+// Added uploadAudiobookTracks function for MP3 uploads
+export const uploadAudiobookTracks = async (bookId, formData) => {
+  const endpoint = `/api/books/${bookId}/audiobook`;
+  console.log(`[API] Uploading audiobook tracks for book ${bookId}...`);
+
+  try {
+    const token = getToken();
+    const headers = {
+      'Accept': 'application/json',
+      // Content-Type is NOT set for FormData, browser handles it
+    };
+
+    if (token && typeof token === 'string' && token.trim() !== '') {
+      headers.Authorization = `Bearer ${token.trim()}`;
+    } else {
+       throw new Error('Authentication required for audiobook upload');
+    }
+
+    const requestConfig = {
+      method: 'POST',
+      headers,
+      body: formData, // FormData object
+      credentials: 'include',
+      mode: 'cors'
+    };
+
+    const fullUrl = new URL(endpoint, API_URL);
+    console.log('[API Debug] Full URL for audiobook upload:', fullUrl.toString());
+
+    const response = await fetch(fullUrl.toString(), requestConfig);
+    console.log('[API Debug] Audiobook upload response status:', response.status);
+
+    if (!response.ok) {
+      let errorMessage = `HTTP error! Status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.title || errorMessage;
+      } catch (e) {
+         try { const text = await response.text(); errorMessage = text || errorMessage; } catch (textError) {}
+      }
+      console.error('[API Error] Audiobook upload failed:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    // Check if response has content before trying to parse JSON
+    const contentType = response.headers.get('content-type');
+    if (response.status === 204 || !contentType) { // 204 No Content
+        console.log('[API Debug] Audiobook upload successful (No Content).');
+        return { message: 'Upload successful' }; // Or return null/undefined
+    } else if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      console.log('[API Debug] Audiobook upload response data:', data);
+      return data;
+    } else {
+      const text = await response.text();
+      console.log('[API Debug] Non-JSON response for audiobook upload:', text);
+      return { message: text || response.statusText };
+    }
+
+  } catch (error) {
+    console.error('[API Error] Failed to upload audiobook tracks:', error);
+    throw error;
+  }
 };
 
 // Add createAudioLessonsBatch function
@@ -704,6 +830,46 @@ export const updateUserSettings = async (settings) => {
   }
 };
 
+// Updated updateAudiobookProgress function (requires bookId)
+export const updateAudiobookProgress = async (bookId, progressData) => {
+  // progressData should be { currentAudiobookTrackId: number | null, currentAudiobookPosition: number | null }
+  const payload = {
+    bookId: bookId,
+    currentAudiobookTrackId: progressData.currentAudiobookTrackId,
+    currentAudiobookPosition: progressData.currentAudiobookPosition
+  };
+  console.log('[API] Updating audiobook progress via UserActivityController:', payload);
+  return await fetchApi('/api/activity/audiobookprogress', {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+};
+
+// Updated function to get audiobook progress specifically (requires bookId)
+export const getAudiobookProgress = async (bookId) => {
+    console.log(`[API] Getting audiobook progress for book ${bookId} via UserActivityController`);
+    // Point to the new endpoint in UserActivityController, appending bookId
+    return await fetchApi(`/api/activity/audiobookprogress/${bookId}`); // GET request by default
+};
+
+// Added logListeningActivity function
+export const logListeningActivity = async (languageId, durationSeconds) => {
+  console.log(`[API] Logging listening activity: Lang ${languageId}, Duration ${durationSeconds}s`);
+  const payload = { languageId, durationSeconds };
+  return await fetchApi('/api/activity/logListening', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+};
+
+// Add logManualActivity function
+export const logManualActivity = async (payload) => {
+  console.log('[API] Logging manual activity:', payload);
+  return await fetchApi('/api/activity/logManual', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+};
 // Add near other translation functions
 
 export const batchTranslateWords = async (words, targetLanguageCode, sourceLanguageCode = null) => {
