@@ -14,12 +14,13 @@ namespace LinguaReadApi.Controllers
     [Authorize] // Require authentication for language management
     public class LanguagesController : ControllerBase
     {
-        private readonly ILanguageService _languageService; // Placeholder for the actual service
+        private readonly ILanguageService _languageService;
+        private readonly LanguageDataUpdater _languageDataUpdater;
 
-        // Constructor injection for the service
-        public LanguagesController(ILanguageService languageService)
+        public LanguagesController(ILanguageService languageService, LanguageDataUpdater languageDataUpdater)
         {
             _languageService = languageService;
+            _languageDataUpdater = languageDataUpdater;
         }
 
         // GET: api/languages
@@ -36,9 +37,15 @@ namespace LinguaReadApi.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception (consider using a proper logging framework)
-                Console.WriteLine($"Error getting all languages: {ex.Message}");
-                return StatusCode(500, "An error occurred while retrieving languages.");
+                Console.WriteLine("=== ERROR in GetAllLanguages ===");
+                Console.WriteLine($"Message: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"InnerException: {ex.InnerException.Message}");
+                    Console.WriteLine($"Inner StackTrace: {ex.InnerException.StackTrace}");
+                }
+                return StatusCode(500, $"Server error: {ex.Message}");
             }
         }
 
@@ -105,6 +112,24 @@ namespace LinguaReadApi.Controllers
             {
                 Console.WriteLine($"Error creating language: {ex.Message}");
                 return StatusCode(500, "An error occurred while creating the language.");
+            }
+        }
+
+        /// <summary>
+        /// TEMPORARY: Updates existing languages with CSV-derived values.
+        /// </summary>
+        [HttpPost("update-from-csv")]
+        public async Task<IActionResult> UpdateLanguagesFromCsv()
+        {
+            try
+            {
+                await _languageDataUpdater.UpdateLanguagesFromCsvDataAsync();
+                return Ok("Languages updated from CSV data.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating languages from CSV: {ex.Message}");
+                return StatusCode(500, "An error occurred during update.");
             }
         }
 

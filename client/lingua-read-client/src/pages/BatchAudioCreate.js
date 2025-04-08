@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Form, Button, Card, Alert, Spinner, ListGroup, ProgressBar } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { getLanguages, createAudioLessonsBatch } from '../utils/api'; // Import API functions
+import { getAllLanguages, createAudioLessonsBatch } from '../utils/api'; // Import API functions
 
 const BatchAudioCreate = () => {
     const [languageId, setLanguageId] = useState('');
@@ -20,7 +20,7 @@ const BatchAudioCreate = () => {
         const fetchLanguages = async () => {
             setLoadingLanguages(true);
             try {
-                const fetchedLanguages = await getLanguages();
+                const fetchedLanguages = await getAllLanguages();
                 setLanguages(fetchedLanguages || []);
                 if (fetchedLanguages && fetchedLanguages.length > 0) {
                     setLanguageId(fetchedLanguages[0].languageId); // Default to first language
