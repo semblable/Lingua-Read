@@ -184,22 +184,76 @@ namespace LinguaReadApi.Controllers
             };
         }
 
-        // GET: api/words/language/5
+        // GET: api/words/language/5?status=1,2,3&sortBy=term_asc
         [HttpGet("language/{languageId}")]
-        public async Task<ActionResult<IEnumerable<WordResponseDto>>> GetWordsByLanguage(int languageId)
+        public async Task<ActionResult<IEnumerable<WordResponseDto>>> GetWordsByLanguage(
+            int languageId,
+            [FromQuery] string? status = null,     // Comma-separated list of statuses (e.g., "1,2,5")
+            [FromQuery] string? sortBy = null,     // Sort criteria (e.g., "term_asc", "status_desc")
+            [FromQuery] string? searchTerm = null) // Search term for Term or Translation
         {
             var userId = GetUserId();
 
-            var words = await _context.Words
+            var query = _context.Words
                 .Where(w => w.LanguageId == languageId && w.UserId == userId)
                 .Include(w => w.Translation)
+                .AsQueryable(); // Use AsQueryable for building the query
+
+            // Apply status filtering
+            if (!string.IsNullOrEmpty(status))
+            {
+                var statusList = status.Split(',')
+                                       .Select(s => s.Trim())
+                                       .Where(s => int.TryParse(s, out _))
+                                       .Select(int.Parse)
+                                       .ToList();
+                if (statusList.Any())
+                {
+                    query = query.Where(w => statusList.Contains(w.Status));
+                }
+            }
+
+            // Apply search term filtering (case-insensitive)
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var termLower = searchTerm.ToLower();
+                query = query.Where(w => w.Term.ToLower().Contains(termLower) ||
+                                       (w.Translation != null && w.Translation.Translation.ToLower().Contains(termLower)));
+            }
+
+            // Apply sorting
+            switch (sortBy?.ToLowerInvariant())
+            {
+                case "term_desc":
+                    query = query.OrderByDescending(w => w.Term);
+                    break;
+                case "status_asc":
+                    query = query.OrderBy(w => w.Status).ThenBy(w => w.Term);
+                    break;
+                case "status_desc":
+                    query = query.OrderByDescending(w => w.Status).ThenBy(w => w.Term);
+                    break;
+                case "created_asc":
+                    query = query.OrderBy(w => w.CreatedAt);
+                    break;
+                case "created_desc":
+                    query = query.OrderByDescending(w => w.CreatedAt);
+                    break;
+                case "term_asc":
+                default:
+                    query = query.OrderBy(w => w.Term);
+                    break;
+            }
+
+            var words = await query
                 .Select(w => new WordResponseDto
                 {
                     WordId = w.WordId,
                     Term = w.Term,
                     Status = w.Status,
                     Translation = w.Translation != null ? w.Translation.Translation : "",
-                    IsNew = w.Status == 1 // Or based on your definition of "New"
+                    IsNew = w.Status == 1, // Or based on your definition of "New"
+                    CreatedAt = w.CreatedAt
                 })
                 .ToListAsync();
 
@@ -342,11 +396,16 @@ namespace LinguaReadApi.Controllers
                 }
                 else
                 {
-                    // Word doesn't exist - Create new Word with status 5
+                    // Word doesn't exist - Create new Word
+                    // Use status from DTO if valid (1-5), otherwise default to 5 (Known)
+                    int initialStatus = (termDto.Status.HasValue && termDto.Status.Value >= 1 && termDto.Status.Value <= 5)
+                                        ? termDto.Status.Value
+                                        : 5;
+
                     var newWord = new Word
                     {
                         Term = trimmedTerm, // Use trimmed term
-                        Status = 5, // Set status to 5 (Known)
+                        Status = initialStatus, // Use determined initial status
                         UserId = userId,
                         LanguageId = languageId,
                         CreatedAt = DateTime.UtcNow
@@ -400,6 +459,82 @@ namespace LinguaReadApi.Controllers
             // Removed extra brace here if present
         }
 
+        // GET: api/words/export?languageId=5&status=1,5
+        [HttpGet("export")]
+        public async Task<IActionResult> ExportWordsCsv(
+            [FromQuery] int? languageId = null,
+            [FromQuery] string? status = null) // Comma-separated list of statuses (e.g., "1,2,5")
+        {
+            var userId = GetUserId();
+
+            var query = _context.Words
+                .Where(w => w.UserId == userId)
+                .Include(w => w.Translation)
+                .Include(w => w.Language) // Include Language for the name
+                .AsQueryable();
+
+            // Apply language filtering
+            if (languageId.HasValue)
+            {
+                query = query.Where(w => w.LanguageId == languageId.Value);
+            }
+
+            // Apply status filtering
+            if (!string.IsNullOrEmpty(status))
+            {
+                var statusList = status.Split(',')
+                                       .Select(s => s.Trim())
+                                       .Where(s => int.TryParse(s, out _))
+                                       .Select(int.Parse)
+                                       .ToList();
+                if (statusList.Any())
+                {
+                    query = query.Where(w => statusList.Contains(w.Status));
+                }
+            }
+
+            // Default sort by Language then Term for consistent export
+            query = query.OrderBy(w => w.Language.Name).ThenBy(w => w.Term);
+
+            var wordsToExport = await query.ToListAsync();
+
+            // Generate CSV content
+            var csvBuilder = new System.Text.StringBuilder();
+            // Add header row
+            csvBuilder.AppendLine("Term,Translation,Status,Language");
+
+            foreach (var word in wordsToExport)
+            {
+                var termCsv = EscapeCsvField(word.Term);
+                var translationCsv = EscapeCsvField(word.Translation?.Translation ?? "");
+                var statusCsv = word.Status.ToString();
+                var languageCsv = EscapeCsvField(word.Language?.Name ?? "Unknown"); // Handle potential null language if needed
+
+                csvBuilder.AppendLine($"{termCsv},{translationCsv},{statusCsv},{languageCsv}");
+            }
+
+            var csvBytes = System.Text.Encoding.UTF8.GetBytes(csvBuilder.ToString());
+            var fileName = $"linguaread_terms_{DateTime.UtcNow:yyyyMMddHHmmss}.csv";
+
+            return File(csvBytes, "text/csv", fileName);
+        }
+
+        // Helper method to escape CSV fields containing commas or quotes
+        private string EscapeCsvField(string field)
+        {
+            if (string.IsNullOrEmpty(field)) return "";
+
+            // If the field contains a comma, double quote, or newline, enclose it in double quotes
+            if (field.Contains(',') || field.Contains('"') || field.Contains('\n') || field.Contains('\r'))
+            {
+                // Escape existing double quotes by doubling them
+                var escapedField = field.Replace("\"", "\"\"");
+                return $"\"{escapedField}\"";
+            }
+            return field;
+        }
+
+
         private Guid GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -430,8 +565,10 @@ namespace LinguaReadApi.Controllers
         [StringLength(100)]
         public string Term { get; set; } = string.Empty;
 
-        // [Required] // Translation is no longer required
-        public string? Translation { get; set; } // Make translation optional/nullable
+        public string? Translation { get; set; } // Translation is optional
+
+        [Range(1, 5, ErrorMessage = "Status must be between 1 and 5.")] // Add validation if status is provided
+        public int? Status { get; set; } // Status is optional
     }
 
 
@@ -469,5 +606,6 @@ namespace LinguaReadApi.Controllers
         public int Status { get; set; }
         public string Translation { get; set; } = string.Empty;
         public bool IsNew { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 } // End of namespace

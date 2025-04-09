@@ -35,6 +35,7 @@ const Navigation = () => {
                 </NavDropdown>
                 
                 <Nav.Link as={Link} to="/statistics">Statistics</Nav.Link>
+                <Nav.Link as={Link} to="/terms">Terms</Nav.Link> {/* Add Terms link */}
               </>
             )}
           </Nav>

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react'; // Added useContext
 import { Container, Form, Button, Card, Alert, Spinner, ListGroup, ProgressBar } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { getAllLanguages, createAudioLessonsBatch } from '../utils/api'; // Import API functions
+import { getAllLanguages, createAudioLessonsBatch } from '../utils/api';
+import { SettingsContext } from '../contexts/SettingsContext'; // Import SettingsContext
 
 const BatchAudioCreate = () => {
     const [languageId, setLanguageId] = useState('');
@@ -12,18 +13,29 @@ const BatchAudioCreate = () => {
     const [loadingLanguages, setLoadingLanguages] = useState(true);
     const [error, setError] = useState('');
     const [uploadProgress, setUploadProgress] = useState(0); // Basic progress state (can be enhanced)
-    const [results, setResults] = useState(null); // To store { createdCount, skippedFiles }
+    const [results, setResults] = useState(null);
     const navigate = useNavigate();
+    const { settings: userSettings } = useContext(SettingsContext); // Get settings from context
 
     // Fetch languages on component mount
     useEffect(() => {
         const fetchLanguages = async () => {
             setLoadingLanguages(true);
             try {
-                const fetchedLanguages = await getAllLanguages();
-                setLanguages(fetchedLanguages || []);
-                if (fetchedLanguages && fetchedLanguages.length > 0) {
-                    setLanguageId(fetchedLanguages[0].languageId); // Default to first language
+                const data = await getAllLanguages();
+                setLanguages(data || []);
+
+                // Use default language from context if available and valid
+                const defaultLangId = userSettings?.defaultLanguageId;
+
+                if (data.length > 0) {
+                    const found = data.find(l => l.languageId === defaultLangId);
+                    if (found) {
+                        setLanguageId(found.languageId.toString());
+                    } else {
+                        // Fallback to first language if default not found or not set
+                        setLanguageId(data[0].languageId.toString());
+                    }
                 }
             } catch (err) {
                 setError('Failed to load languages.');
@@ -33,7 +45,8 @@ const BatchAudioCreate = () => {
             }
         };
         fetchLanguages();
-    }, []);
+        // Re-run if userSettings context changes
+    }, [userSettings?.defaultLanguageId]);
 
     const handleFileChange = (event) => {
         setFiles(event.target.files); // Store the FileList

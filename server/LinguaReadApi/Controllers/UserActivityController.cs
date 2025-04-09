@@ -8,7 +8,9 @@ using System;
 using System.ComponentModel.DataAnnotations; // Added for [Required] attribute
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging; // Add logger namespace
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic; // For Dictionary, List
+using System.Linq; // For LINQ methods like GroupBy, Sum
 
 namespace LinguaReadApi.Controllers
 {
@@ -67,6 +69,29 @@ public async Task<IActionResult> LogListeningActivity([FromBody] LogListeningReq
     try
     {
         _context.UserActivities.Add(activity);
+        await _context.SaveChangesAsync();
+
+        // --- Update UserLanguageStatistics cumulative listening time ---
+        var stats = await _context.UserLanguageStatistics
+            .FirstOrDefaultAsync(uls => uls.UserId == userId && uls.LanguageId == request.LanguageId);
+
+        if (stats == null)
+        {
+            stats = new UserLanguageStatistics
+            {
+                UserId = userId,
+                LanguageId = request.LanguageId,
+                TotalSecondsListened = request.DurationSeconds,
+                LastUpdatedAt = DateTime.UtcNow
+            };
+            _context.UserLanguageStatistics.Add(stats);
+        }
+        else
+        {
+            stats.TotalSecondsListened += request.DurationSeconds;
+            stats.LastUpdatedAt = DateTime.UtcNow;
+        }
+
         await _context.SaveChangesAsync();
         _logger.LogInformation("Successfully saved listening activity for UserId: {UserId}, ActivityId: {ActivityId}", userId, activity.ActivityId);
         return Ok(new { message = "Listening activity logged successfully.", activityId = activity.ActivityId }); // Indicate success
@@ -191,8 +216,122 @@ public async Task<IActionResult> LogManualActivity([FromBody] LogManualActivityR
     }
 }
 
-// --- Endpoint for fetching statistics will be added later --- // This comment is now outdated
-        // --- Endpoint for fetching statistics will be added later ---
+// --- DTOs for Statistics Endpoints ---
+
+public class ReadingStatsDto
+{
+    public int TotalWordsRead { get; set; }
+    public Dictionary<string, int> ActivityByDate { get; set; } = new(); // Date (YYYY-MM-DD) -> WordCount
+    public List<LanguageReadingStat> ActivityByLanguage { get; set; } = new();
+}
+
+public class LanguageReadingStat
+{
+    public int LanguageId { get; set; }
+    public string LanguageName { get; set; } = string.Empty;
+    public int TotalWords { get; set; }
+}
+
+public class ListeningStatsDto
+{
+    public int TotalListeningSeconds { get; set; }
+    public Dictionary<string, int> ListeningByDate { get; set; } = new(); // Date (YYYY-MM-DD) -> Seconds
+    public List<LanguageListeningStat> ListeningByLanguage { get; set; } = new();
+}
+
+public class LanguageListeningStat
+{
+    public int LanguageId { get; set; }
+    public string LanguageName { get; set; } = string.Empty;
+    public int TotalSeconds { get; set; }
+}
+
+// --- Statistics Endpoints ---
+
+[HttpGet("reading")]
+public async Task<ActionResult<ReadingStatsDto>> GetReadingStats([FromQuery] string period = "all")
+{
+    var userId = GetUserId(); // Assuming GetUserId() exists and works
+    var startDate = CalculateStartDate(period);
+
+    var readingActivities = await _context.UserActivities
+        .Where(ua => ua.UserId == userId &&
+                     ua.Timestamp >= startDate &&
+                     (ua.ActivityType == "Reading" || ua.ActivityType == "ManualReading" || ua.ActivityType == "TextCompleted")) // Include relevant types
+        .Include(ua => ua.Language) // Include Language for name
+        .ToListAsync();
+
+    var stats = new ReadingStatsDto();
+    stats.TotalWordsRead = readingActivities.Sum(ua => ua.WordCount);
+
+    stats.ActivityByDate = readingActivities
+        .GroupBy(ua => ua.Timestamp.Date)
+        .ToDictionary(g => g.Key.ToString("yyyy-MM-dd"), g => g.Sum(ua => ua.WordCount));
+
+    stats.ActivityByLanguage = readingActivities
+        .GroupBy(ua => ua.Language) // Group by Language entity
+        .Select(g => new LanguageReadingStat
+        {
+            LanguageId = g.Key?.LanguageId ?? 0,
+            LanguageName = g.Key?.Name ?? "Unknown",
+            TotalWords = g.Sum(ua => ua.WordCount)
+        })
+        .OrderBy(ls => ls.LanguageName)
+        .ToList();
+
+    return Ok(stats);
+}
+
+[HttpGet("listening")]
+public async Task<ActionResult<ListeningStatsDto>> GetListeningStats([FromQuery] string period = "all")
+{
+    var userId = GetUserId();
+    var startDate = CalculateStartDate(period);
+
+    var listeningActivities = await _context.UserActivities
+        .Where(ua => ua.UserId == userId &&
+                     ua.Timestamp >= startDate &&
+                     (ua.ActivityType == "Listening" || ua.ActivityType == "ManualListening")) // Include relevant types
+        .Include(ua => ua.Language) // Include Language for name
+        .ToListAsync();
+
+    var stats = new ListeningStatsDto();
+    // Fix: Handle potential null values in Sum
+    stats.TotalListeningSeconds = listeningActivities.Sum(ua => ua.ListeningDurationSeconds ?? 0);
+
+    stats.ListeningByDate = listeningActivities
+        .GroupBy(ua => ua.Timestamp.Date)
+        // Fix: Handle potential null values in Sum
+        .ToDictionary(g => g.Key.ToString("yyyy-MM-dd"), g => g.Sum(ua => ua.ListeningDurationSeconds ?? 0));
+
+    stats.ListeningByLanguage = listeningActivities
+        .GroupBy(ua => ua.Language) // Group by Language entity
+        .Select(g => new LanguageListeningStat
+        {
+            LanguageId = g.Key?.LanguageId ?? 0,
+            LanguageName = g.Key?.Name ?? "Unknown",
+            // Fix: Handle potential null values in Sum
+            TotalSeconds = g.Sum(ua => ua.ListeningDurationSeconds ?? 0)
+        })
+        .OrderBy(ls => ls.LanguageName)
+        .ToList();
+
+    return Ok(stats);
+}
+
+private DateTime CalculateStartDate(string period)
+{
+    var now = DateTime.UtcNow.Date; // Use Date part for comparisons
+    return period.ToLowerInvariant() switch
+    {
+        "week" => now.AddDays(-(int)now.DayOfWeek), // Start of current week (assuming Sunday as start)
+        "month" => new DateTime(now.Year, now.Month, 1), // Start of current month
+        "year" => new DateTime(now.Year, 1, 1), // Start of current year
+        _ => DateTime.MinValue, // "all" or any other value
+    };
+}
+
+// --- Existing Endpoints Below ---
 
         // DTO for updating audiobook progress
         public class UpdateAudiobookProgressRequest
@@ -340,5 +479,17 @@ public async Task<IActionResult> LogManualActivity([FromBody] LogManualActivityR
                 return StatusCode(500, "An error occurred while retrieving audiobook progress.");
             }
         }
-    }
-}
+
+        // Moved GetUserId inside the class
+        private Guid GetUserId()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                throw new UnauthorizedAccessException("User ID not found or invalid in token.");
+            }
+            return userId;
+        }
+
+    } // End of UserActivityController class
+} // End of namespace

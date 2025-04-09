@@ -638,10 +638,19 @@ export const updateLastRead = (bookId, textId) => {
 };
 
 export const completeLesson = (bookId, textId) => {
-  return fetchApi(`/api/books/${bookId}/complete-lesson`, {
-    method: 'PUT',
-    body: JSON.stringify({ textId })
-  });
+  if (bookId) {
+    // Existing call for lessons within books
+    return fetchApi(`/api/books/${bookId}/complete-lesson`, {
+      method: 'PUT',
+      body: JSON.stringify({ textId }) // Assuming textId is still needed in body
+    });
+  } else {
+    // New call for standalone texts (Assumes backend endpoint PUT /api/texts/{textId}/complete exists)
+    return fetchApi(`/api/texts/${textId}/complete`, {
+      method: 'PUT'
+      // Body might not be needed if textId is in the URL
+    });
+  }
 };
 
 export const finishBook = (bookId) => {
@@ -731,6 +740,38 @@ export const updateWord = async (wordId, status, translation) => {
     console.error('Error in updateWord:', error);
     throw error;
   }
+};
+
+// Fetches words for a specific language, with optional filtering and sorting
+export const getWordsByLanguage = (languageId, statusFilter = [], sortBy = 'term_asc', searchTerm = '') => {
+  const params = new URLSearchParams();
+  if (statusFilter && statusFilter.length > 0) {
+    params.append('status', statusFilter.join(','));
+  }
+  if (sortBy) {
+    params.append('sortBy', sortBy);
+  }
+  if (searchTerm && searchTerm.trim() !== '') {
+    params.append('searchTerm', searchTerm.trim());
+  }
+  const queryString = params.toString();
+  const endpoint = `/api/words/language/${languageId}${queryString ? `?${queryString}` : ''}`;
+  return fetchApi(endpoint);
+};
+
+// Triggers CSV export for words, with optional filtering
+export const exportWordsCsv = (languageId = null, statusFilter = []) => {
+  const params = new URLSearchParams();
+  if (languageId) {
+    params.append('languageId', languageId);
+  }
+  if (statusFilter && statusFilter.length > 0) {
+    params.append('status', statusFilter.join(','));
+  }
+  const queryString = params.toString();
+  const endpoint = `/api/words/export${queryString ? `?${queryString}` : ''}`;
+  // Use fetchApiDownload for file downloads
+  return fetchApiDownload(endpoint);
 };
 
 // Translation API

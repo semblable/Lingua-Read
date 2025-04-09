@@ -26,7 +26,7 @@ import UserSettings from './pages/UserSettings';
 import CreateAudioLesson from './pages/CreateAudioLesson';
 import LanguagesPage from './components/settings/LanguagesPage'; // <-- Import the new component
 import BatchAudioCreate from './pages/BatchAudioCreate'; // Import the batch create page
-
+import TermsPage from './pages/TermsPage'; // Import the new Terms page
 function App() {
   const { token, setToken, clearToken } = useAuthStore();
 
@@ -115,7 +115,7 @@ function App() {
 
               {/* Statistics route */}
               <Route path="/statistics" element={token ? <Statistics /> : <Navigate to="/login" />} />
-
+              <Route path="/terms" element={token ? <TermsPage /> : <Navigate to="/login" />} /> {/* Add route for Terms page */}
               {/* Settings route */}
               <Route path="/settings" element={token ? <UserSettings /> : <Navigate to="/login" />} />
               <Route path="/settings/languages" element={token ? <LanguagesPage /> : <Navigate to="/login" />} /> {/* <-- Add route for Languages page */}

@@ -24,7 +24,8 @@ namespace LinguaReadApi.Data
         public DbSet<UserBookProgress> UserBookProgresses { get; set; } // Added for per-book audiobook progress
         public DbSet<LanguageDictionary> LanguageDictionaries { get; set; } // Added for Language Config feature
         public DbSet<LanguageSentenceSplitException> LanguageSentenceSplitExceptions { get; set; } // Added for Language Config feature
-        
+        public DbSet<UserLanguageStatistics> UserLanguageStatistics { get; set; } // Added for aggregated stats
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -196,6 +197,26 @@ namespace LinguaReadApi.Data
                 .WithMany(l => l.SentenceSplitExceptions)
                 .HasForeignKey(lse => lse.LanguageId)
                 .OnDelete(DeleteBehavior.Cascade); // If Language is deleted, delete its exceptions
+
+            // Configure UserLanguageStatistics
+            modelBuilder.Entity<UserLanguageStatistics>()
+                .HasKey(uls => uls.UserLanguageStatisticsId); // Use single primary key
+
+            modelBuilder.Entity<UserLanguageStatistics>()
+                .HasIndex(uls => new { uls.UserId, uls.LanguageId }) // Add unique index for User/Language combo
+                .IsUnique();
+
+            modelBuilder.Entity<UserLanguageStatistics>()
+                .HasOne(uls => uls.User)
+                .WithMany() // No collection navigation property in User
+                .HasForeignKey(uls => uls.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // If user deleted, delete their stats
+
+            modelBuilder.Entity<UserLanguageStatistics>()
+                .HasOne(uls => uls.Language)
+                .WithMany() // No collection navigation property in Language
+                .HasForeignKey(uls => uls.LanguageId)
+                .OnDelete(DeleteBehavior.Restrict); // Don't delete language if stats exist
         }
     }
-} 
+}

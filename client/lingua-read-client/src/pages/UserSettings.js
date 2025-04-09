@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react'; // Added useRef, useContext
 import { Container, Card, Form, Button, Alert, Spinner, Row, Col } from 'react-bootstrap';
 import {
-    getUserSettings, updateUserSettings, getLanguages,
+    getUserSettings, updateUserSettings, getAllLanguages, // Changed getLanguages to getAllLanguages
     backupDatabase, restoreDatabase // Import new API functions
 } from '../utils/api';
 import { SettingsContext } from '../contexts/SettingsContext'; // Import SettingsContext
@@ -63,8 +63,8 @@ const UserSettings = () => {
 
     const fetchLanguages = async () => {
        try {
-         const data = await getLanguages();
-         setLanguages(data);
+         const data = await getAllLanguages(); // Use getAllLanguages
+         setLanguages(data || []); // Ensure it's an array
        } catch (err) {
          console.error('Failed to load languages:', err);
        } finally {
@@ -79,9 +79,19 @@ const UserSettings = () => {
   const handleChange = (e) => {
      const { name, value, type, checked } = e.target;
 
+     let processedValue = value;
+     if (type === 'checkbox') {
+       processedValue = checked;
+     } else if (type === 'number' || name === 'defaultLanguageId') { // Treat defaultLanguageId as number
+       processedValue = parseInt(value, 10);
+       if (isNaN(processedValue)) { // Handle potential NaN if parsing fails (e.g., for "0")
+          processedValue = 0; // Default to 0 if parsing fails or value is "0"
+       }
+     }
+
      setSettings(prevSettings => ({
        ...prevSettings,
-       [name]: type === 'checkbox' ? checked : (type === 'number' ? parseInt(value, 10) : value)
+       [name]: processedValue
      }));
   };
 

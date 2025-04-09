@@ -16,6 +16,8 @@ const AudiobookPlayer = ({ book }) => {
   const [playbackPositionLoaded, setPlaybackPositionLoaded] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1.0);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false); // State for when play is clicked but audio not ready
+  const lastKnownPositionRef = useRef(0); // Cache last known playback position across lessons
+  const lastKnownTrackIndexRef = useRef(0); // Cache last known track index across lessons
 
   // Refs
   const saveIntervalRef = useRef(null);
@@ -37,12 +39,14 @@ const AudiobookPlayer = ({ book }) => {
           console.log(`[AudioPlayer Load] Received progress: Track ID ${progress.currentAudiobookTrackId}, Position ${progress.currentAudiobookPosition}. Current Book ID: ${bookId}`);
           if (lastTrackIndex !== -1) {
             setCurrentTrackIndex(lastTrackIndex);
+            lastKnownTrackIndexRef.current = lastTrackIndex; // Update cached track index when restoring saved progress
             // Store the loaded position in the ref instead of setting state immediately
             initialSeekPositionRef.current = progress.currentAudiobookPosition;
             console.log(`[AudioPlayer Load] Will attempt to resume Book ${bookId} at Track Index ${lastTrackIndex} (ID: ${progress.currentAudiobookTrackId}), Position ${progress.currentAudiobookPosition}`);
           } else {
              console.warn(`[AudioPlayer Load] Last saved track ID ${progress.currentAudiobookTrackId} not found in tracks for current Book ID ${bookId}. Starting from beginning.`);
              setCurrentTrackIndex(0);
+             lastKnownTrackIndexRef.current = 0; // Reset cached track index if no saved progress
              // Ensure initial seek ref is cleared if starting from beginning
              initialSeekPositionRef.current = null;
              console.log(`[AudioPlayer Log] setCurrentTime(0) from loadLastPosition (track not found or no progress)`);
@@ -50,11 +54,13 @@ const AudiobookPlayer = ({ book }) => {
           }
         } else {
             // No progress saved for this book
-            console.log(`[AudioPlayer Load] No progress found for Book ID ${bookId}. Starting from beginning.`);
-            setCurrentTrackIndex(0);
+            console.log(`[AudioPlayer Load] No progress found for Book ID ${bookId}. Restoring cached position if available.`);
+            const cachedTrackIndex = lastKnownTrackIndexRef.current || 0;
+            const cachedPosition = lastKnownPositionRef.current || 0;
+            console.log(`[AudioPlayer Log] Restoring cached track index ${cachedTrackIndex} and position ${cachedPosition} (no progress found)`);
+            setCurrentTrackIndex(cachedTrackIndex);
             initialSeekPositionRef.current = null;
-            console.log(`[AudioPlayer Log] setCurrentTime(0) from loadLastPosition (no progress found)`);
-            setCurrentTime(0);
+            setCurrentTime(cachedPosition);
         }
       } catch (err) {
         console.error("Failed to load playback position:", err);
@@ -138,6 +144,8 @@ const AudiobookPlayer = ({ book }) => {
       if (isMounted) {
           // console.log(`[AudioPlayer Log] setCurrentTime from handleTimeUpdate: ${audio.currentTime}`); // Very noisy, disable normally
           setCurrentTime(audio.currentTime);
+          lastKnownPositionRef.current = audio.currentTime; // Update cached position
+          lastKnownTrackIndexRef.current = currentTrackIndex; // Update cached track index
       }
     };
 

@@ -79,6 +79,7 @@ builder.Services.AddScoped<IDatabaseAdminService, DatabaseAdminService>(); // <-
 
 // Register Language Service (New)
 builder.Services.AddScoped<ILanguageService, LanguageService>();
+builder.Services.AddScoped<IUserActivityService, UserActivityService>(); // Register UserActivityService
 
 // Configure JWT Authentication
 builder.Services.AddAuthentication(options =>

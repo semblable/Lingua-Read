@@ -705,13 +705,23 @@ const TextDisplay = () => {
     };
 
    const handleCompleteLesson = async () => {
-      if (!text?.bookId) return;
+      if (!text?.textId) return; // Require at least textId
       setCompleting(true);
       try {
-        const bookStats = await completeLesson(text.bookId, text.textId);
-        if (globalSettings.showProgressStats) { setStats(bookStats); setShowStatsModal(true); } // Use globalSettings
-        else if (globalSettings.autoAdvanceToNextLesson && nextTextId) { navigate(`/texts/${nextTextId}`); } // Use globalSettings
-        else { navigate(`/books/${text.bookId}`); }
+        const bookStats = text?.bookId
+          ? await completeLesson(text.bookId, text.textId)
+          : await completeLesson(null, text.textId); // Support standalone lessons
+        // If standalone text, always go back to texts page after completion
+        if (!text?.bookId) {
+            navigate('/texts');
+        } else if (globalSettings.autoAdvanceToNextLesson && nextTextId) {
+            navigate(`/texts/${nextTextId}`);
+        } else if (globalSettings.showProgressStats) {
+            setStats(bookStats);
+            setShowStatsModal(true);
+        } else {
+            navigate(`/books/${text.bookId}`);
+        }
       } catch (error) { alert(`Failed to complete lesson: ${error.message}`); }
       finally { setCompleting(false); }
     };
@@ -889,14 +899,14 @@ const TextDisplay = () => {
      );
   };
   // --- End Rendering Logic ---
-
-
   // --- Loading/Error/NotFound States ---
   if (loading) { return <Container className="py-5 text-center"><Spinner animation="border" /></Container>; }
   if (error) { return <Container className="py-5"><Alert variant="danger">{error}<Button onClick={() => navigate(-1)}>Back</Button></Alert></Container>; }
   if (!text) { return <Container className="py-5"><Alert variant="warning">Text not found<Button onClick={() => navigate('/texts')}>Back</Button></Alert></Container>; }
   // --- End Loading/Error States ---
 
+      // DEBUG: Log isAudioLesson state before rendering
+      console.log(`[Render Check] isAudioLesson state: ${isAudioLesson}`);
 
   // --- Main Return JSX ---
   return (
@@ -963,8 +973,15 @@ const TextDisplay = () => {
                {text && !loading && ( <Button variant="info" size="sm" onClick={handleFullTextTranslation} className="me-1">Translate Text</Button> )}
                {text && !loading && ( <Button variant="secondary" size="sm" onClick={handleTranslateUnknownWords} disabled={translatingUnknown} className="ms-1" title="Translate unknown/learning words">{translatingUnknown ? <Spinner size="sm"/> : 'Translate ?'}</Button> )}
                {text && !loading && ( <Button variant="outline-success" size="sm" onClick={handleMarkAllUnknownAsKnown} disabled={isMarkingAll} className="ms-1" title="Mark all untracked words as Known">{isMarkingAll ? <Spinner size="sm"/> : 'Mark All Known'}</Button> )}
-               {text?.bookId && ( <Button variant="outline-primary" size="sm" onClick={() => navigate(`/books/${text.bookId}`)}>Back to Book</Button> )}
-               {!text?.bookId && ( <Button variant="outline-secondary" size="sm" onClick={() => navigate('/texts')}>Back to Texts</Button> )}
+               {/* Add Complete Lesson button here specifically for Audio Lessons */}
+               {/* Show top button ONLY for standalone audio lessons */}
+               {isAudioLesson && !text?.bookId && (
+                   <Button variant="success" onClick={handleCompleteLesson} disabled={completing} size="sm" className="ms-1">
+                       {completing ? <Spinner animation="border" size="sm" /> : (nextTextId === null ? 'Finish Book' : 'Complete Lesson')}
+                   </Button>
+               )}
+               {text?.bookId && ( <Button variant="outline-primary" size="sm" onClick={() => navigate(`/books/${text.bookId}`)} className="ms-1">Back to Book</Button> )}
+               {!text?.bookId && ( <Button variant="outline-secondary" size="sm" onClick={() => navigate('/texts')} className="ms-1">Back to Texts</Button> )}
              </div>
            </div>
            {translateUnknownError && <Alert variant="danger" className="mt-1 mb-0 p-1 small">{translateUnknownError}</Alert>}
@@ -1002,7 +1019,8 @@ const TextDisplay = () => {
              <div className="flex-grow-1" ref={textContentRef}>
                {isAudioLesson && displayMode === 'audio' ? renderAudioTranscript() : renderStandardText()}
              </div>
-             {text?.bookId && (
+             {/* Show bottom button for regular texts OR any text within a book */}
+             {(!isAudioLesson || text?.bookId) && (
                 <div className="mt-auto pt-2 text-end px-2 pb-2">
                     <Button variant="success" onClick={handleCompleteLesson} disabled={completing} size="sm">
                         {completing ? <Spinner animation="border" size="sm" /> : (nextTextId === null ? 'Finish Book' : 'Complete Lesson')}
