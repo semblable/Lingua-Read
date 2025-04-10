@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Alert, Spinner, ProgressBar, Table, Form, Button } from 'react-bootstrap';
 // import { useNavigate } from 'react-router-dom'; // Removed unused import
 import { getUserStatistics, getReadingActivity, getListeningActivity } from '../utils/api';
@@ -12,6 +13,8 @@ import ManualEntryModal from '../components/ManualEntryModal'; // Import the mod
 // Custom colors for charts
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 const Statistics = () => {
+  const location = useLocation();
+  // If navigated with state { refreshStats: true }, force a stats refresh
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -185,15 +188,28 @@ const Statistics = () => {
       }
     };
 
-    fetchStats();
-  }, []);
+    // If navigated with state { refreshStats: true }, or on initial mount, fetch stats
+    if (location.state && location.state.refreshStats) {
+      fetchStats();
+      // Clear the state so it doesn't refetch on every render
+      window.history.replaceState({}, document.title);
+    } else {
+      fetchStats();
+    }
+  }, [location.state]);
 
   // --- Refactored Data Fetching ---
   const fetchReadingActivityData = async (period) => {
     setLoadingActivity(true);
     try {
       console.log(`Starting reading activity fetch for period: ${period}`);
-      const data = await getReadingActivity(period);
+      let data;
+      if (period && period !== 'all') {
+        const timezoneOffsetMinutes = new Date().getTimezoneOffset();
+        data = await getReadingActivity(period, timezoneOffsetMinutes);
+      } else {
+        data = await getReadingActivity(period);
+      }
       console.log('Reading activity data received:', data);
 
       if (!data) {
@@ -220,7 +236,9 @@ const Statistics = () => {
     setLoadingListeningActivity(true);
     try {
       console.log(`Starting listening activity fetch for period: ${period}`);
-      const data = await getListeningActivity(period);
+      // Pass timezone offset for all periods except 'all'
+      const timezoneOffsetMinutes = period !== 'all' ? new Date().getTimezoneOffset() : null;
+      const data = await getListeningActivity(period, timezoneOffsetMinutes);
       console.log('Raw listening activity data received:', data);
 
       if (!data || data.error) {
@@ -514,22 +532,22 @@ const Statistics = () => {
       return acc;
   }, {});
 
-  // Populate CUMULATIVE stats from stats.LanguageStatistics (assumed source of UserLanguageStatistics)
+  // Populate CUMULATIVE stats from stats.LanguageStatistics (for fields NOT available in activity endpoints)
   (stats?.LanguageStatistics || []).forEach(stat => {
       const langId = stat.LanguageId || stat.languageId;
       if (uniqueLanguages[langId]) {
-          // Cumulative stats
-          uniqueLanguages[langId].knownWords = stat.KnownWords || stat.knownWords || 0; // Assuming these are cumulative word statuses
+          // Populate stats potentially ONLY available here (like word status counts, book counts)
+          uniqueLanguages[langId].knownWords = stat.KnownWords || stat.knownWords || 0;
           uniqueLanguages[langId].learningWords = stat.LearningWords || stat.learningWords || 0;
-          uniqueLanguages[langId].totalWordsRead = stat.TotalWordsRead || stat.totalWordsRead || 0; // Use new cumulative field name
-          uniqueLanguages[langId].totalSecondsListened = stat.TotalSecondsListened || stat.totalSecondsListened || 0; // Use new cumulative field name
-          uniqueLanguages[langId].totalTextsCompleted = stat.TotalTextsCompleted || stat.totalTextsCompleted || 0; // Use new cumulative field name
-          uniqueLanguages[langId].totalBooksCompleted = stat.TotalBooksCompleted || stat.totalBooksCompleted || 0; // Use new cumulative field name
-
-          // General stats (might still come from here or general stats object)
-          uniqueLanguages[langId].totalWordsEncountered = stat.WordCount || stat.wordCount || 0; // Or maybe stats.TotalWords? Needs clarification.
-          uniqueLanguages[langId].bookCount = stat.BookCount || stat.bookCount || 0; // Or maybe stats.TotalBooks?
-          uniqueLanguages[langId].finishedBookCount = stat.FinishedBookCount || stat.finishedBookCount || 0; // Or maybe stats.FinishedBooks?
+          uniqueLanguages[langId].totalTextsCompleted = stat.TotalTextsCompleted || stat.totalTextsCompleted || 0; // Keep this for now
+          uniqueLanguages[langId].totalBooksCompleted = stat.TotalBooksCompleted || stat.totalBooksCompleted || 0;
+          uniqueLanguages[langId].totalWordsEncountered = stat.WordCount || stat.wordCount || 0; // Needs clarification?
+          uniqueLanguages[langId].bookCount = stat.BookCount || stat.bookCount || 0; // Needs clarification?
+          uniqueLanguages[langId].finishedBookCount = stat.FinishedBookCount || stat.finishedBookCount || 0; // Needs clarification?
+// Robustly map both PascalCase and camelCase to camelCase for frontend
+uniqueLanguages[langId].totalWordsRead = stat.TotalWordsRead ?? stat.totalWordsRead ?? 0;
+uniqueLanguages[langId].totalSecondsListened = stat.TotalSecondsListened ?? stat.totalSecondsListened ?? 0;
+          // DO NOT populate totalWordsRead or totalSecondsListened here, use activity endpoints below
       }
   });
 
@@ -538,22 +556,35 @@ const Statistics = () => {
     : Object.values(readingActivity?.ActivityByLanguage || {});
 
   // Populate PERIOD stats from readingActivity
-  readingActivityByLanguageArray.forEach(stat => {
-      const langId = stat.LanguageId || stat.languageId;
-      if (uniqueLanguages[langId]) {
-          // Store in period-specific field, DO NOT overwrite cumulative totalWordsRead
-          uniqueLanguages[langId].periodWordsRead = stat.TotalWords || stat.totalWords || 0;
-      }
-  });
+  if (activityPeriod !== 'all') {
+    if (!loadingActivity) { // Only calculate if reading activity is not loading
+      // Correctly iterate over the reading activity object { LanguageName: count }
+      const activityByLangObject = readingActivity?.ActivityByLanguage || readingActivity?.activityByLanguage || {};
+      Object.entries(activityByLangObject).forEach(([langName, wordCount]) => {
+        // Find the language ID in our uniqueLanguages map using the language name
+        const langEntry = Object.values(uniqueLanguages).find(lang => lang.languageName === langName);
+        if (langEntry) {
+          const langId = langEntry.languageId;
+          uniqueLanguages[langId].periodWordsRead = wordCount || 0;
+        } else {
+          console.warn(`[DEBUG] Could not find language ID for language name: ${langName} in reading activity data.`);
+        }
+      });
+    }
 
-   // Populate PERIOD stats from listeningActivity
-   (listeningActivity?.ListeningByLanguage || []).forEach(stat => {
-       const langId = stat.LanguageId || stat.languageId;
-       if (uniqueLanguages[langId]) {
-           // Store in period-specific field, DO NOT overwrite cumulative totalSecondsListened
-           uniqueLanguages[langId].periodSecondsListened = stat.TotalSeconds || stat.totalSeconds || 0;
-       }
-   });
+    // Populate PERIOD stats from listeningActivity
+    if (!loadingListeningActivity) { // Only calculate if listening activity is not loading
+      (listeningActivity?.ListeningByLanguage || []).forEach(stat => {
+          const langId = stat.LanguageId || stat.languageId;
+          if (uniqueLanguages[langId]) {
+              // Update the periodSecondsListened from the activity endpoint data
+              const activitySeconds = stat.TotalSeconds || stat.totalSeconds || 0;
+              uniqueLanguages[langId].periodSecondsListened = activitySeconds;
+          }
+      });
+    }
+  }
+
 
   const languagesArray = Object.values(uniqueLanguages).sort((a, b) => a.languageName.localeCompare(b.languageName));
   const totalLanguages = languagesArray.length;

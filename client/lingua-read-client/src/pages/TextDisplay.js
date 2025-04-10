@@ -3,7 +3,7 @@ import { Container, Card, Spinner, Alert, Button, Modal, Form, Row, Col, Badge, 
 import { useParams, useNavigate } from 'react-router-dom'; // Removed unused Link import
 import { FixedSizeList as List } from 'react-window';
 import {
-  getText, createWord, updateWord, updateLastRead, completeLesson, getBook,
+  getText, createWord, updateWord, updateLastRead, completeText, getBook, // Replaced completeLesson with completeText
   translateText, /*translateSentence,*/ translateFullText, updateUserSettings, // Added updateUserSettings, removed unused getUserSettings
   batchTranslateWords, addTermsBatch, getLanguage, // Added getLanguage (Phase 3)
   API_URL
@@ -708,16 +708,15 @@ const TextDisplay = () => {
       if (!text?.textId) return; // Require at least textId
       setCompleting(true);
       try {
-        const bookStats = text?.bookId
-          ? await completeLesson(text.bookId, text.textId)
-          : await completeLesson(null, text.textId); // Support standalone lessons
+        // Call the correct API endpoint using the imported completeText function
+        const textStats = await completeText(text.textId);
         // If standalone text, always go back to texts page after completion
         if (!text?.bookId) {
             navigate('/texts');
         } else if (globalSettings.autoAdvanceToNextLesson && nextTextId) {
             navigate(`/texts/${nextTextId}`);
         } else if (globalSettings.showProgressStats) {
-            setStats(bookStats);
+            setStats(textStats); // Use the stats returned from completeText
             setShowStatsModal(true);
         } else {
             navigate(`/books/${text.bookId}`);

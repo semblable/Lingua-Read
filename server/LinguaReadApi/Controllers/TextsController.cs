@@ -871,7 +871,66 @@ namespace LinguaReadApi.Controllers
                 return NotFound("Text not found.");
             }
 
-            // --- 1. Calculate Text Stats ---
+            // --- 1. Re-parse and re-link words to ensure accurate stats ---
+            // Remove old TextWords links
+            var oldLinks = _context.TextWords.Where(tw => tw.TextId == text.TextId);
+            _context.TextWords.RemoveRange(oldLinks);
+            await _context.SaveChangesAsync();
+
+            // Parse and link words from current text content
+            var content = text.Content;
+            var languageId = text.LanguageId;
+            var separators = new char[] { ' ', '\t', '\r', '\n', '.', ',', ';', ':', '!', '?', '\"', '\'', '(', ')', '[', ']', '{', '}', '-', '_', '/', '\\', '|', '@', '#', '$', '%', '^', '&', '*', '+', '=', '<', '>', '`', '~' };
+            var wordsInText = content.Split(separators, StringSplitOptions.RemoveEmptyEntries)
+                                     .Select(w => w.Trim().ToLowerInvariant())
+                                     .Where(w => !string.IsNullOrWhiteSpace(w))
+                                     .ToList();
+            var uniqueWords = wordsInText.Distinct().ToList();
+
+            // Fetch existing words for this user and language
+            var existingWords = await _context.Words
+                .Where(w => w.UserId == userId && w.LanguageId == languageId && uniqueWords.Contains(w.Term.ToLower()))
+                .ToDictionaryAsync(w => w.Term.ToLower());
+
+            var newWords = new List<Word>();
+            foreach (var wordTerm in uniqueWords)
+            {
+                if (!existingWords.ContainsKey(wordTerm))
+                {
+                    var newWord = new Word
+                    {
+                        UserId = userId,
+                        LanguageId = languageId,
+                        Term = wordTerm,
+                        Status = 0,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Words.Add(newWord);
+                    newWords.Add(newWord);
+                    existingWords[wordTerm] = newWord;
+                }
+            }
+            await _context.SaveChangesAsync();
+
+            // Link all word occurrences in the text
+            foreach (var wordTerm in wordsInText)
+            {
+                if (existingWords.TryGetValue(wordTerm, out var word))
+                {
+                    var textWord = new TextWord
+                    {
+                        TextId = text.TextId,
+                        WordId = word.WordId,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.TextWords.Add(textWord);
+                }
+            }
+            await _context.SaveChangesAsync();
+
+            // Re-fetch text with updated links
+            await _context.Entry(text).Collection(t => t.TextWords).Query().Include(tw => tw.Word).LoadAsync();
+
             var totalWords = text.TextWords.Count;
             var knownWords = text.TextWords.Count(tw => tw.Word.Status == 5); // Status 5 = Known
             var learningWords = text.TextWords.Count(tw => tw.Word.Status > 0 && tw.Word.Status < 5); // Status 1-4 = Learning

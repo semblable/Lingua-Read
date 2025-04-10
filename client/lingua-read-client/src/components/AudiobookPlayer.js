@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, Spinner, Alert, ProgressBar, ButtonGroup } from 'react-bootstrap';
+import { Button, Spinner, Alert, ProgressBar, ButtonGroup, Form } from 'react-bootstrap';
 import { getAudiobookProgress, updateAudiobookProgress, logListeningActivity } from '../utils/api';
 import { formatTime } from '../utils/helpers';
 
@@ -17,6 +17,18 @@ const AudiobookPlayer = ({ book }) => {
   const [playbackRate, setPlaybackRate] = useState(1.0);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false); // State for when play is clicked but audio not ready
   const lastKnownPositionRef = useRef(0); // Cache last known playback position across lessons
+  // --- Volume State ---
+  const [volume, setVolume] = useState(1.0); // 1.0 = max volume
+  // --- Mute State ---
+  const [isMuted, setIsMuted] = useState(false);
+  const [volumeBeforeMute, setVolumeBeforeMute] = useState(1.0);
+
+  // Sync audio element volume with state, considering mute
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
   const lastKnownTrackIndexRef = useRef(0); // Cache last known track index across lessons
 
   // Refs
@@ -658,6 +670,54 @@ const AudiobookPlayer = ({ book }) => {
             <i className="bi bi-skip-end-fill" />
           </Button>
         </ButtonGroup>
+        {/* Volume Control */}
+        <div className="d-flex align-items-center gap-1 ms-2" style={{ minWidth: 120 }}>
+          <i
+            className={`bi ${isMuted || volume === 0 ? 'bi-volume-mute' : 'bi-volume-up'}`}
+            style={{ fontSize: '1.1rem', color: 'var(--bs-body-color)', cursor: 'pointer' }}
+            title={isMuted ? "Unmute" : "Mute"}
+            onClick={() => {
+              if (!isMuted) {
+                // Mute: Store current volume (or 1.0 if already 0) and set mute state
+                setVolumeBeforeMute(volume === 0 ? 1.0 : volume);
+                setIsMuted(true);
+              } else {
+                // Unmute: Restore volume and clear mute state
+                setIsMuted(false);
+                setVolume(volumeBeforeMute === 0 ? 1.0 : volumeBeforeMute); // Restore to 1.0 if previous was 0
+              }
+            }}
+            aria-label={isMuted ? "Unmute" : "Mute"}
+            tabIndex={0} // Make it focusable
+            role="button" // Indicate it's interactive
+          />
+          <Form.Range
+            min={0}
+            max={1}
+            step={0.01}
+            value={isMuted ? 0 : volume} // Slider reflects mute state
+            onChange={e => {
+              const newVolume = parseFloat(e.target.value);
+              setVolume(newVolume);
+              // If user drags slider to 0, mute. If they drag away from 0, unmute.
+              if (newVolume === 0) {
+                if (!isMuted) {
+                  setVolumeBeforeMute(1.0); // Store 1.0 if muted via slider
+                  setIsMuted(true);
+                }
+              } else {
+                if (isMuted) {
+                  setIsMuted(false);
+                }
+                // Keep track of the last non-zero volume set by the slider
+                setVolumeBeforeMute(newVolume);
+              }
+            }}
+            style={{ width: 80 }}
+            aria-label="Volume"
+            title="Volume"
+          />
+        </div>
       </div>
     </div>
   );

@@ -201,6 +201,47 @@ public async Task<IActionResult> LogManualActivity([FromBody] LogManualActivityR
     {
         _context.UserActivities.AddRange(activitiesToAdd);
         await _context.SaveChangesAsync();
+        // Update UserLanguageStatistics after manual activity save
+        try
+        {
+            var stats = await _context.UserLanguageStatistics
+                .FirstOrDefaultAsync(uls => uls.UserId == userId && uls.LanguageId == request.LanguageId);
+
+            if (stats == null)
+            {
+                stats = new UserLanguageStatistics
+                {
+                    UserId = userId,
+                    LanguageId = request.LanguageId,
+                    TotalWordsRead = request.WordCount ?? 0,
+                    TotalSecondsListened = request.ListeningDurationSeconds ?? 0,
+                    LastUpdatedAt = DateTime.UtcNow
+                };
+                _context.UserLanguageStatistics.Add(stats);
+            }
+            else
+            {
+                if (request.WordCount.HasValue)
+                    stats.TotalWordsRead += request.WordCount.Value;
+                if (request.ListeningDurationSeconds.HasValue)
+                    stats.TotalSecondsListened += request.ListeningDurationSeconds.Value;
+                stats.LastUpdatedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Updated UserLanguageStatistics for UserId: {UserId}, LanguageId: {LanguageId}", userId, request.LanguageId);
+        }
+        catch (DbUpdateException dbEx)
+        {
+            _logger.LogError(dbEx, "Database error updating UserLanguageStatistics for UserId: {UserId}. InnerException: {InnerMessage}", userId, dbEx.InnerException?.Message);
+            // Do not fail the request if stats update fails
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error updating UserLanguageStatistics for UserId: {UserId}", userId);
+            // Do not fail the request if stats update fails
+        }
+
         _logger.LogInformation("Successfully saved {Count} manual activity record(s) for UserId: {UserId}", activitiesToAdd.Count, userId);
         return Ok(new { message = "Manual activity logged successfully." });
     }

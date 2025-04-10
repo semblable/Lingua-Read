@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useContext } from 'react'; // Added
 import { Container, Card, Form, Button, Alert, Spinner, Row, Col } from 'react-bootstrap';
 import {
     getUserSettings, updateUserSettings, getAllLanguages, // Changed getLanguages to getAllLanguages
-    backupDatabase, restoreDatabase // Import new API functions
+    backupDatabase, restoreDatabase, resetUserStatistics // Import new API functions
 } from '../utils/api';
 import { SettingsContext } from '../contexts/SettingsContext'; // Import SettingsContext
 const UserSettings = () => {
@@ -32,6 +32,8 @@ const UserSettings = () => {
   const [restoreMessage, setRestoreMessage] = useState({ type: '', text: '' });
   const [restoreFile, setRestoreFile] = useState(null);
   const fileInputRef = useRef(null); // Ref for file input
+  const [isResettingStats, setIsResettingStats] = useState(false);
+  const [resetStatsMessage, setResetStatsMessage] = useState({ type: '', text: '' });
   // --- End Backup/Restore State ---
 
   // Removed unused isAdmin placeholder
@@ -203,6 +205,37 @@ const UserSettings = () => {
     }
   };
   // --- End Backup/Restore Handlers ---
+
+  // --- Reset Statistics Handler ---
+  const handleResetStatistics = async () => {
+    const confirmation = window.confirm(
+      "Are you sure you want to reset all your reading and listening statistics?\n\n" +
+      "This includes activity history, words read counts, listening time, etc.\n\n" +
+      "Your account, books, texts, and learned word statuses will NOT be affected.\n\n" +
+      "This action cannot be undone."
+    );
+
+    if (!confirmation) {
+      setResetStatsMessage({ type: 'info', text: 'Statistics reset cancelled.' });
+      return;
+    }
+
+    setIsResettingStats(true);
+    setResetStatsMessage({ type: '', text: '' });
+
+    try {
+      const result = await resetUserStatistics();
+      setResetStatsMessage({ type: 'success', text: result.message || 'Statistics reset successfully.' });
+      // Optionally clear message after a few seconds
+      setTimeout(() => setResetStatsMessage({ type: '', text: '' }), 5000);
+    } catch (err) {
+      console.error("Reset statistics failed:", err);
+      setResetStatsMessage({ type: 'danger', text: `Reset failed: ${err.message}` });
+    } finally {
+      setIsResettingStats(false);
+    }
+  };
+  // --- End Reset Statistics Handler ---
 
 
   if (loading) {
@@ -432,6 +465,29 @@ const UserSettings = () => {
                         Restoring...
                       </>
                     ) : 'Restore from Backup'}
+                  </Button>
+                </Card.Body>
+              </Card>
+
+              {/* Reset Statistics Section */}
+              <Card className="mt-3">
+                <Card.Body>
+                  <Card.Title>Reset Statistics</Card.Title>
+                  <Card.Text className="text-warning fw-bold">
+                    Reset all reading/listening history and aggregate counts (words read, time listened, texts/books completed). Your learned words status, books, and texts themselves will remain. This action is irreversible.
+                  </Card.Text>
+                  {resetStatsMessage.text && <Alert variant={resetStatsMessage.type} className="mt-2">{resetStatsMessage.text}</Alert>}
+                  <Button
+                    variant="warning" // Use warning color for caution
+                    onClick={handleResetStatistics}
+                    disabled={isResettingStats}
+                  >
+                    {isResettingStats ? (
+                      <>
+                        <Spinner animation="border" size="sm" className="me-2" />
+                        Resetting...
+                      </>
+                    ) : 'Reset All Statistics'}
                   </Button>
                 </Card.Body>
               </Card>

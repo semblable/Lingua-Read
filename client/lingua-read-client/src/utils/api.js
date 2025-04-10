@@ -385,6 +385,16 @@ export const deleteText = (textId) => {
   });
 };
 
+// Marks a text as completed and logs activity
+export const completeText = (textId) => {
+  console.log(`[API] Marking text ${textId} as complete.`);
+  return fetchApi(`/api/texts/${textId}/complete`, {
+    method: 'PUT'
+    // No body needed for this request
+  });
+};
+
+
 
 // Books API
 export const getBooks = () => {
@@ -664,10 +674,11 @@ export const getUserStatistics = () => {
   return fetchApi('/api/users/statistics');
 };
 
-export const getReadingActivity = async (period = 'all') => {
+export const getReadingActivity = async (period = 'all', timezoneOffsetMinutes = null) => {
   try {
-    console.log(`[API] Getting reading activity for period: ${period}`);
-    const data = await fetchApi(`/api/users/reading-activity?period=${period}`);
+    const tzParam = timezoneOffsetMinutes !== null ? `&timezoneOffsetMinutes=${timezoneOffsetMinutes}` : '';
+    console.log(`[API] Getting reading activity for period: ${period}, timezoneOffsetMinutes: ${timezoneOffsetMinutes}`);
+    const data = await fetchApi(`/api/users/reading-activity?period=${period}${tzParam}`);
     return data;
   } catch (error) {
     console.error('Error getting reading activity:', error);
@@ -676,16 +687,31 @@ export const getReadingActivity = async (period = 'all') => {
 };
 
 // Fetch listening activity data
-export const getListeningActivity = async (period = 'all') => {
+export const getListeningActivity = async (period = 'all', timezoneOffsetMinutes = null) => {
   try {
-    console.log(`[API] Fetching listening activity for period: ${period}`);
-    const data = await fetchApi(`/api/users/listening-activity?period=${period}`);
+    let tzParam = '';
+    if (timezoneOffsetMinutes !== null && timezoneOffsetMinutes !== undefined) {
+      tzParam = `&timezoneOffsetMinutes=${timezoneOffsetMinutes}`;
+    }
+    console.log(`[API] Fetching listening activity for period: ${period}, timezoneOffsetMinutes: ${timezoneOffsetMinutes}`);
+    const data = await fetchApi(`/api/users/listening-activity?period=${period}${tzParam}`);
     return data;
   } catch (error) {
     console.error('Error getting listening activity:', error);
     return { error: error.message }; // Return error object on failure
   }
 };
+
+
+// User Statistics API
+export const resetUserStatistics = () => {
+  console.log('[API] Resetting user statistics.');
+  return fetchApi('/api/users/reset-statistics', {
+    method: 'POST'
+    // No body needed for this request
+  });
+};
+
 
 // Words API
 export const createWord = async (textId, term, status, translation) => {
