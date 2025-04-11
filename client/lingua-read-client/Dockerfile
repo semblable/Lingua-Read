@@ -11,7 +11,7 @@ COPY client/lingua-read-client/package.json ./
 COPY client/lingua-read-client/package-lock.json* ./
 
 # Install dependencies
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy the rest of the application code
 # Note: Paths inside the Docker build context are relative to the context root (project root)
