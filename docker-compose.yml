@@ -5,6 +5,11 @@ services:
     build:
       context: . # Build context is the project root
       dockerfile: client/lingua-read-client/Dockerfile # Path relative to context
+      # Ensure build args are passed for environment variable embedding
+
+      args:
+        - REACT_APP_API_URL=http://backend:8080 # Pass the URL as a build argument
+
     ports:
       - "3000:80" # Map host port 3000 to container port 80 (Nginx)
     environment:

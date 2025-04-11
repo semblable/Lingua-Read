@@ -1,6 +1,9 @@
 # Stage 1: Build the React application
 FROM node:20 AS build
 
+# Define build-time argument for API URL
+ARG REACT_APP_API_URL
+
 # Set the working directory
 WORKDIR /app
 
@@ -18,6 +21,9 @@ RUN npm install --legacy-peer-deps
 COPY client/lingua-read-client/ ./
 
 # Build the application
+# Set environment variable for the build process
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
 RUN npm run build
 
 # Stage 2: Serve the application using Nginx
