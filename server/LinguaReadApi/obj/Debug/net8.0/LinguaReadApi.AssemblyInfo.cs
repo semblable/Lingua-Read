@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LinguaReadApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+043b402aaa2bc30e29c491b5146456366a06a54f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c10c890f5d2e2b0ec5a356cf504682432f7baf21")]
 [assembly: System.Reflection.AssemblyProductAttribute("LinguaReadApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LinguaReadApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

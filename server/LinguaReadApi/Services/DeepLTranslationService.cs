@@ -23,18 +23,21 @@ namespace LinguaReadApi.Services
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ILogger<DeepLTranslationService> _logger;
+        private readonly ILanguageService _languageService; // Added LanguageService dependency
         private readonly string _apiKey;
         private readonly string _apiUrl;
 
-        public DeepLTranslationService(HttpClient httpClient, IConfiguration configuration, ILogger<DeepLTranslationService> logger)
+        public DeepLTranslationService(HttpClient httpClient, IConfiguration configuration, ILogger<DeepLTranslationService> logger, ILanguageService languageService) // Added languageService parameter
         {
             _httpClient = httpClient;
             _configuration = configuration;
             _logger = logger;
+            _languageService = languageService; // Store injected service
 
             // Read API key and throw if missing
-            _apiKey = _configuration["DeepLApiKey"] ?? throw new InvalidOperationException("DeepL API Key (DeepLApiKey) is not configured in environment variables or app settings.");
-            _apiUrl = _configuration["DeepLApiUrl"] ?? "https://api-free.deepl.com/v2/translate"; // Default to free API
+            _apiKey = _configuration["DeepL:ApiKey"] ?? throw new InvalidOperationException("DeepL API Key (DeepL:ApiKey) is not configured. Check .env (DeepL__ApiKey) or appsettings.json.");
+            // Use a specific config key for the translate endpoint to avoid conflicts. Default to free API translate endpoint.
+            _apiUrl = _configuration["DeepL:TranslateUrl"] ?? "https://api-free.deepl.com/v2/translate";
 
             // The check below is now redundant because of the null-coalescing throw above,
             // but it doesn't hurt to leave it commented for future reference.
@@ -57,24 +60,44 @@ namespace LinguaReadApi.Services
 
             try
             {
-                 // DeepL Free API expects form data, Pro API supports JSON. Assuming Free for default URL.
-                 // Adjust content type and serialization if using Pro API with JSON.
-                var formContent = new List<KeyValuePair<string, string>>
-                {
-                    new KeyValuePair<string, string>("target_lang", targetLang)
-                };
-                foreach (var word in words)
-                {
-                    formContent.Add(new KeyValuePair<string, string>("text", word));
-                }
+                // --- Determine the final target language code ---
+                string finalDeepLTargetCode = targetLang; // Default to the requested target language
+
                 if (!string.IsNullOrEmpty(sourceLang))
                 {
-                    formContent.Add(new KeyValuePair<string, string>("source_lang", sourceLang));
+                    // Fetch all languages and find the one matching the source code
+                    var allLanguages = await _languageService.GetAllLanguagesAsync();
+                    var sourceLanguageConfig = allLanguages.FirstOrDefault(l => l.Code.Equals(sourceLang, StringComparison.OrdinalIgnoreCase));
+
+                    if (sourceLanguageConfig != null && !string.IsNullOrEmpty(sourceLanguageConfig.DeepLTargetCode))
+                    {
+                        finalDeepLTargetCode = sourceLanguageConfig.DeepLTargetCode;
+                        _logger.LogInformation("Using configured DeepL target code '{ConfiguredCode}' for source '{SourceCode}' instead of requested '{RequestedCode}'.", finalDeepLTargetCode, sourceLang, targetLang);
+                    }
+                }
+                // --- End determining target code ---
+
+                 // DeepL Free API expects form data (application/x-www-form-urlencoded).
+                 // Create the key-value pairs for the form data.
+                var formData = new List<KeyValuePair<string, string>>();
+                foreach (var word in words)
+                {
+                    formData.Add(new KeyValuePair<string, string>("text", word));
+                }
+                // Use the determined final target code
+                formData.Add(new KeyValuePair<string, string>("target_lang", finalDeepLTargetCode));
+
+                if (!string.IsNullOrEmpty(sourceLang))
+                {
+                    // Keep sending the original source language code if provided
+                    formData.Add(new KeyValuePair<string, string>("source_lang", sourceLang));
                 }
 
-                var requestContent = new FormUrlEncodedContent(formContent);
+                // Create FormUrlEncodedContent. HttpClient sets the Content-Type header.
+                var requestContent = new FormUrlEncodedContent(formData);
 
-                _logger.LogInformation($"Sending {words.Count} words to DeepL for translation to {targetLang}");
+
+                // Removed previous detailed debug logging
 
                 var response = await _httpClient.PostAsync(_apiUrl, requestContent);
 
@@ -86,8 +109,11 @@ namespace LinguaReadApi.Services
                     {
                         for (int i = 0; i < words.Count; i++)
                         {
-                            // Ensure case-insensitivity if needed, or handle duplicates if DeepL returns multiple for same input
-                            translations[words[i]] = responseContent.translations[i].text; 
+                            string originalWord = words[i] ?? string.Empty;
+                            string translatedWord = responseContent.translations[i].text ?? string.Empty;
+
+                            // Add raw strings to the dictionary (no sanitization)
+                            translations[originalWord] = translatedWord;
                         }
                         _logger.LogInformation($"Successfully received {translations.Count} translations from DeepL.");
                     }

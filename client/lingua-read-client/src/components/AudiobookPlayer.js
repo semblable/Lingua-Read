@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, Spinner, Alert, ProgressBar, ButtonGroup } from 'react-bootstrap';
+import { Button, Spinner, Alert, ProgressBar, ButtonGroup, Form } from 'react-bootstrap';
 import { getAudiobookProgress, updateAudiobookProgress, logListeningActivity } from '../utils/api';
 import { formatTime } from '../utils/helpers';
 
@@ -16,6 +16,20 @@ const AudiobookPlayer = ({ book }) => {
   const [playbackPositionLoaded, setPlaybackPositionLoaded] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1.0);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false); // State for when play is clicked but audio not ready
+  const lastKnownPositionRef = useRef(0); // Cache last known playback position across lessons
+  // --- Volume State ---
+  const [volume, setVolume] = useState(1.0); // 1.0 = max volume
+  // --- Mute State ---
+  const [isMuted, setIsMuted] = useState(false);
+  const [volumeBeforeMute, setVolumeBeforeMute] = useState(1.0);
+
+  // Sync audio element volume with state, considering mute
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : volume;
+    }
+  }, [volume, isMuted]);
+  const lastKnownTrackIndexRef = useRef(0); // Cache last known track index across lessons
 
   // Refs
   const saveIntervalRef = useRef(null);
@@ -37,12 +51,14 @@ const AudiobookPlayer = ({ book }) => {
           console.log(`[AudioPlayer Load] Received progress: Track ID ${progress.currentAudiobookTrackId}, Position ${progress.currentAudiobookPosition}. Current Book ID: ${bookId}`);
           if (lastTrackIndex !== -1) {
             setCurrentTrackIndex(lastTrackIndex);
+            lastKnownTrackIndexRef.current = lastTrackIndex; // Update cached track index when restoring saved progress
             // Store the loaded position in the ref instead of setting state immediately
             initialSeekPositionRef.current = progress.currentAudiobookPosition;
             console.log(`[AudioPlayer Load] Will attempt to resume Book ${bookId} at Track Index ${lastTrackIndex} (ID: ${progress.currentAudiobookTrackId}), Position ${progress.currentAudiobookPosition}`);
           } else {
              console.warn(`[AudioPlayer Load] Last saved track ID ${progress.currentAudiobookTrackId} not found in tracks for current Book ID ${bookId}. Starting from beginning.`);
              setCurrentTrackIndex(0);
+             lastKnownTrackIndexRef.current = 0; // Reset cached track index if no saved progress
              // Ensure initial seek ref is cleared if starting from beginning
              initialSeekPositionRef.current = null;
              console.log(`[AudioPlayer Log] setCurrentTime(0) from loadLastPosition (track not found or no progress)`);
@@ -50,11 +66,13 @@ const AudiobookPlayer = ({ book }) => {
           }
         } else {
             // No progress saved for this book
-            console.log(`[AudioPlayer Load] No progress found for Book ID ${bookId}. Starting from beginning.`);
-            setCurrentTrackIndex(0);
+            console.log(`[AudioPlayer Load] No progress found for Book ID ${bookId}. Restoring cached position if available.`);
+            const cachedTrackIndex = lastKnownTrackIndexRef.current || 0;
+            const cachedPosition = lastKnownPositionRef.current || 0;
+            console.log(`[AudioPlayer Log] Restoring cached track index ${cachedTrackIndex} and position ${cachedPosition} (no progress found)`);
+            setCurrentTrackIndex(cachedTrackIndex);
             initialSeekPositionRef.current = null;
-            console.log(`[AudioPlayer Log] setCurrentTime(0) from loadLastPosition (no progress found)`);
-            setCurrentTime(0);
+            setCurrentTime(cachedPosition);
         }
       } catch (err) {
         console.error("Failed to load playback position:", err);
@@ -138,6 +156,8 @@ const AudiobookPlayer = ({ book }) => {
       if (isMounted) {
           // console.log(`[AudioPlayer Log] setCurrentTime from handleTimeUpdate: ${audio.currentTime}`); // Very noisy, disable normally
           setCurrentTime(audio.currentTime);
+          lastKnownPositionRef.current = audio.currentTime; // Update cached position
+          lastKnownTrackIndexRef.current = currentTrackIndex; // Update cached track index
       }
     };
 
@@ -170,6 +190,10 @@ const AudiobookPlayer = ({ book }) => {
         setCurrentTime(0); // Reset time for the new track visually
         initialSeekPositionRef.current = 0; // Ensure seek ref is 0 for next track
         setIsPlaying(true); // Set intent to play the next track automatically
+
+        // Save progress immediately for the new track at position 0
+        const nextTrack = audiobookTracks[nextIndex];
+        saveProgress(false, nextTrack, 0);
       } else {
         console.log("[AudioPlayer] Last track finished.");
         setIsPlaying(false); // Stop playing after the last track
@@ -196,8 +220,8 @@ const AudiobookPlayer = ({ book }) => {
       audio.src = newSrc;
       sourceChanged = true;
       setDuration(0); // Reset duration
-      console.log(`[AudioPlayer Log] setCurrentTime(0) from useEffect (src changed)`);
-      setCurrentTime(0); // Reset time state
+      // console.log(`[AudioPlayer Log] setCurrentTime(0) from useEffect (src changed)`); // Removed - Let loadedmetadata handle initial time
+      // setCurrentTime(0); // Reset time state - Let loadedmetadata handle initial time
       initialSeekPositionRef.current = 0; // Explicitly set initial seek to 0 for new track
       setIsLoadingAudio(isPlaying); // Set loading if intent was to play
     }
@@ -382,11 +406,11 @@ const AudiobookPlayer = ({ book }) => {
 
 
   // --- Save Progress ---
-  const saveProgress = useCallback(async (isUnmounting = false) => {
+  const saveProgress = useCallback(async (isUnmounting = false, trackOverride = null, positionOverride = null) => {
     // Use refs and state directly here
     const audio = audioRef.current;
-    const track = currentTrack; // currentTrack is derived state, stable if dependencies are stable
-    const position = audio ? audio.currentTime : null;
+    const track = trackOverride || currentTrack;
+    const position = positionOverride !== null ? positionOverride : (audio ? audio.currentTime : null);
     const ready = audio ? audio.readyState : null;
 
     if (!track || !audio || ready === 0) {
@@ -406,6 +430,8 @@ const AudiobookPlayer = ({ book }) => {
       return;
     }
 
+    // *** DEBUG LOG: Check position just before API call in saveProgress ***
+    console.log(`[AudioPlayer Save DEBUG] About to call API. Track ID: ${track?.trackId}, Position: ${position}, isUnmounting: ${isUnmounting}`);
     console.log(`[AudioPlayer Save] Attempting to save progress for Book ${bookId}: Track ID ${track.trackId}, Position ${position}, Unmounting: ${isUnmounting}`);
     try {
       await updateAudiobookProgress(bookId, {
@@ -490,7 +516,9 @@ const AudiobookPlayer = ({ book }) => {
       console.log(`[AudioPlayer Cleanup] Final state check: isPlaying=${isPlaying}, isLoadingAudio=${isLoadingAudio}, bookId=${bookId}, trackId=${track?.trackId}, position=${position}, readyState=${ready}`);
 
       if (audio && ready > 0 && track) { // Use captured ref value 'audio'
-          console.log(`[AudioPlayer Cleanup] Saving final state: Book ${bookId}, Track ${track.trackId}, Pos ${position}`);
+          // *** DEBUG LOG: Check position just before saving in cleanup ***
+          console.log(`[AudioPlayer Cleanup DEBUG] About to save final state. Track ID: ${track.trackId}, Position Read from audioRef.current: ${audio.currentTime}`);
+          console.log(`[AudioPlayer Cleanup] Saving final state: Book ${bookId}, Track ${track.trackId}, Pos ${position}`); // Note: 'position' here uses the value read on line 486
           // Call the useCallback versions directly
           saveProgress(true);
           logListeningTime(true);
@@ -621,8 +649,8 @@ const AudiobookPlayer = ({ book }) => {
             variant="outline-secondary"
             size="sm"
             onClick={() => {
-                console.log(`[AudioPlayer Log] setCurrentTime(0) from prev track button`);
-                setCurrentTime(0); // Reset time state immediately
+                // console.log(`[AudioPlayer Log] setCurrentTime(0) from prev track button`); // Removed - Let loadedmetadata handle initial time
+                // setCurrentTime(0); // Reset time state immediately - Let loadedmetadata handle initial time
                 initialSeekPositionRef.current = 0; // Ensure seek ref is 0
                 setCurrentTrackIndex(prev => Math.max(0, prev - 1));
             }}
@@ -635,8 +663,8 @@ const AudiobookPlayer = ({ book }) => {
             variant="outline-secondary"
             size="sm"
             onClick={() => {
-                console.log(`[AudioPlayer Log] setCurrentTime(0) from next track button`);
-                setCurrentTime(0); // Reset time state immediately
+                // console.log(`[AudioPlayer Log] setCurrentTime(0) from next track button`); // Removed - Let loadedmetadata handle initial time
+                // setCurrentTime(0); // Reset time state immediately - Let loadedmetadata handle initial time
                 initialSeekPositionRef.current = 0; // Ensure seek ref is 0
                 setCurrentTrackIndex(prev => Math.min(audiobookTracks.length - 1, prev + 1));
             }}
@@ -646,6 +674,54 @@ const AudiobookPlayer = ({ book }) => {
             <i className="bi bi-skip-end-fill" />
           </Button>
         </ButtonGroup>
+        {/* Volume Control */}
+        <div className="d-flex align-items-center gap-1 ms-2" style={{ minWidth: 120 }}>
+          <i
+            className={`bi ${isMuted || volume === 0 ? 'bi-volume-mute' : 'bi-volume-up'}`}
+            style={{ fontSize: '1.1rem', color: 'var(--bs-body-color)', cursor: 'pointer' }}
+            title={isMuted ? "Unmute" : "Mute"}
+            onClick={() => {
+              if (!isMuted) {
+                // Mute: Store current volume (or 1.0 if already 0) and set mute state
+                setVolumeBeforeMute(volume === 0 ? 1.0 : volume);
+                setIsMuted(true);
+              } else {
+                // Unmute: Restore volume and clear mute state
+                setIsMuted(false);
+                setVolume(volumeBeforeMute === 0 ? 1.0 : volumeBeforeMute); // Restore to 1.0 if previous was 0
+              }
+            }}
+            aria-label={isMuted ? "Unmute" : "Mute"}
+            tabIndex={0} // Make it focusable
+            role="button" // Indicate it's interactive
+          />
+          <Form.Range
+            min={0}
+            max={1}
+            step={0.01}
+            value={isMuted ? 0 : volume} // Slider reflects mute state
+            onChange={e => {
+              const newVolume = parseFloat(e.target.value);
+              setVolume(newVolume);
+              // If user drags slider to 0, mute. If they drag away from 0, unmute.
+              if (newVolume === 0) {
+                if (!isMuted) {
+                  setVolumeBeforeMute(1.0); // Store 1.0 if muted via slider
+                  setIsMuted(true);
+                }
+              } else {
+                if (isMuted) {
+                  setIsMuted(false);
+                }
+                // Keep track of the last non-zero volume set by the slider
+                setVolumeBeforeMute(newVolume);
+              }
+            }}
+            style={{ width: 80 }}
+            aria-label="Volume"
+            title="Volume"
+          />
+        </div>
       </div>
     </div>
   );

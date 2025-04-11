@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react'; // Added useContext
 // import { useNavigate } from 'react-router-dom'; // Keep commented if not used
-import { Container, Form, Button, Alert, Spinner, Row, Col } from 'react-bootstrap'; // Import Bootstrap components
-import { getLanguages, createAudioLesson } from '../utils/api'; // Import API functions
+import { Container, Form, Button, Alert, Spinner, Row, Col } from 'react-bootstrap';
+import { getAllLanguages, createAudioLesson } from '../utils/api'; // Changed getLanguages to getAllLanguages
+import { SettingsContext } from '../contexts/SettingsContext'; // Import SettingsContext
 // import './CreateAudioLesson.css'; // Remove CSS file import
 
 function CreateAudioLesson() {
@@ -15,16 +16,26 @@ function CreateAudioLesson() {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     // const navigate = useNavigate();
+    const { settings: userSettings } = useContext(SettingsContext); // Get settings from context
 
     // Fetch languages on component mount
     useEffect(() => {
         const fetchLanguages = async () => {
             try {
-                const fetchedLanguages = await getLanguages();
-                setLanguages(fetchedLanguages || []);
-                if (fetchedLanguages && fetchedLanguages.length > 0) {
-                    // Don't default here, let user select
-                    // setLanguageId(fetchedLanguages[0].languageId);
+                const data = await getAllLanguages();
+                setLanguages(data || []);
+
+                // Use default language from context if available and valid
+                const defaultLangId = userSettings?.defaultLanguageId;
+
+                if (data.length > 0) {
+                    const found = data.find(l => l.languageId === defaultLangId);
+                    if (found) {
+                        setLanguageId(found.languageId.toString());
+                    } else {
+                        // Don't default if no user setting, let user select
+                        // setLanguageId(data[0].languageId.toString());
+                    }
                 }
             } catch (err) {
                 setError('Failed to load languages.');
@@ -32,7 +43,8 @@ function CreateAudioLesson() {
             }
         };
         fetchLanguages();
-    }, []);
+        // Re-run if userSettings context changes
+    }, [userSettings?.defaultLanguageId]);
 
     const handleAudioFileChange = (event) => {
         setAudioFile(event.target.files[0]);

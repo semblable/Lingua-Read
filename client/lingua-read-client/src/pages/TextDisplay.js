@@ -3,10 +3,11 @@ import { Container, Card, Spinner, Alert, Button, Modal, Form, Row, Col, Badge, 
 import { useParams, useNavigate } from 'react-router-dom'; // Removed unused Link import
 import { FixedSizeList as List } from 'react-window';
 import {
-  getText, createWord, updateWord, updateLastRead, completeLesson, getBook,
+  getText, createWord, updateWord, updateLastRead, completeText, getBook, // Replaced completeLesson with completeText
   translateText, /*translateSentence,*/ translateFullText, updateUserSettings, // Added updateUserSettings, removed unused getUserSettings
-  batchTranslateWords, addTermsBatch,
-  API_URL
+  batchTranslateWords, addTermsBatch, getLanguage, // Added getLanguage (Phase 3)
+  API_URL,
+  getAudioLessonProgress, updateAudioLessonProgress // Added audio lesson progress API functions
 } from '../utils/api';
 import TranslationPopup from '../components/TranslationPopup';
 import AudiobookPlayer from '../components/AudiobookPlayer'; // Import AudiobookPlayer
@@ -176,6 +177,8 @@ const TextDisplay = () => {
   const [displayMode, setDisplayMode] = useState('audio');
   const [initialAudioTime, setInitialAudioTime] = useState(null); // State for restored time
   const [playbackRate, setPlaybackRate] = useState(1.0); // State for playback speed
+  const [languageConfig, setLanguageConfig] = useState(null); // State for language settings (Phase 3)
+  const [embeddedUrl, setEmbeddedUrl] = useState(null); // State for embedded dictionary iframe URL (Phase 3)
   // --- End State Declarations ---
 
   // --- Helper Functions & Memoized Values (Define BEFORE useEffects that use them) ---
@@ -188,17 +191,9 @@ const TextDisplay = () => {
       });
       if (!response.ok) throw new Error('Failed to fetch language words');
       const allLanguageWords = await response.json();
-      setWords(prevWords => {
-          const prevWordMap = new Map(prevWords.map(w => [w.term.toLowerCase(), w]));
-          allLanguageWords.forEach(langWord => {
-              const key = langWord.term.toLowerCase();
-              // Only add if not already present from the initial text fetch, or update if needed (though API returns full state)
-              if (!prevWordMap.has(key)) {
-                  prevWordMap.set(key, langWord);
-              }
-          });
-          return Array.from(prevWordMap.values());
-      });
+      // Replace the entire words state with the newly fetched data
+      setWords(allLanguageWords);
+      console.log(`[fetchAllLanguageWords] Replaced words state with ${allLanguageWords.length} words from backend.`);
     } catch (error) { console.error('Error fetching language words:', error); }
   }, [setWords]); // Dependency: setWords
 
@@ -271,13 +266,21 @@ const TextDisplay = () => {
 
   const processTextContent = useCallback((content) => {
     if (!content) return [];
-    const wordsRegex = /\p{L}+(['-]\p{L}+)*/gu;
-    const parts = content.split(new RegExp(`(${wordsRegex.source})`, 'gu')).filter(Boolean);
+    const tokenRegex = new RegExp(
+      [
+        "\\p{L}+(['-]\\p{L}+)*", // words with hyphens/apostrophes
+        "[.,!?;:\"“”‘’…—–-]",    // punctuation
+        "\\s+"                   // whitespace
+      ].join("|"),
+      "gu"
+    );
+    const tokens = content.match(tokenRegex) || [];
     let currentKeyIndex = 0;
-    return parts.map((segment) => {
-      if (!segment) return null;
-      if (wordsRegex.test(segment) && segment.match(wordsRegex)?.[0] === segment) {
-        const wordOnly = segment;
+    const wordPattern = /^\p{L}+(['-]\p{L}+)*$/u;
+    return tokens.map((token) => {
+      if (!token) return null;
+      if (wordPattern.test(token)) {
+        const wordOnly = token;
         const wordData = getWordData(wordOnly);
         const wordStatus = wordData ? wordData.status : 0;
         const wordTranslation = wordData ? wordData.translation : null;
@@ -290,7 +293,7 @@ const TextDisplay = () => {
             onMouseEnter={() => setHoveredWordTerm(wordOnly)}
             onMouseLeave={() => setHoveredWordTerm(null)}
           >
-            {segment}
+            {token}
           </span>
         );
         return wordTranslation ? (
@@ -299,7 +302,7 @@ const TextDisplay = () => {
           </OverlayTrigger>
         ) : wordSpan;
       } else {
-        return <React.Fragment key={`sep-${currentKeyIndex++}`}>{segment}</React.Fragment>;
+        return <React.Fragment key={`sep-${currentKeyIndex++}`}>{token}</React.Fragment>;
       }
     }).filter(Boolean);
   }, [getWordData, getWordStyle, handleWordClick, setHoveredWordTerm]);
@@ -377,20 +380,40 @@ const TextDisplay = () => {
           setSrtLines(parseSrtContent(data.srtContent));
           setDisplayMode('audio');
 
-          // --- Restore Audio Time ---
-          const savedTime = localStorage.getItem(`audioTime-${textId}`);
-          if (savedTime && !isNaN(parseFloat(savedTime))) {
-             console.log(`[Audio Restore] Found saved time: ${savedTime}`);
-             setInitialAudioTime(parseFloat(savedTime));
-          } else {
-             console.log(`[Audio Restore] No valid saved time found for textId: ${textId}`);
-          }
+          // --- Restore Audio Time from Backend ---
+          getAudioLessonProgress(textId).then(progress => {
+            if (progress && progress.currentPosition != null && progress.currentPosition > 0) {
+              console.log(`[Audio Restore - Backend] Restored time: ${progress.currentPosition} for textId: ${textId}`);
+              setInitialAudioTime(progress.currentPosition); // Set state to trigger seek on metadata load
+            } else {
+              console.log(`[Audio Restore - Backend] No progress found or position is 0 for textId: ${textId}.`);
+              setInitialAudioTime(0); // Ensure it starts at 0 if no progress
+            }
+          }).catch(err => {
+            console.error("[Audio Restore - Backend] Failed to get audio lesson progress:", err);
+            setInitialAudioTime(0); // Start at 0 on error
+          });
           // --- End Restore Audio Time ---
 
         } else {
           setIsAudioLesson(false); setAudioSrc(null); setSrtLines([]); setDisplayMode('text');
         }
-        if (data.languageId) await fetchAllLanguageWords(data.languageId);
+        // Fetch all words for the language AND the language configuration itself (Phase 3)
+        if (data.languageId) {
+           await fetchAllLanguageWords(data.languageId);
+           try {
+               // Assuming getLanguage exists in api.js from Phase 1/2
+               const langConfigData = await getLanguage(data.languageId); // Make sure getLanguage is imported
+               setLanguageConfig(langConfigData);
+               console.log('[Language Config] Fetched:', langConfigData);
+           } catch (langErr) {
+               console.error('Failed to fetch language configuration:', langErr);
+               setError(prev => `${prev} (Warning: Failed to load language config)`);
+               setLanguageConfig(null); // Ensure it's null on error
+           }
+        } else {
+            setLanguageConfig(null); // Reset if no languageId
+        }
         if (data.bookId) {
           try {
             await updateLastRead(data.bookId, data.textId);
@@ -420,11 +443,15 @@ const TextDisplay = () => {
       console.log(`[TextDisplay Cleanup] State at cleanup: isAudioLesson=${isAudioLesson}, text exists=${!!text}, languageId=${text?.languageId}`);
       try {
         // Save Current Playback Position using the variable captured in the effect scope
+        // Save Current Playback Position using the variable captured in the effect scope
         if (currentAudioElement && isAudioLesson) {
           const currentTime = currentAudioElement.currentTime;
           if (currentTime > 0) {
-            console.log(`[Audio Save - Unmount] Saving position: ${currentTime} for textId: ${textId}`);
-            localStorage.setItem(`audioTime-${textId}`, currentTime.toString());
+            console.log(`[Audio Save - Unmount] Saving position via API: ${currentTime} for textId: ${textId}`);
+            // Use API instead of localStorage
+            updateAudioLessonProgress(textId, { currentPosition: currentTime })
+              .then(() => console.log(`[Audio Save - Unmount API] Success for textId: ${textId}`))
+              .catch(err => console.error(`[Audio Save - Unmount API] Failed for textId: ${textId}:`, err));
           }
         }
 
@@ -527,9 +554,14 @@ const TextDisplay = () => {
       if (isAudioLesson && audioCurrentTime > 0) { // Only save if playing and valid time
           const now = Date.now();
           if (now - lastSaveTimeRef.current > saveInterval) {
-              console.log(`[Audio Save - Throttled] Saving time: ${audioCurrentTime} for textId: ${textId}`);
-              localStorage.setItem(`audioTime-${textId}`, audioCurrentTime.toString());
-              lastSaveTimeRef.current = now;
+              console.log(`[Audio Save - Throttled API] Saving time: ${audioCurrentTime} for textId: ${textId}`);
+              // Use API instead of localStorage
+              updateAudioLessonProgress(textId, { currentPosition: audioCurrentTime })
+                .then(() => {
+                  console.log(`[Audio Save - Throttled API] Success for textId: ${textId}`);
+                  lastSaveTimeRef.current = Date.now(); // Update last save time only on success
+                })
+                .catch(err => console.error(`[Audio Save - Throttled API] Failed for textId: ${textId}:`, err));
           }
       }
   }, [audioCurrentTime, isAudioLesson, textId]); // Depend on time, lesson status, and textId
@@ -650,9 +682,23 @@ const TextDisplay = () => {
         const translations = await batchTranslateWords(unknownWords, 'EN', text.languageCode);
         const originalCaseMap = new Map();
         textWords.forEach(w => { const lower = w.toLowerCase(); if (!originalCaseMap.has(lower)) { originalCaseMap.set(lower, w); } });
-        const termsToAdd = unknownWords.map(word => ({ term: originalCaseMap.get(word) || word, translation: translations[word.toLowerCase()] || '' })).filter(t => t.translation);
+        const termsToAdd = unknownWords.map(word => ({
+          term: originalCaseMap.get(word) || word,
+          translation: translations[word.toLowerCase()] || ''
+        })).filter(t => t.translation);
+        
         if (termsToAdd.length === 0) { alert("No translations received."); setTranslatingUnknown(false); return; } // Exit early
-        await addTermsBatch(text.languageId, termsToAdd);
+        
+        // Two-step workflow: first fetch translations, then save terms+translations
+        try {
+          await addTermsBatch(text.languageId, termsToAdd);
+        } catch (saveError) {
+          console.error("Error saving translated terms:", saveError);
+          setTranslateUnknownError(`Failed to save terms: ${saveError.message}`);
+          alert(`Error saving terms: ${saveError.message}`);
+          setTranslatingUnknown(false);
+          return;
+        }
         await fetchAllLanguageWords(text.languageId);
         alert(`Successfully translated and updated ${termsToAdd.length} words.`);
       } catch (err) { console.error("Error translating unknown words:", err); setTranslateUnknownError(`Failed: ${err.message}`); alert(`Error: ${err.message}`); }
@@ -680,13 +726,22 @@ const TextDisplay = () => {
     };
 
    const handleCompleteLesson = async () => {
-      if (!text?.bookId) return;
+      if (!text?.textId) return; // Require at least textId
       setCompleting(true);
       try {
-        const bookStats = await completeLesson(text.bookId, text.textId);
-        if (globalSettings.showProgressStats) { setStats(bookStats); setShowStatsModal(true); } // Use globalSettings
-        else if (globalSettings.autoAdvanceToNextLesson && nextTextId) { navigate(`/texts/${nextTextId}`); } // Use globalSettings
-        else { navigate(`/books/${text.bookId}`); }
+        // Call the correct API endpoint using the imported completeText function
+        const textStats = await completeText(text.textId);
+        // If standalone text, always go back to texts page after completion
+        if (!text?.bookId) {
+            navigate('/texts');
+        } else if (globalSettings.autoAdvanceToNextLesson && nextTextId) {
+            navigate(`/texts/${nextTextId}`);
+        } else if (globalSettings.showProgressStats) {
+            setStats(textStats); // Use the stats returned from completeText
+            setShowStatsModal(true);
+        } else {
+            navigate(`/books/${text.bookId}`);
+        }
       } catch (error) { alert(`Failed to complete lesson: ${error.message}`); }
       finally { setCompleting(false); }
     };
@@ -819,18 +874,59 @@ const TextDisplay = () => {
           <div className="d-flex flex-wrap gap-1 mt-2">
              {[1, 2, 3, 4, 5].map(s => <Button key={s} variant="outline-secondary" size="sm" className="py-0 px-2" onClick={() => handleSaveWord(s)} disabled={processingWord || isTranslating || !selectedWord}>{s}</Button>)}
           </div>
+
+          {/* --- Phase 3: Dictionary Buttons --- */}
+          {languageConfig?.dictionaries && selectedWord && (
+            <div className="mt-3 pt-2 border-top">
+              <h6 className="mb-2 small text-muted">Dictionaries</h6>
+              <div className="d-flex flex-wrap gap-1">
+                {languageConfig.dictionaries
+                  .filter(dict => dict.isActive && dict.purpose === 'terms')
+                  .sort((a, b) => a.sortOrder - b.sortOrder)
+                  .map(dict => {
+                    const handleDictClick = () => {
+                      if (!selectedWord) return;
+                      const term = encodeURIComponent(selectedWord); // Ensure encoding
+                      const url = dict.urlTemplate.replace('###', term);
+                      console.log(`[Dictionary] Clicked: ${dict.dictionaryId}, Type: ${dict.displayType}, URL: ${url}`);
+                      if (dict.displayType === 'popup') {
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                        setEmbeddedUrl(null); // Clear any existing embedded view
+                      } else if (dict.displayType === 'embedded') {
+                        setEmbeddedUrl(url);
+                      }
+                    };
+                    // Attempt to get a simple name from the URL
+                    let buttonText = `Dict ${dict.sortOrder}`;
+                    try {
+                        const urlObj = new URL(dict.urlTemplate);
+                        buttonText = urlObj.hostname.replace(/^www\./, '').split('.')[0];
+                        buttonText = buttonText.charAt(0).toUpperCase() + buttonText.slice(1);
+                    } catch (e) { /* Ignore invalid URL for naming */ }
+
+                    return (
+                      <Button key={dict.dictionaryId} variant="outline-info" size="sm" onClick={handleDictClick} title={dict.urlTemplate}>
+                        {buttonText}
+                      </Button>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+          {/* --- End Phase 3 --- */}
+
         </div>
      );
   };
   // --- End Rendering Logic ---
-
-
   // --- Loading/Error/NotFound States ---
   if (loading) { return <Container className="py-5 text-center"><Spinner animation="border" /></Container>; }
   if (error) { return <Container className="py-5"><Alert variant="danger">{error}<Button onClick={() => navigate(-1)}>Back</Button></Alert></Container>; }
   if (!text) { return <Container className="py-5"><Alert variant="warning">Text not found<Button onClick={() => navigate('/texts')}>Back</Button></Alert></Container>; }
   // --- End Loading/Error States ---
 
+      // DEBUG: Log isAudioLesson state before rendering
+      console.log(`[Render Check] isAudioLesson state: ${isAudioLesson}`);
 
   // --- Main Return JSX ---
   return (
@@ -897,8 +993,15 @@ const TextDisplay = () => {
                {text && !loading && ( <Button variant="info" size="sm" onClick={handleFullTextTranslation} className="me-1">Translate Text</Button> )}
                {text && !loading && ( <Button variant="secondary" size="sm" onClick={handleTranslateUnknownWords} disabled={translatingUnknown} className="ms-1" title="Translate unknown/learning words">{translatingUnknown ? <Spinner size="sm"/> : 'Translate ?'}</Button> )}
                {text && !loading && ( <Button variant="outline-success" size="sm" onClick={handleMarkAllUnknownAsKnown} disabled={isMarkingAll} className="ms-1" title="Mark all untracked words as Known">{isMarkingAll ? <Spinner size="sm"/> : 'Mark All Known'}</Button> )}
-               {text?.bookId && ( <Button variant="outline-primary" size="sm" onClick={() => navigate(`/books/${text.bookId}`)}>Back to Book</Button> )}
-               {!text?.bookId && ( <Button variant="outline-secondary" size="sm" onClick={() => navigate('/texts')}>Back to Texts</Button> )}
+               {/* Add Complete Lesson button here specifically for Audio Lessons */}
+               {/* Show top button ONLY for standalone audio lessons */}
+               {isAudioLesson && !text?.bookId && (
+                   <Button variant="success" onClick={handleCompleteLesson} disabled={completing} size="sm" className="ms-1">
+                       {completing ? <Spinner animation="border" size="sm" /> : (nextTextId === null ? 'Finish Book' : 'Complete Lesson')}
+                   </Button>
+               )}
+               {text?.bookId && ( <Button variant="outline-primary" size="sm" onClick={() => navigate(`/books/${text.bookId}`)} className="ms-1">Back to Book</Button> )}
+               {!text?.bookId && ( <Button variant="outline-secondary" size="sm" onClick={() => navigate('/texts')} className="ms-1">Back to Texts</Button> )}
              </div>
            </div>
            {translateUnknownError && <Alert variant="danger" className="mt-1 mb-0 p-1 small">{translateUnknownError}</Alert>}
@@ -936,7 +1039,8 @@ const TextDisplay = () => {
              <div className="flex-grow-1" ref={textContentRef}>
                {isAudioLesson && displayMode === 'audio' ? renderAudioTranscript() : renderStandardText()}
              </div>
-             {text?.bookId && (
+             {/* Show bottom button for regular texts OR any text within a book */}
+             {(!isAudioLesson || text?.bookId) && (
                 <div className="mt-auto pt-2 text-end px-2 pb-2">
                     <Button variant="success" onClick={handleCompleteLesson} disabled={completing} size="sm">
                         {completing ? <Spinner animation="border" size="sm" /> : (nextTextId === null ? 'Finish Book' : 'Complete Lesson')}
@@ -952,7 +1056,30 @@ const TextDisplay = () => {
         <div className="right-panel" style={{ width: `${100 - leftPanelWidth}%`, height: 'calc(100vh - 130px)', overflowY: 'auto', padding: '6px', position: 'relative' }}>
            <Card className="border-0 h-100"><Card.Body className="p-2 d-flex flex-column">
              <h5 className="mb-2 flex-shrink-0">Word Info</h5>
-             <div className="flex-grow-1" style={{ overflowY: 'auto' }}>{renderSidePanel()}</div>
+             <div className="flex-grow-1" style={{ overflowY: 'auto', paddingBottom: '5px' }}>{renderSidePanel()}</div>
+
+             {/* --- Phase 3: Embedded Dictionary Iframe --- */}
+             {embeddedUrl && (
+                <div className="mt-2 pt-2 border-top flex-shrink-0" style={{ position: 'relative', height: '40%', minHeight: '150px' }}>
+                   <Button
+                     variant="light"
+                     size="sm"
+                     onClick={() => setEmbeddedUrl(null)}
+                     style={{ position: 'absolute', top: '5px', right: '5px', zIndex: 10, padding: '0.1rem 0.3rem', lineHeight: 1 }}
+                     title="Close Dictionary View"
+                   >
+                     &times; {/* Close icon */}
+                   </Button>
+                   <iframe
+                     src={embeddedUrl}
+                     title="Embedded Dictionary"
+                     style={{ width: '100%', height: '100%', border: 'none' }}
+                     sandbox="allow-scripts allow-same-origin allow-popups allow-forms" // Security sandbox
+                     referrerPolicy="no-referrer" // Privacy
+                   ></iframe>
+                </div>
+             )}
+             {/* --- End Phase 3 --- */}
            </Card.Body></Card>
         </div>
       </div>

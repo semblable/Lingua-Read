@@ -19,13 +19,15 @@ namespace LinguaReadApi.Services
         private readonly string _apiKey;
         private readonly string _baseUrl;
         private readonly ILogger<GeminiTranslationService> _logger;
+        private readonly ILanguageService _languageService; // Added LanguageService dependency
 
-        public GeminiTranslationService(IConfiguration configuration, ILogger<GeminiTranslationService> logger)
+        public GeminiTranslationService(IConfiguration configuration, ILogger<GeminiTranslationService> logger, ILanguageService languageService) // Added languageService parameter
         {
             _httpClient = new HttpClient();
             _apiKey = configuration["Gemini:ApiKey"] ?? throw new ArgumentNullException("Gemini:ApiKey is missing in configuration");
             _baseUrl = configuration["Gemini:BaseUrl"] ?? "https://generativelanguage.googleapis.com/v1beta";
             _logger = logger;
+            _languageService = languageService; // Store injected service
             
             _logger.LogInformation("GeminiTranslationService initialized");
             _logger.LogDebug($"Using base URL: {_baseUrl}");
@@ -41,10 +43,27 @@ namespace LinguaReadApi.Services
 
             try
             {
-                _logger.LogInformation($"Translating text ({text.Length} chars) from {sourceLanguage} to {targetLanguage}");
-                
-                // Prepare a clear prompt specifically for translation
-                string prompt = $"Translate the following text from {sourceLanguage} to {targetLanguage}. Maintain all formatting, punctuation, and special characters. Return ONLY the translated text with no additional text.\n\nText to translate: {text}";
+                // --- Determine the final target language code ---
+                string finalGeminiTargetCode = targetLanguage; // Default to the requested target language
+
+                if (!string.IsNullOrEmpty(sourceLanguage))
+                {
+                    // Fetch all languages and find the one matching the source code
+                    var allLanguages = await _languageService.GetAllLanguagesAsync();
+                    var sourceLanguageConfig = allLanguages.FirstOrDefault(l => l.Code.Equals(sourceLanguage, StringComparison.OrdinalIgnoreCase));
+
+                    if (sourceLanguageConfig != null && !string.IsNullOrEmpty(sourceLanguageConfig.GeminiTargetCode))
+                    {
+                        finalGeminiTargetCode = sourceLanguageConfig.GeminiTargetCode;
+                        _logger.LogInformation("Using configured Gemini target code '{ConfiguredCode}' for source '{SourceCode}' instead of requested '{RequestedCode}'.", finalGeminiTargetCode, sourceLanguage, targetLanguage);
+                    }
+                }
+                // --- End determining target code ---
+
+                _logger.LogInformation($"Translating text ({text.Length} chars) from {sourceLanguage} to {finalGeminiTargetCode}");
+
+                // Prepare a clear prompt specifically for translation using the final target code
+                string prompt = $"Translate the following text from {sourceLanguage} to {finalGeminiTargetCode}. Maintain all formatting, punctuation, and special characters. Return ONLY the translated text with no additional text.\n\nText to translate: {text}";
 
                 // Create request payload according to Gemini API specs
                 var requestPayload = new GeminiRequest

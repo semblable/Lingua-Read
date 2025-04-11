@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 using LinguaReadApi.Data;
 using LinguaReadApi.Models;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.Extensions.Logging; // Add this
-using System.IO; // Added for Path and File operations
-
+using Microsoft.Extensions.Logging;
+using System.IO;
+using LinguaReadApi.Services;
 namespace LinguaReadApi.Controllers
 {
     [Route("api/[controller]")]
@@ -20,13 +20,15 @@ namespace LinguaReadApi.Controllers
     public class TextsController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly ILogger<TextsController> _logger; // Add logger field
-        private const int MaxRecentTexts = 5; // Define max recent texts to return
+        private readonly ILogger<TextsController> _logger;
+        private readonly IUserActivityService _userActivityService; // Inject activity service
+        private const int MaxRecentTexts = 5;
 
-        public TextsController(AppDbContext context, ILogger<TextsController> logger) // Inject logger
+        public TextsController(AppDbContext context, ILogger<TextsController> logger, IUserActivityService userActivityService) // Inject services
         {
             _context = context;
-            _logger = logger; // Assign logger
+            _logger = logger;
+            _userActivityService = userActivityService; // Assign service
         }
 
         // GET: api/texts
@@ -182,6 +184,63 @@ namespace LinguaReadApi.Controllers
             _context.Texts.Add(text);
             await _context.SaveChangesAsync();
 
+            // --- Parse and link words ---
+            var content = text.Content;
+            var languageId = text.LanguageId;
+
+            // Basic word parsing: split on whitespace and punctuation
+            var separators = new char[] { ' ', '\t', '\r', '\n', '.', ',', ';', ':', '!', '?', '\"', '\'', '(', ')', '[', ']', '{', '}', '-', '_', '/', '\\', '|', '@', '#', '$', '%', '^', '&', '*', '+', '=', '<', '>', '`', '~' };
+            var wordsInText = content.Split(separators, StringSplitOptions.RemoveEmptyEntries)
+                                     .Select(w => w.Trim().ToLowerInvariant())
+                                     .Where(w => !string.IsNullOrWhiteSpace(w))
+                                     .ToList();
+
+            var uniqueWords = wordsInText.Distinct().ToList();
+
+            // Fetch existing words for this user and language
+            var existingWords = await _context.Words
+                .Where(w => w.UserId == userId && w.LanguageId == languageId && uniqueWords.Contains(w.Term.ToLower()))
+                .ToDictionaryAsync(w => w.Term.ToLower());
+
+            var newWords = new List<Word>();
+
+            foreach (var wordTerm in uniqueWords)
+            {
+                if (!existingWords.ContainsKey(wordTerm))
+                {
+                    var newWord = new Word
+                    {
+                        UserId = userId,
+                        LanguageId = languageId,
+                        Term = wordTerm,
+                        Status = 0, // Default status (unknown/learning)
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Words.Add(newWord);
+                    newWords.Add(newWord);
+                    existingWords[wordTerm] = newWord; // Add to dictionary for linking
+                }
+            }
+
+            await _context.SaveChangesAsync(); // Save new words to get their IDs
+
+            // Link all word occurrences in the text
+            foreach (var wordTerm in wordsInText)
+            {
+                if (existingWords.TryGetValue(wordTerm, out var word))
+                {
+                    var textWord = new TextWord
+                    {
+                        TextId = text.TextId,
+                        WordId = word.WordId,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.TextWords.Add(textWord);
+                }
+            }
+
+            await _context.SaveChangesAsync(); // Save all TextWord links
+
             var language = await _context.Languages.FindAsync(text.LanguageId);
 
             var textDto = new TextDto
@@ -291,6 +350,86 @@ namespace LinguaReadApi.Controllers
 
                 _context.Texts.Add(text);
                 await _context.SaveChangesAsync();
+
+                // --- Parse and link words from transcript ---
+                var content = transcript;
+                var languageId = text.LanguageId;
+
+                // Basic word parsing: split on whitespace and punctuation
+                var separators = new char[] { ' ', '\t', '\r', '\n', '.', ',', ';', ':', '!', '?', '\"', '\'', '(', ')', '[', ']', '{', '}', '-', '_', '/', '\\', '|', '@', '#', '$', '%', '^', '&', '*', '+', '=', '<', '>', '`', '~' };
+                var wordsInText = content.Split(separators, StringSplitOptions.RemoveEmptyEntries)
+                                         .Select(w => w.Trim().ToLowerInvariant())
+                                         .Where(w => !string.IsNullOrWhiteSpace(w))
+                                         .ToList();
+
+                var uniqueWords = wordsInText.Distinct().ToList();
+
+                // Fetch existing words for this user and language
+                var existingWordsQuery = _context.Words
+                    .Where(w => w.UserId == userId && w.LanguageId == languageId && uniqueWords.Contains(w.Term.ToLower()));
+
+                // --- DEBUG LOGGING START ---
+                var wordsBeforeDict = await existingWordsQuery.ToListAsync(); // Fetch results first
+                _logger.LogInformation("User {UserId}, Language {LanguageId}: Found {Count} existing words matching terms from the text.", userId, languageId, wordsBeforeDict.Count);
+
+                var wordsGroupedByLowerTerm = wordsBeforeDict
+                    .GroupBy(w => w.Term.ToLowerInvariant())
+                    .Where(g => g.Count() > 1) // Find terms that appear more than once after lowercasing
+                    .ToList();
+
+                if (wordsGroupedByLowerTerm.Any())
+                {
+                    foreach (var group in wordsGroupedByLowerTerm)
+                    {
+                        _logger.LogWarning("User {UserId}, Language {LanguageId}: Duplicate key potential for term '{Term}'. Found {Count} entries: {WordIds}",
+                            userId, languageId, group.Key, group.Count(), string.Join(", ", group.Select(w => w.Term)));
+                    }
+                    // Log all fetched terms for broader context if duplicates found
+                     _logger.LogInformation("User {UserId}, Language {LanguageId}: All fetched terms before dictionary creation: {Terms}", userId, languageId, string.Join(", ", wordsBeforeDict.Select(w => $"'{w.Term}'")));
+                }
+                // --- DEBUG LOGGING END ---
+
+                // Now attempt to create the dictionary (this might still throw, but we have logs)
+                var existingWords = wordsBeforeDict.ToDictionary(w => w.Term.ToLowerInvariant());
+
+                var newWords = new List<Word>();
+
+                foreach (var wordTerm in uniqueWords)
+                {
+                    if (!existingWords.ContainsKey(wordTerm))
+                    {
+                        var newWord = new Word
+                        {
+                            UserId = userId,
+                            LanguageId = languageId,
+                            Term = wordTerm,
+                            Status = 0, // Default status (unknown/learning)
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        _context.Words.Add(newWord);
+                        newWords.Add(newWord);
+                        existingWords[wordTerm] = newWord; // Add to dictionary for linking
+                    }
+                }
+
+                await _context.SaveChangesAsync(); // Save new words to get their IDs
+
+                // Link all word occurrences in the transcript
+                foreach (var wordTerm in wordsInText)
+                {
+                    if (existingWords.TryGetValue(wordTerm, out var word))
+                    {
+                        var textWord = new TextWord
+                        {
+                            TextId = text.TextId,
+                            WordId = word.WordId,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        _context.TextWords.Add(textWord);
+                    }
+                }
+
+                await _context.SaveChangesAsync(); // Save all TextWord links
 
                 // --- 4. Return Response ---
                 var language = await _context.Languages.FindAsync(text.LanguageId);
@@ -715,6 +854,129 @@ namespace LinguaReadApi.Controllers
         {
             return await _context.Texts.AnyAsync(e => e.TextId == id && e.UserId == userId);
         }
+
+        // PUT: api/texts/{textId}/complete
+        [HttpPut("{textId}/complete")] // Corrected route: combines with controller route "/api/texts"
+        public async Task<ActionResult<TextStatsDto>> CompleteText(int textId)
+        {
+            var userId = GetUserId();
+
+            var text = await _context.Texts
+                .Include(t => t.TextWords)
+                    .ThenInclude(tw => tw.Word)
+                .FirstOrDefaultAsync(t => t.TextId == textId && t.UserId == userId);
+
+            if (text == null)
+            {
+                return NotFound("Text not found.");
+            }
+
+            // --- 1. Re-parse and re-link words to ensure accurate stats ---
+            // Remove old TextWords links
+            var oldLinks = _context.TextWords.Where(tw => tw.TextId == text.TextId);
+            _context.TextWords.RemoveRange(oldLinks);
+            await _context.SaveChangesAsync();
+
+            // Parse and link words from current text content
+            var content = text.Content;
+            var languageId = text.LanguageId;
+            var separators = new char[] { ' ', '\t', '\r', '\n', '.', ',', ';', ':', '!', '?', '\"', '\'', '(', ')', '[', ']', '{', '}', '-', '_', '/', '\\', '|', '@', '#', '$', '%', '^', '&', '*', '+', '=', '<', '>', '`', '~' };
+            var wordsInText = content.Split(separators, StringSplitOptions.RemoveEmptyEntries)
+                                     .Select(w => w.Trim().ToLowerInvariant())
+                                     .Where(w => !string.IsNullOrWhiteSpace(w))
+                                     .ToList();
+            var uniqueWords = wordsInText.Distinct().ToList();
+
+            // Fetch existing words for this user and language
+            var existingWords = await _context.Words
+                .Where(w => w.UserId == userId && w.LanguageId == languageId && uniqueWords.Contains(w.Term.ToLower()))
+                .ToDictionaryAsync(w => w.Term.ToLower());
+
+            var newWords = new List<Word>();
+            foreach (var wordTerm in uniqueWords)
+            {
+                if (!existingWords.ContainsKey(wordTerm))
+                {
+                    var newWord = new Word
+                    {
+                        UserId = userId,
+                        LanguageId = languageId,
+                        Term = wordTerm,
+                        Status = 0,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Words.Add(newWord);
+                    newWords.Add(newWord);
+                    existingWords[wordTerm] = newWord;
+                }
+            }
+            await _context.SaveChangesAsync();
+
+            // Link all word occurrences in the text
+            foreach (var wordTerm in wordsInText)
+            {
+                if (existingWords.TryGetValue(wordTerm, out var word))
+                {
+                    var textWord = new TextWord
+                    {
+                        TextId = text.TextId,
+                        WordId = word.WordId,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.TextWords.Add(textWord);
+                }
+            }
+            await _context.SaveChangesAsync();
+
+            // Re-fetch text with updated links
+            await _context.Entry(text).Collection(t => t.TextWords).Query().Include(tw => tw.Word).LoadAsync();
+
+            var totalWords = text.TextWords.Count;
+            var knownWords = text.TextWords.Count(tw => tw.Word.Status == 5); // Status 5 = Known
+            var learningWords = text.TextWords.Count(tw => tw.Word.Status > 0 && tw.Word.Status < 5); // Status 1-4 = Learning
+
+            // --- 2. Log Activity ---
+            try
+            {
+                // Log completion activity (TODO: Implement the service method fully)
+                await _userActivityService.LogTextCompletedActivity(userId, text.LanguageId, textId, totalWords, text.IsAudioLesson);
+                // TODO: Optionally call UpdateUserLanguageStats here or within LogTextCompletedActivity
+                // await _userActivityService.UpdateUserLanguageStats(userId, text.LanguageId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to log TextCompleted activity or update stats for UserId {UserId}, TextId {TextId}", userId, textId);
+                // Decide if this should prevent completion - likely not critical, just log.
+            }
+
+            // --- 3. Update Text Status (If applicable) ---
+            // If a 'IsCompleted' or similar status exists on the Text model, update it here.
+            // text.IsCompleted = true;
+            // await _context.SaveChangesAsync(); // Save if status updated
+
+            // --- 4. Return Stats ---
+            var stats = new TextStatsDto
+            {
+                TotalWords = totalWords,
+                KnownWords = knownWords,
+                LearningWords = learningWords,
+                CompletionPercentage = totalWords > 0 ? (double)knownWords / totalWords * 100 : 0
+            };
+
+            // Use Ok() as we are returning stats. Use NoContent() if not returning anything.
+            return Ok(stats);
+        }
+
+    } // End of Controller Class (Ensure this closing brace exists)
+
+    // DTO Definitions (Place outside or inside controller class as preferred)
+
+    public class TextStatsDto
+    {
+        public int TotalWords { get; set; }
+        public int KnownWords { get; set; }
+        public int LearningWords { get; set; }
+        public double CompletionPercentage { get; set; }
     }
 
     // DTOs (Data Transfer Objects)

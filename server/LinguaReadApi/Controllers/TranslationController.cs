@@ -14,10 +14,17 @@ namespace LinguaReadApi.Controllers
     public class TranslationController : ControllerBase
     {
         private readonly ITranslationService _translationService;
+        private readonly ILanguageService _languageService; // Inject LanguageService
+        private readonly ILogger<TranslationController> _logger;
 
-        public TranslationController(ITranslationService translationService)
+        public TranslationController(
+            ITranslationService translationService,
+            ILanguageService languageService,
+            ILogger<TranslationController> logger)
         {
             _translationService = translationService;
+            _languageService = languageService; // Assign injected service
+            _logger = logger;
         }
 
         /// <summary>
@@ -69,25 +76,20 @@ namespace LinguaReadApi.Controllers
         /// </summary>
         /// <returns>List of language codes and names</returns>
         [HttpGet("languages")]
-        public ActionResult<IEnumerable<LanguageInfo>> GetSupportedLanguages()
+        public async Task<ActionResult<IEnumerable<LanguageInfo>>> GetSupportedLanguages()
         {
-            // Return a list of languages supported by DeepL
-            var languages = new List<LanguageInfo>
-            {
-                new LanguageInfo { Code = "EN", Name = "English" },
-                new LanguageInfo { Code = "DE", Name = "German" },
-                new LanguageInfo { Code = "FR", Name = "French" },
-                new LanguageInfo { Code = "ES", Name = "Spanish" },
-                new LanguageInfo { Code = "IT", Name = "Italian" },
-                new LanguageInfo { Code = "NL", Name = "Dutch" },
-                new LanguageInfo { Code = "PL", Name = "Polish" },
-                new LanguageInfo { Code = "PT", Name = "Portuguese" },
-                new LanguageInfo { Code = "RU", Name = "Russian" },
-                new LanguageInfo { Code = "JA", Name = "Japanese" },
-                new LanguageInfo { Code = "ZH", Name = "Chinese" }
-            };
+            // Fetch languages marked as active for translation from the service
+            var activeLanguages = await _languageService.GetLanguagesForTranslationAsync();
 
-            return Ok(languages);
+            // Map the Language entities to LanguageInfo DTOs
+            var languageInfos = activeLanguages.Select(lang => new LanguageInfo
+            {
+                // Ensure case consistency if needed (e.g., DeepL might expect uppercase)
+                Code = lang.Code.ToUpperInvariant(),
+                Name = lang.Name
+            }).ToList();
+
+            return Ok(languageInfos);
         }
 
         /// <summary>
@@ -97,6 +99,7 @@ namespace LinguaReadApi.Controllers
         /// <returns>A dictionary mapping original words to their translations.</returns>
         [HttpPost("batch")] // Added route segment "batch"
         public async Task<ActionResult<Dictionary<string, string>>> TranslateBatch([FromBody] BatchTranslationRequest request)
+
         {
             if (request.Words == null || request.Words.Count == 0)
             {
@@ -107,22 +110,11 @@ namespace LinguaReadApi.Controllers
                 return BadRequest("Target language code cannot be empty.");
             }
 
-            try
-            {
-                // SourceLanguageCode is optional for DeepL, service handles null
-                var translations = await _translationService.TranslateBatchAsync(
-                    request.Words,
-                    request.TargetLanguageCode,
-                    request.SourceLanguageCode); // Pass sourceLang if provided
-
-                return Ok(translations);
-            }
-            catch (Exception ex)
-            {
-                // Log the exception details
-                // Consider returning a more specific error response
-                return StatusCode(500, $"Batch translation failed: {ex.Message}");
-            }
+            var translations = await _translationService.TranslateBatchAsync(
+                request.Words,
+                request.TargetLanguageCode,
+                request.SourceLanguageCode);
+            return Ok(translations);
         }
     } // End of Controller class
 

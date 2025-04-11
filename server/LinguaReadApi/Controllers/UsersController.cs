@@ -51,20 +51,39 @@ namespace LinguaReadApi.Controllers
             var wordsByLanguage = words
                 .GroupBy(w => w.LanguageId)
                 .ToDictionary(g => g.Key, g => g.Count());
+
+            // --- Fetch Aggregated User Language Statistics ---
+            var userLangStats = await _context.UserLanguageStatistics
+                .Where(uls => uls.UserId == userId)
+                .Include(uls => uls.Language) // Include Language for name
+                .ToDictionaryAsync(uls => uls.LanguageId); // Dictionary for easy lookup
+
+            // Get language details for languages the user has stats for
+            var languages = userLangStats.Values.Select(uls => uls.Language).Distinct().ToList();
                 
-            // Create language statistics
-            var languages = await _context.Languages
-                .Where(l => wordsByLanguage.Keys.Contains(l.LanguageId))
-                .ToListAsync();
-                
-            var languageStats = languages.Select(l => new LanguageStatisticsDto
+            // --- Create LanguageStatisticsDto using UserLanguageStatistics ---
+            var languageStats = languages.Select(l =>
             {
-                LanguageId = l.LanguageId,
-                LanguageName = l.Name,
-                WordCount = wordsByLanguage.ContainsKey(l.LanguageId) ? wordsByLanguage[l.LanguageId] : 0,
-                TotalWordsRead = l.WordsRead,
-                BookCount = books.Count(b => b.LanguageId == l.LanguageId),
-                FinishedBookCount = books.Count(b => b.LanguageId == l.LanguageId && b.IsFinished)
+                // Get stats from the fetched dictionary, or default if none exist yet
+                var stats = userLangStats.TryGetValue(l.LanguageId, out var uls)
+                    ? uls
+                    : new UserLanguageStatistics { LanguageId = l.LanguageId }; // Default empty stats
+
+                return new LanguageStatisticsDto
+                {
+                    LanguageId = l.LanguageId,
+                    LanguageName = l.Name,
+                    // WordCount (total unique terms known/learning) might still come from 'words' collection
+                    WordCount = wordsByLanguage.ContainsKey(l.LanguageId) ? wordsByLanguage[l.LanguageId] : 0,
+                    // Use cumulative stats from UserLanguageStatistics
+                    TotalWordsRead = (int)stats.TotalWordsRead, // Cast long to int for DTO
+                    TotalTextsCompleted = stats.TotalTextsCompleted,
+                    TotalSecondsListened = (int)stats.TotalSecondsListened, // Cast long to int for DTO
+                    // Book counts can still be calculated from the 'books' collection
+                    BookCount = books.Count(b => b.LanguageId == l.LanguageId),
+                    FinishedBookCount = books.Count(b => b.LanguageId == l.LanguageId && b.IsFinished) // Assuming IsFinished exists on Book model
+                    // Note: UserLanguageStatistics also has TotalBooksCompleted, could use that instead if Book model doesn't have IsFinished
+                };
             }).ToList();
                 
             // Calculate total statistics
@@ -98,32 +117,45 @@ namespace LinguaReadApi.Controllers
         }
 
         [HttpGet("reading-activity")] // Corrected route to match frontend api.js
-        public async Task<IActionResult> GetReadingActivity([FromQuery] string period = "all")
+        public async Task<IActionResult> GetReadingActivity([FromQuery] string period = "all", [FromQuery] int? timezoneOffsetMinutes = null)
         {
-            _logger.LogInformation("Getting reading activity for period: {Period}", period);
+            _logger.LogInformation("Getting reading activity for period: {Period}, timezoneOffsetMinutes: {TimezoneOffset}", period, timezoneOffsetMinutes);
             var userId = GetUserId();
 
             try
             {
                 DateTime startDate;
-                var now = DateTime.UtcNow;
+                DateTime nowUtc = DateTime.UtcNow;
+                DateTime nowLocal;
+
+                if (timezoneOffsetMinutes.HasValue)
+                {
+                    nowLocal = nowUtc.AddMinutes(timezoneOffsetMinutes.Value);
+                }
+                else
+                {
+                    nowLocal = nowUtc;
+                }
 
                 switch (period.ToLower())
                 {
                     case "last_day":
-                        startDate = now.Date; // Start of today
+                        // Start of today in user's local time, converted to UTC
+                        startDate = nowLocal.Date.AddMinutes(-timezoneOffsetMinutes.GetValueOrDefault(0));
                         break;
                     case "last_week":
-                        startDate = now.Date.AddDays(-6); // Start of the week (last 7 days including today)
+                        // Start of 7-day period in user's local time, converted to UTC
+                        startDate = nowLocal.Date.AddDays(-6).AddMinutes(-timezoneOffsetMinutes.GetValueOrDefault(0));
                         break;
                     case "last_month":
-                        startDate = now.Date.AddDays(-29); // Start of the month (last 30 days including today)
+                        // Start of 30-day period in user's local time, converted to UTC
+                        startDate = nowLocal.Date.AddDays(-29).AddMinutes(-timezoneOffsetMinutes.GetValueOrDefault(0));
                         break;
                     case "last_90":
-                        startDate = now.Date.AddDays(-89); // Last 90 days including today
+                        startDate = nowLocal.Date.AddDays(-89).AddMinutes(-timezoneOffsetMinutes.GetValueOrDefault(0));
                         break;
                     case "last_180":
-                        startDate = now.Date.AddDays(-179); // Last 180 days including today
+                        startDate = nowLocal.Date.AddDays(-179).AddMinutes(-timezoneOffsetMinutes.GetValueOrDefault(0));
                         break;
                     case "all":
                     default:
@@ -131,11 +163,11 @@ namespace LinguaReadApi.Controllers
                         break;
                 }
 
-                _logger.LogDebug("Fetching activities from {StartDate} for user {UserId}", startDate, userId);
+                _logger.LogDebug("Fetching activities from {StartDate} for user {UserId} (timezoneOffsetMinutes: {TimezoneOffset})", startDate, userId, timezoneOffsetMinutes);
 
                 var activities = await _context.UserActivities
                     .Where(a => a.UserId == userId && a.Timestamp >= startDate &&
-                                (a.ActivityType == "LessonCompleted" || a.ActivityType == "BookFinished" || a.ActivityType == "ManualReading")) // Filter for reading activities
+                                (a.ActivityType == "LessonCompleted" || a.ActivityType == "BookFinished" || a.ActivityType == "ManualReading" || a.ActivityType == "TextCompleted")) // Added TextCompleted
                     .Include(a => a.Language) // Include Language for grouping
                     .OrderBy(a => a.Timestamp)
                     .ToListAsync();
@@ -183,32 +215,45 @@ namespace LinguaReadApi.Controllers
 
         // GET: api/users/listening-activity
         [HttpGet("listening-activity")]
-        public async Task<IActionResult> GetListeningActivity([FromQuery] string period = "all")
+        public async Task<IActionResult> GetListeningActivity([FromQuery] string period = "all", [FromQuery] int? timezoneOffsetMinutes = null)
         {
-            _logger.LogInformation("Getting listening activity for period: {Period}", period);
+            _logger.LogInformation("Getting listening activity for period: {Period}, timezoneOffsetMinutes: {TimezoneOffset}", period, timezoneOffsetMinutes);
             var userId = GetUserId();
 
             try
             {
                 DateTime startDate;
-                var now = DateTime.UtcNow;
+                DateTime nowUtc = DateTime.UtcNow;
+                DateTime nowLocal;
+
+                if (timezoneOffsetMinutes.HasValue)
+                {
+                    nowLocal = nowUtc.AddMinutes(timezoneOffsetMinutes.Value);
+                }
+                else
+                {
+                    nowLocal = nowUtc;
+                }
 
                 switch (period.ToLower())
                 {
                     case "last_day":
-                        startDate = now.Date;
+                        // Start of today in user's local time, converted to UTC
+                        startDate = nowLocal.Date.AddMinutes(-timezoneOffsetMinutes.GetValueOrDefault(0));
                         break;
                     case "last_week":
-                        startDate = now.Date.AddDays(-6);
+                        // Start of 7-day period in user's local time, converted to UTC
+                        startDate = nowLocal.Date.AddDays(-6).AddMinutes(-timezoneOffsetMinutes.GetValueOrDefault(0));
                         break;
                     case "last_month":
-                        startDate = now.Date.AddDays(-29);
+                        // Start of 30-day period in user's local time, converted to UTC
+                        startDate = nowLocal.Date.AddDays(-29).AddMinutes(-timezoneOffsetMinutes.GetValueOrDefault(0));
                         break;
                     case "last_90":
-                        startDate = now.Date.AddDays(-89); // Last 90 days including today
+                        startDate = nowLocal.Date.AddDays(-89).AddMinutes(-timezoneOffsetMinutes.GetValueOrDefault(0));
                         break;
                     case "last_180":
-                        startDate = now.Date.AddDays(-179); // Last 180 days including today
+                        startDate = nowLocal.Date.AddDays(-179).AddMinutes(-timezoneOffsetMinutes.GetValueOrDefault(0));
                         break;
                     case "all":
                     default:
@@ -271,6 +316,68 @@ namespace LinguaReadApi.Controllers
             }
         }
  
+
+        // POST: api/users/reset-statistics
+        [HttpPost("reset-statistics")]
+        public async Task<IActionResult> ResetStatistics()
+        {
+            var userId = GetUserId();
+            _logger.LogInformation("Attempting to reset statistics for user {UserId}", userId);
+
+            try
+            {
+                // 1. Find and remove UserActivities
+                var activities = await _context.UserActivities
+                    .Where(a => a.UserId == userId)
+                    .ToListAsync();
+
+                if (activities.Any())
+                {
+                    _logger.LogInformation("Found {ActivityCount} UserActivity records to remove for user {UserId}", activities.Count, userId);
+                    _context.UserActivities.RemoveRange(activities);
+                }
+                else
+                {
+                    _logger.LogInformation("No UserActivity records found for user {UserId}", userId);
+                }
+
+                // 2. Find and reset UserLanguageStatistics
+                var langStats = await _context.UserLanguageStatistics
+                    .Where(uls => uls.UserId == userId)
+                    .ToListAsync();
+
+                if (langStats.Any())
+                {
+                    _logger.LogInformation("Found {StatCount} UserLanguageStatistics records to reset for user {UserId}", langStats.Count, userId);
+                    foreach (var stat in langStats)
+                    {
+                        stat.TotalWordsRead = 0;
+                        stat.TotalSecondsListened = 0;
+                        stat.TotalTextsCompleted = 0;
+                        stat.TotalBooksCompleted = 0;
+                        // Add any other relevant aggregate fields from UserLanguageStatistics model here if needed
+                        _context.Entry(stat).State = EntityState.Modified;
+                    }
+                }
+                 else
+                {
+                    _logger.LogInformation("No UserLanguageStatistics records found for user {UserId}", userId);
+                }
+
+                // 3. Save changes
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Successfully reset statistics for user {UserId}", userId);
+
+                return Ok(new { message = "Statistics reset successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting statistics for user {UserId}", userId);
+                return StatusCode(500, new { message = "An error occurred while resetting statistics.", error = ex.Message });
+            }
+        }
+
+
         private Guid GetUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -299,9 +406,11 @@ namespace LinguaReadApi.Controllers
     {
         public int LanguageId { get; set; }
         public string LanguageName { get; set; } = string.Empty;
-        public int WordCount { get; set; }
-        public int TotalWordsRead { get; set; }
-        public int BookCount { get; set; }
-        public int FinishedBookCount { get; set; }
+        public int WordCount { get; set; } // Total unique words encountered for this language
+        public int TotalWordsRead { get; set; } // Cumulative words read
+        public int TotalTextsCompleted { get; set; } // Cumulative texts completed
+        public int TotalSecondsListened { get; set; } // Cumulative listening time
+        public int BookCount { get; set; } // Total books started in this language
+        public int FinishedBookCount { get; set; } // Total books finished in this language
     }
 } 

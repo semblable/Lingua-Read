@@ -13,10 +13,8 @@ const getToken = () => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.log('No token found in storage');
       return null;
     }
-    console.log('Token retrieved from storage:', token.length + ' chars');
     return token;
   } catch (error) {
     console.error('Error retrieving token:', error);
@@ -33,8 +31,6 @@ const fetchApi = async (endpoint, options = {}) => {
 
   try {
     const token = getToken();
-    console.log('[API Debug] Endpoint:', endpoint);
-    console.log('[API Debug] Base URL:', API_URL);
 
     const headers = {
       'Accept': 'application/json',
@@ -45,9 +41,8 @@ const fetchApi = async (endpoint, options = {}) => {
     if (token && typeof token === 'string' && token.trim() !== '') {
       const cleanToken = token.trim();
       headers.Authorization = `Bearer ${cleanToken}`;
-      console.log('[API Debug] Authorization header added');
+      // Authorization header added
     } else {
-      console.log('[API Debug] No token available for request');
       if (endpoint !== '/api/auth/login' && endpoint !== '/api/auth/register' && endpoint !== '/api/languages') {
         throw new Error('Authentication required');
       }
@@ -67,17 +62,8 @@ const fetchApi = async (endpoint, options = {}) => {
 
     // Construct the full URL properly
     const fullUrl = new URL(endpoint, API_URL);
-    console.log('[API Debug] Full URL:', fullUrl.toString());
-    console.log('[API Debug] Request config:', {
-      method: requestConfig.method || 'GET',
-      headers: requestConfig.headers,
-      credentials: requestConfig.credentials,
-      mode: requestConfig.mode
-    });
 
     const response = await fetch(fullUrl.toString(), requestConfig);
-    console.log('[API Debug] Response status:', response.status);
-    console.log('[API Debug] Response headers:', Object.fromEntries(response.headers.entries()));
 
     // Handle response
     if (!response.ok) {
@@ -106,11 +92,9 @@ const fetchApi = async (endpoint, options = {}) => {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json();
-      console.log('[API Debug] Response data:', data);
       return data;
     } else {
       const text = await response.text();
-      console.log('[API Debug] Non-JSON response:', text);
       return { message: text || response.statusText };
     }
   } catch (error) {
@@ -234,7 +218,44 @@ export const register = (email, password) => {
 
 // Languages API
 export const getLanguages = () => {
+  // Note: This might be fetching the translation-specific list.
+  // Keep it for now, but the new functions below target the full config endpoint.
+  return fetchApi('/api/translation/languages'); // Assuming this is what it was intended for
+};
+
+// --- Language Configuration API ---
+
+// Gets ALL languages with full configuration details
+export const getAllLanguages = () => {
   return fetchApi('/api/languages');
+};
+
+// Gets a single language by ID with full configuration
+export const getLanguage = (languageId) => {
+  return fetchApi(`/api/languages/${languageId}`);
+};
+
+// Creates a new language configuration
+export const createLanguage = (languageData) => {
+  return fetchApi('/api/languages', {
+    method: 'POST',
+    body: JSON.stringify(languageData)
+  });
+};
+
+// Updates an existing language configuration
+export const updateLanguage = (languageId, languageData) => {
+  return fetchApi(`/api/languages/${languageId}`, {
+    method: 'PUT',
+    body: JSON.stringify(languageData)
+  });
+};
+
+// Deletes a language configuration
+export const deleteLanguage = (languageId) => {
+  return fetchApi(`/api/languages/${languageId}`, {
+    method: 'DELETE'
+  });
 };
 
 // Texts API
@@ -363,6 +384,16 @@ export const deleteText = (textId) => {
     method: 'DELETE'
   });
 };
+
+// Marks a text as completed and logs activity
+export const completeText = (textId) => {
+  console.log(`[API] Marking text ${textId} as complete.`);
+  return fetchApi(`/api/texts/${textId}/complete`, {
+    method: 'PUT'
+    // No body needed for this request
+  });
+};
+
 
 
 // Books API
@@ -617,10 +648,19 @@ export const updateLastRead = (bookId, textId) => {
 };
 
 export const completeLesson = (bookId, textId) => {
-  return fetchApi(`/api/books/${bookId}/complete-lesson`, {
-    method: 'PUT',
-    body: JSON.stringify({ textId })
-  });
+  if (bookId) {
+    // Existing call for lessons within books
+    return fetchApi(`/api/books/${bookId}/complete-lesson`, {
+      method: 'PUT',
+      body: JSON.stringify({ textId }) // Assuming textId is still needed in body
+    });
+  } else {
+    // New call for standalone texts (Assumes backend endpoint PUT /api/texts/{textId}/complete exists)
+    return fetchApi(`/api/texts/${textId}/complete`, {
+      method: 'PUT'
+      // Body might not be needed if textId is in the URL
+    });
+  }
 };
 
 export const finishBook = (bookId) => {
@@ -634,10 +674,11 @@ export const getUserStatistics = () => {
   return fetchApi('/api/users/statistics');
 };
 
-export const getReadingActivity = async (period = 'all') => {
+export const getReadingActivity = async (period = 'all', timezoneOffsetMinutes = null) => {
   try {
-    console.log(`[API] Getting reading activity for period: ${period}`);
-    const data = await fetchApi(`/api/users/reading-activity?period=${period}`);
+    const tzParam = timezoneOffsetMinutes !== null ? `&timezoneOffsetMinutes=${timezoneOffsetMinutes}` : '';
+    console.log(`[API] Getting reading activity for period: ${period}, timezoneOffsetMinutes: ${timezoneOffsetMinutes}`);
+    const data = await fetchApi(`/api/users/reading-activity?period=${period}${tzParam}`);
     return data;
   } catch (error) {
     console.error('Error getting reading activity:', error);
@@ -646,16 +687,31 @@ export const getReadingActivity = async (period = 'all') => {
 };
 
 // Fetch listening activity data
-export const getListeningActivity = async (period = 'all') => {
+export const getListeningActivity = async (period = 'all', timezoneOffsetMinutes = null) => {
   try {
-    console.log(`[API] Fetching listening activity for period: ${period}`);
-    const data = await fetchApi(`/api/users/listening-activity?period=${period}`);
+    let tzParam = '';
+    if (timezoneOffsetMinutes !== null && timezoneOffsetMinutes !== undefined) {
+      tzParam = `&timezoneOffsetMinutes=${timezoneOffsetMinutes}`;
+    }
+    console.log(`[API] Fetching listening activity for period: ${period}, timezoneOffsetMinutes: ${timezoneOffsetMinutes}`);
+    const data = await fetchApi(`/api/users/listening-activity?period=${period}${tzParam}`);
     return data;
   } catch (error) {
     console.error('Error getting listening activity:', error);
     return { error: error.message }; // Return error object on failure
   }
 };
+
+
+// User Statistics API
+export const resetUserStatistics = () => {
+  console.log('[API] Resetting user statistics.');
+  return fetchApi('/api/users/reset-statistics', {
+    method: 'POST'
+    // No body needed for this request
+  });
+};
+
 
 // Words API
 export const createWord = async (textId, term, status, translation) => {
@@ -710,6 +766,38 @@ export const updateWord = async (wordId, status, translation) => {
     console.error('Error in updateWord:', error);
     throw error;
   }
+};
+
+// Fetches words for a specific language, with optional filtering and sorting
+export const getWordsByLanguage = (languageId, statusFilter = [], sortBy = 'term_asc', searchTerm = '') => {
+  const params = new URLSearchParams();
+  if (statusFilter && statusFilter.length > 0) {
+    params.append('status', statusFilter.join(','));
+  }
+  if (sortBy) {
+    params.append('sortBy', sortBy);
+  }
+  if (searchTerm && searchTerm.trim() !== '') {
+    params.append('searchTerm', searchTerm.trim());
+  }
+  const queryString = params.toString();
+  const endpoint = `/api/words/language/${languageId}${queryString ? `?${queryString}` : ''}`;
+  return fetchApi(endpoint);
+};
+
+// Triggers CSV export for words, with optional filtering
+export const exportWordsCsv = (languageId = null, statusFilter = []) => {
+  const params = new URLSearchParams();
+  if (languageId) {
+    params.append('languageId', languageId);
+  }
+  if (statusFilter && statusFilter.length > 0) {
+    params.append('status', statusFilter.join(','));
+  }
+  const queryString = params.toString();
+  const endpoint = `/api/words/export${queryString ? `?${queryString}` : ''}`;
+  // Use fetchApiDownload for file downloads
+  return fetchApiDownload(endpoint);
 };
 
 // Translation API
@@ -852,6 +940,29 @@ export const getAudiobookProgress = async (bookId) => {
     return await fetchApi(`/api/activity/audiobookprogress/${bookId}`); // GET request by default
 };
 
+// --- Audio Lesson Progress ---
+
+// Update audio lesson progress (requires textId)
+export const updateAudioLessonProgress = async (textId, progressData) => {
+  // progressData should be { currentPosition: number | null }
+  const payload = {
+    textId: textId,
+    currentPosition: progressData.currentPosition
+  };
+  console.log('[API] Updating audio lesson progress via UserActivityController:', payload);
+  return await fetchApi('/api/activity/audiolessonprogress', {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+};
+
+// Get audio lesson progress (requires textId)
+export const getAudioLessonProgress = async (textId) => {
+    console.log(`[API] Getting audio lesson progress for text ${textId} via UserActivityController`);
+    // Point to the new endpoint in UserActivityController, appending textId
+    return await fetchApi(`/api/activity/audiolessonprogress/${textId}`); // GET request by default
+};
+
 // Added logListeningActivity function
 export const logListeningActivity = async (languageId, durationSeconds) => {
   console.log(`[API] Logging listening activity: Lang ${languageId}, Duration ${durationSeconds}s`);
@@ -893,14 +1004,20 @@ export const batchTranslateWords = async (words, targetLanguageCode, sourceLangu
 
 // Add near other word functions
 
+/**
+ * Add a batch of terms and their translations to the database.
+ * @param {string} languageId - The language ID.
+ * @param {Array<{term: string, translation: string}>} terms - Array of objects with term and translation.
+ * @returns {Promise<any>}
+ */
 export const addTermsBatch = async (languageId, terms) => {
   try {
+    // The backend expects: [{ term: string, translation: string }]
+    // The endpoint is /api/words/batch
     const payload = {
       languageId,
-      terms // Array of { term: string, translation: string }
+      terms
     };
-     console.log(`[API] Sending batch add terms request for ${terms.length} terms for language ${languageId}`);
-    // Assuming the endpoint is /api/words/batch based on backend changes
     return await fetchApi('/api/words/batch', {
       method: 'POST',
       body: JSON.stringify(payload)

@@ -22,7 +22,11 @@ namespace LinguaReadApi.Data
         public DbSet<BookTag> BookTags { get; set; }
         public DbSet<AudiobookTrack> AudiobookTracks { get; set; } // Added for Audiobook feature
         public DbSet<UserBookProgress> UserBookProgresses { get; set; } // Added for per-book audiobook progress
-        
+        public DbSet<LanguageDictionary> LanguageDictionaries { get; set; } // Added for Language Config feature
+        public DbSet<LanguageSentenceSplitException> LanguageSentenceSplitExceptions { get; set; } // Added for Language Config feature
+        public DbSet<UserLanguageStatistics> UserLanguageStatistics { get; set; } // Added for aggregated stats
+        public DbSet<UserAudioLessonProgress> UserAudioLessonProgresses { get; set; } // Added for audio lesson progress
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -114,6 +118,14 @@ namespace LinguaReadApi.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
+
+            modelBuilder.Entity<Language>()
+                .HasIndex(l => l.Name)
+                .IsUnique();
+
+            modelBuilder.Entity<Language>()
+                .HasIndex(l => l.Code)
+                .IsUnique();
             
             // UserActivity - Language: Many-to-One
             modelBuilder.Entity<UserActivity>()
@@ -172,6 +184,56 @@ namespace LinguaReadApi.Data
                 .HasForeignKey(ubp => ubp.CurrentAudiobookTrackId)
                 .IsRequired(false) // TrackId can be null
                 .OnDelete(DeleteBehavior.SetNull); // If track is deleted, set FK to null
+
+            // Configure Language -> LanguageDictionary: One-to-Many
+            modelBuilder.Entity<LanguageDictionary>()
+                .HasOne(ld => ld.Language)
+                .WithMany(l => l.Dictionaries)
+                .HasForeignKey(ld => ld.LanguageId)
+                .OnDelete(DeleteBehavior.Cascade); // If Language is deleted, delete its dictionaries
+
+            // Configure Language -> LanguageSentenceSplitException: One-to-Many
+            modelBuilder.Entity<LanguageSentenceSplitException>()
+                .HasOne(lse => lse.Language)
+                .WithMany(l => l.SentenceSplitExceptions)
+                .HasForeignKey(lse => lse.LanguageId)
+                .OnDelete(DeleteBehavior.Cascade); // If Language is deleted, delete its exceptions
+
+            // Configure UserLanguageStatistics
+            modelBuilder.Entity<UserLanguageStatistics>()
+                .HasKey(uls => uls.UserLanguageStatisticsId); // Use single primary key
+
+            modelBuilder.Entity<UserLanguageStatistics>()
+                .HasIndex(uls => new { uls.UserId, uls.LanguageId }) // Add unique index for User/Language combo
+                .IsUnique();
+
+            modelBuilder.Entity<UserLanguageStatistics>()
+                .HasOne(uls => uls.User)
+                .WithMany() // No collection navigation property in User
+                .HasForeignKey(uls => uls.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // If user deleted, delete their stats
+
+            modelBuilder.Entity<UserLanguageStatistics>()
+                .HasOne(uls => uls.Language)
+                .WithMany() // No collection navigation property in Language
+                .HasForeignKey(uls => uls.LanguageId)
+                .OnDelete(DeleteBehavior.Restrict); // Don't delete language if stats exist
+
+            // Configure UserAudioLessonProgress entity
+            modelBuilder.Entity<UserAudioLessonProgress>()
+                .HasKey(ualp => new { ualp.UserId, ualp.TextId }); // Composite primary key
+
+            modelBuilder.Entity<UserAudioLessonProgress>()
+                .HasOne(ualp => ualp.User)
+                .WithMany() // No collection navigation property in User for this
+                .HasForeignKey(ualp => ualp.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // If user is deleted, delete their progress
+
+            modelBuilder.Entity<UserAudioLessonProgress>()
+                .HasOne(ualp => ualp.Text)
+                .WithMany() // No collection navigation property in Text for this
+                .HasForeignKey(ualp => ualp.TextId)
+                .OnDelete(DeleteBehavior.Cascade); // If text (lesson) is deleted, delete its progress records
         }
     }
-} 
+}

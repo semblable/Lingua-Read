@@ -8,7 +8,9 @@ using System;
 using System.ComponentModel.DataAnnotations; // Added for [Required] attribute
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging; // Add logger namespace
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic; // For Dictionary, List
+using System.Linq; // For LINQ methods like GroupBy, Sum
 
 namespace LinguaReadApi.Controllers
 {
@@ -67,6 +69,29 @@ public async Task<IActionResult> LogListeningActivity([FromBody] LogListeningReq
     try
     {
         _context.UserActivities.Add(activity);
+        await _context.SaveChangesAsync();
+
+        // --- Update UserLanguageStatistics cumulative listening time ---
+        var stats = await _context.UserLanguageStatistics
+            .FirstOrDefaultAsync(uls => uls.UserId == userId && uls.LanguageId == request.LanguageId);
+
+        if (stats == null)
+        {
+            stats = new UserLanguageStatistics
+            {
+                UserId = userId,
+                LanguageId = request.LanguageId,
+                TotalSecondsListened = request.DurationSeconds,
+                LastUpdatedAt = DateTime.UtcNow
+            };
+            _context.UserLanguageStatistics.Add(stats);
+        }
+        else
+        {
+            stats.TotalSecondsListened += request.DurationSeconds;
+            stats.LastUpdatedAt = DateTime.UtcNow;
+        }
+
         await _context.SaveChangesAsync();
         _logger.LogInformation("Successfully saved listening activity for UserId: {UserId}, ActivityId: {ActivityId}", userId, activity.ActivityId);
         return Ok(new { message = "Listening activity logged successfully.", activityId = activity.ActivityId }); // Indicate success
@@ -176,6 +201,47 @@ public async Task<IActionResult> LogManualActivity([FromBody] LogManualActivityR
     {
         _context.UserActivities.AddRange(activitiesToAdd);
         await _context.SaveChangesAsync();
+        // Update UserLanguageStatistics after manual activity save
+        try
+        {
+            var stats = await _context.UserLanguageStatistics
+                .FirstOrDefaultAsync(uls => uls.UserId == userId && uls.LanguageId == request.LanguageId);
+
+            if (stats == null)
+            {
+                stats = new UserLanguageStatistics
+                {
+                    UserId = userId,
+                    LanguageId = request.LanguageId,
+                    TotalWordsRead = request.WordCount ?? 0,
+                    TotalSecondsListened = request.ListeningDurationSeconds ?? 0,
+                    LastUpdatedAt = DateTime.UtcNow
+                };
+                _context.UserLanguageStatistics.Add(stats);
+            }
+            else
+            {
+                if (request.WordCount.HasValue)
+                    stats.TotalWordsRead += request.WordCount.Value;
+                if (request.ListeningDurationSeconds.HasValue)
+                    stats.TotalSecondsListened += request.ListeningDurationSeconds.Value;
+                stats.LastUpdatedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Updated UserLanguageStatistics for UserId: {UserId}, LanguageId: {LanguageId}", userId, request.LanguageId);
+        }
+        catch (DbUpdateException dbEx)
+        {
+            _logger.LogError(dbEx, "Database error updating UserLanguageStatistics for UserId: {UserId}. InnerException: {InnerMessage}", userId, dbEx.InnerException?.Message);
+            // Do not fail the request if stats update fails
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error updating UserLanguageStatistics for UserId: {UserId}", userId);
+            // Do not fail the request if stats update fails
+        }
+
         _logger.LogInformation("Successfully saved {Count} manual activity record(s) for UserId: {UserId}", activitiesToAdd.Count, userId);
         return Ok(new { message = "Manual activity logged successfully." });
     }
@@ -191,8 +257,122 @@ public async Task<IActionResult> LogManualActivity([FromBody] LogManualActivityR
     }
 }
 
-// --- Endpoint for fetching statistics will be added later --- // This comment is now outdated
-        // --- Endpoint for fetching statistics will be added later ---
+// --- DTOs for Statistics Endpoints ---
+
+public class ReadingStatsDto
+{
+    public int TotalWordsRead { get; set; }
+    public Dictionary<string, int> ActivityByDate { get; set; } = new(); // Date (YYYY-MM-DD) -> WordCount
+    public List<LanguageReadingStat> ActivityByLanguage { get; set; } = new();
+}
+
+public class LanguageReadingStat
+{
+    public int LanguageId { get; set; }
+    public string LanguageName { get; set; } = string.Empty;
+    public int TotalWords { get; set; }
+}
+
+public class ListeningStatsDto
+{
+    public int TotalListeningSeconds { get; set; }
+    public Dictionary<string, int> ListeningByDate { get; set; } = new(); // Date (YYYY-MM-DD) -> Seconds
+    public List<LanguageListeningStat> ListeningByLanguage { get; set; } = new();
+}
+
+public class LanguageListeningStat
+{
+    public int LanguageId { get; set; }
+    public string LanguageName { get; set; } = string.Empty;
+    public int TotalSeconds { get; set; }
+}
+
+// --- Statistics Endpoints ---
+
+[HttpGet("reading")]
+public async Task<ActionResult<ReadingStatsDto>> GetReadingStats([FromQuery] string period = "all")
+{
+    var userId = GetUserId(); // Assuming GetUserId() exists and works
+    var startDate = CalculateStartDate(period);
+
+    var readingActivities = await _context.UserActivities
+        .Where(ua => ua.UserId == userId &&
+                     ua.Timestamp >= startDate &&
+                     (ua.ActivityType == "Reading" || ua.ActivityType == "ManualReading" || ua.ActivityType == "TextCompleted")) // Include relevant types
+        .Include(ua => ua.Language) // Include Language for name
+        .ToListAsync();
+
+    var stats = new ReadingStatsDto();
+    stats.TotalWordsRead = readingActivities.Sum(ua => ua.WordCount);
+
+    stats.ActivityByDate = readingActivities
+        .GroupBy(ua => ua.Timestamp.Date)
+        .ToDictionary(g => g.Key.ToString("yyyy-MM-dd"), g => g.Sum(ua => ua.WordCount));
+
+    stats.ActivityByLanguage = readingActivities
+        .GroupBy(ua => ua.Language) // Group by Language entity
+        .Select(g => new LanguageReadingStat
+        {
+            LanguageId = g.Key?.LanguageId ?? 0,
+            LanguageName = g.Key?.Name ?? "Unknown",
+            TotalWords = g.Sum(ua => ua.WordCount)
+        })
+        .OrderBy(ls => ls.LanguageName)
+        .ToList();
+
+    return Ok(stats);
+}
+
+[HttpGet("listening")]
+public async Task<ActionResult<ListeningStatsDto>> GetListeningStats([FromQuery] string period = "all")
+{
+    var userId = GetUserId();
+    var startDate = CalculateStartDate(period);
+
+    var listeningActivities = await _context.UserActivities
+        .Where(ua => ua.UserId == userId &&
+                     ua.Timestamp >= startDate &&
+                     (ua.ActivityType == "Listening" || ua.ActivityType == "ManualListening")) // Include relevant types
+        .Include(ua => ua.Language) // Include Language for name
+        .ToListAsync();
+
+    var stats = new ListeningStatsDto();
+    // Fix: Handle potential null values in Sum
+    stats.TotalListeningSeconds = listeningActivities.Sum(ua => ua.ListeningDurationSeconds ?? 0);
+
+    stats.ListeningByDate = listeningActivities
+        .GroupBy(ua => ua.Timestamp.Date)
+        // Fix: Handle potential null values in Sum
+        .ToDictionary(g => g.Key.ToString("yyyy-MM-dd"), g => g.Sum(ua => ua.ListeningDurationSeconds ?? 0));
+
+    stats.ListeningByLanguage = listeningActivities
+        .GroupBy(ua => ua.Language) // Group by Language entity
+        .Select(g => new LanguageListeningStat
+        {
+            LanguageId = g.Key?.LanguageId ?? 0,
+            LanguageName = g.Key?.Name ?? "Unknown",
+            // Fix: Handle potential null values in Sum
+            TotalSeconds = g.Sum(ua => ua.ListeningDurationSeconds ?? 0)
+        })
+        .OrderBy(ls => ls.LanguageName)
+        .ToList();
+
+    return Ok(stats);
+}
+
+private DateTime CalculateStartDate(string period)
+{
+    var now = DateTime.UtcNow.Date; // Use Date part for comparisons
+    return period.ToLowerInvariant() switch
+    {
+        "week" => now.AddDays(-(int)now.DayOfWeek), // Start of current week (assuming Sunday as start)
+        "month" => new DateTime(now.Year, now.Month, 1), // Start of current month
+        "year" => new DateTime(now.Year, 1, 1), // Start of current year
+        _ => DateTime.MinValue, // "all" or any other value
+    };
+}
+
+// --- Existing Endpoints Below ---
 
         // DTO for updating audiobook progress
         public class UpdateAudiobookProgressRequest
@@ -268,7 +448,12 @@ public async Task<IActionResult> LogManualActivity([FromBody] LogManualActivityR
                     _logger.LogInformation("Found existing UserBookProgress for UserId: {UserId}, BookId: {BookId}. Updating.", userId, request.BookId);
                     _logger.LogInformation("Updating UserBookProgress: Old TrackId={OldTrackId}, Old Position={OldPosition}", progressRecord.CurrentAudiobookTrackId, progressRecord.CurrentAudiobookPosition);
                     progressRecord.CurrentAudiobookTrackId = request.CurrentAudiobookTrackId;
-                    progressRecord.CurrentAudiobookPosition = request.CurrentAudiobookPosition;
+                    // Only update position if a valid position is provided in the request
+                    if (request.CurrentAudiobookPosition.HasValue)
+                    {
+                         progressRecord.CurrentAudiobookPosition = request.CurrentAudiobookPosition;
+                    }
+                    // Always update the timestamp
                     progressRecord.UpdatedAt = DateTime.UtcNow;
                     _logger.LogInformation("Updating UserBookProgress: New TrackId={NewTrackId}, New Position={NewPosition}", progressRecord.CurrentAudiobookTrackId, progressRecord.CurrentAudiobookPosition);
                     // EF Core tracks changes on the found entity, no need for explicit Update call
@@ -334,6 +519,130 @@ public async Task<IActionResult> LogManualActivity([FromBody] LogManualActivityR
                 _logger.LogError(ex, "Error retrieving audiobook progress for UserId: {UserId}, BookId: {BookId}", userId, bookId);
                 return StatusCode(500, "An error occurred while retrieving audiobook progress.");
             }
+        }
+
+        // --- Endpoints for Audio Lesson Progress ---
+
+        // DTO for updating audio lesson progress
+        public class UpdateAudioLessonProgressRequest
+        {
+            [Required]
+            public int TextId { get; set; } // ID of the Text entity representing the lesson
+            public double? CurrentPosition { get; set; } // Nullable position
+        }
+
+        [HttpPut("audiolessonprogress")]
+        public async Task<IActionResult> UpdateAudioLessonProgress([FromBody] UpdateAudioLessonProgressRequest request)
+        {
+            _logger.LogInformation("---- BEGIN UpdateAudioLessonProgress ----");
+            _logger.LogInformation("Received request body: TextId={TextId}, Position={Position}", request?.TextId, request?.CurrentPosition);
+
+            if (request == null)
+            {
+                _logger.LogWarning("Request body is null.");
+                return BadRequest("Request body cannot be null.");
+            }
+
+            var userId = GetUserId(); // Use helper method
+            if (userId == Guid.Empty)
+            {
+                _logger.LogWarning("Failed to get UserId from token claim for UpdateAudioLessonProgress.");
+                return Unauthorized("User ID not found or invalid in token.");
+            }
+            _logger.LogInformation("Attempting to find/update UserAudioLessonProgress for UserId: {UserId}, TextId: {TextId}", userId, request.TextId);
+
+            try
+            {
+                var progressRecord = await _context.UserAudioLessonProgresses.FindAsync(userId, request.TextId);
+
+                if (progressRecord == null)
+                {
+                    _logger.LogInformation("UserAudioLessonProgress record not found for UserId: {UserId}, TextId: {TextId}. Creating new record.", userId, request.TextId);
+                    progressRecord = new UserAudioLessonProgress
+                    {
+                        UserId = userId,
+                        TextId = request.TextId,
+                        CurrentPosition = request.CurrentPosition, // Can be null
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _context.UserAudioLessonProgresses.Add(progressRecord);
+                    _logger.LogInformation("Added new UserAudioLessonProgress to context for UserId: {UserId}, TextId: {TextId}", userId, request.TextId);
+                }
+                else
+                {
+                    _logger.LogInformation("Found existing UserAudioLessonProgress for UserId: {UserId}, TextId: {TextId}. Updating.", userId, request.TextId);
+                    _logger.LogInformation("Updating UserAudioLessonProgress: Old Position={OldPosition}", progressRecord.CurrentPosition);
+                    progressRecord.CurrentPosition = request.CurrentPosition; // Update position (can be null)
+                    progressRecord.UpdatedAt = DateTime.UtcNow;
+                    _logger.LogInformation("Updating UserAudioLessonProgress: New Position={NewPosition}", progressRecord.CurrentPosition);
+                }
+
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("SaveChangesAsync completed successfully for UserAudioLessonProgress for UserId: {UserId}, TextId: {TextId}", userId, request.TextId);
+                _logger.LogInformation("---- END UpdateAudioLessonProgress (Success) ----");
+                return Ok(new { message = "Audio lesson progress updated successfully." });
+            }
+            catch (DbUpdateException dbEx)
+            {
+                _logger.LogError(dbEx, "Database error updating audio lesson progress for UserId: {UserId}, TextId: {TextId}. InnerException: {InnerMessage}", userId, request.TextId, dbEx.InnerException?.Message);
+                _logger.LogInformation("---- END UpdateAudioLessonProgress (DB Error) ----");
+                return StatusCode(500, $"A database error occurred while updating progress: {dbEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error updating audio lesson progress for UserId: {UserId}, TextId: {TextId}", userId, request.TextId);
+                _logger.LogInformation("---- END UpdateAudioLessonProgress (Error) ----");
+                return StatusCode(500, $"An unexpected error occurred while updating progress: {ex.Message}");
+            }
+        }
+
+        [HttpGet("audiolessonprogress/{textId}")]
+        public async Task<IActionResult> GetAudioLessonProgress(int textId)
+        {
+            _logger.LogInformation("Received request to get audio lesson progress for TextId: {TextId}", textId);
+
+            var userId = GetUserId();
+            if (userId == Guid.Empty)
+            {
+                _logger.LogWarning("Could not parse UserId from token for getting audio lesson progress for TextId: {TextId}.", textId);
+                return Unauthorized("User ID not found in token.");
+            }
+            _logger.LogInformation("Attempting to get audio lesson progress for UserId: {UserId}, TextId: {TextId}", userId, textId);
+
+            try
+            {
+                var progressRecord = await _context.UserAudioLessonProgresses.FindAsync(userId, textId);
+
+                if (progressRecord == null)
+                {
+                    _logger.LogInformation("UserAudioLessonProgress record not found for UserId: {UserId}, TextId: {TextId}. Returning default progress.", userId, textId);
+                    return Ok(new { currentPosition = (double?)null }); // Return null if no record found
+                }
+
+                _logger.LogInformation("Successfully retrieved audio lesson progress from UserAudioLessonProgress for UserId: {UserId}, TextId: {TextId}. Position: {Position}", userId, textId, progressRecord.CurrentPosition);
+                return Ok(new
+                {
+                    currentPosition = progressRecord.CurrentPosition
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving audio lesson progress for UserId: {UserId}, TextId: {TextId}", userId, textId);
+                return StatusCode(500, "An error occurred while retrieving audio lesson progress.");
+            }
+        }
+
+        // --- Helper Methods ---
+
+        private Guid GetUserId()
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (Guid.TryParse(userIdString, out Guid userId))
+            {
+                return userId;
+            }
+            _logger.LogWarning("GetUserId: Failed to parse UserId from token claim '{UserIdString}'. Returning Guid.Empty.", userIdString);
+            return Guid.Empty; // Return empty Guid if parsing fails
         }
     }
 }

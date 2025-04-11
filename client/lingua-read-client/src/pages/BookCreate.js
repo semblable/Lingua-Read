@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Form, Button, Card, Alert, Spinner, Row, Col, Tabs, Tab } from 'react-bootstrap'; // Added Tabs, Tab
+import React, { useState, useEffect, useContext } from 'react'; // Added useContext
+import { Container, Form, Button, Card, Alert, Spinner, Row, Col, Tabs, Tab } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { createBook, uploadBook, getLanguages, uploadAudiobookTracks } from '../utils/api'; // Added uploadBook and uploadAudiobookTracks
+import { createBook, uploadBook, getAllLanguages, uploadAudiobookTracks } from '../utils/api';
+import { SettingsContext } from '../contexts/SettingsContext'; // Import SettingsContext
 
 const BookCreate = () => {
   const [title, setTitle] = useState('');
@@ -20,14 +21,25 @@ const BookCreate = () => {
   const [audioFiles, setAudioFiles] = useState([]); // State for audio files
   const [audioUploadError, setAudioUploadError] = useState(''); // Separate error for audio upload
   const navigate = useNavigate();
+  const { settings: userSettings } = useContext(SettingsContext); // Get settings from context
 
   useEffect(() => {
     const fetchLanguages = async () => {
       try {
-        const data = await getLanguages();
+        const data = await getAllLanguages();
         setLanguages(data);
+
+        // Use default language from context if available and valid
+        const defaultLangId = userSettings?.defaultLanguageId;
+
         if (data.length > 0) {
-          setLanguageId(data[0].languageId.toString());
+          const found = data.find(l => l.languageId === defaultLangId);
+          if (found) {
+            setLanguageId(found.languageId.toString());
+          } else {
+            // Fallback to first language if default not found or not set
+            setLanguageId(data[0].languageId.toString());
+          }
         }
       } catch (err) {
         setError('Failed to load languages. Please try again later.');
@@ -37,7 +49,8 @@ const BookCreate = () => {
     };
 
     fetchLanguages();
-  }, []);
+    // Re-run if userSettings context changes (e.g., after initial load)
+  }, [userSettings?.defaultLanguageId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -95,7 +108,6 @@ const BookCreate = () => {
       }
 
       // --- Start: Audiobook Upload Logic ---
-      let audioUploadSuccess = true;
       if (audioFiles.length > 0 && newBook?.bookId) {
         console.log(`Book created/uploaded (ID: ${newBook.bookId}), now uploading audio tracks...`);
         setAudioUploadError(''); // Clear previous audio error
@@ -108,7 +120,6 @@ const BookCreate = () => {
           await uploadAudiobookTracks(newBook.bookId, audioFormData);
           console.log(`Audio tracks uploaded successfully for book ${newBook.bookId}`);
         } catch (audioErr) {
-          audioUploadSuccess = false;
           const audioErrorMsg = audioErr.message || 'Failed to upload audio tracks. Please add them later from the book detail page.';
           console.error("Audio upload failed:", audioErrorMsg);
           // Set a separate error state or append to the main error?
