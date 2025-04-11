@@ -109,8 +109,11 @@ namespace LinguaReadApi.Services
                     {
                         for (int i = 0; i < words.Count; i++)
                         {
-                            // Ensure case-insensitivity if needed, or handle duplicates if DeepL returns multiple for same input
-                            translations[words[i]] = responseContent.translations[i].text; 
+                            string originalWord = words[i] ?? string.Empty;
+                            string translatedWord = responseContent.translations[i].text ?? string.Empty;
+
+                            // Add raw strings to the dictionary (no sanitization)
+                            translations[originalWord] = translatedWord;
                         }
                         _logger.LogInformation($"Successfully received {translations.Count} translations from DeepL.");
                     }

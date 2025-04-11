@@ -190,6 +190,10 @@ const AudiobookPlayer = ({ book }) => {
         setCurrentTime(0); // Reset time for the new track visually
         initialSeekPositionRef.current = 0; // Ensure seek ref is 0 for next track
         setIsPlaying(true); // Set intent to play the next track automatically
+
+        // Save progress immediately for the new track at position 0
+        const nextTrack = audiobookTracks[nextIndex];
+        saveProgress(false, nextTrack, 0);
       } else {
         console.log("[AudioPlayer] Last track finished.");
         setIsPlaying(false); // Stop playing after the last track
@@ -402,11 +406,11 @@ const AudiobookPlayer = ({ book }) => {
 
 
   // --- Save Progress ---
-  const saveProgress = useCallback(async (isUnmounting = false) => {
+  const saveProgress = useCallback(async (isUnmounting = false, trackOverride = null, positionOverride = null) => {
     // Use refs and state directly here
     const audio = audioRef.current;
-    const track = currentTrack; // currentTrack is derived state, stable if dependencies are stable
-    const position = audio ? audio.currentTime : null;
+    const track = trackOverride || currentTrack;
+    const position = positionOverride !== null ? positionOverride : (audio ? audio.currentTime : null);
     const ready = audio ? audio.readyState : null;
 
     if (!track || !audio || ready === 0) {

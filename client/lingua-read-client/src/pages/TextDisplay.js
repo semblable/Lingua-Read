@@ -6,7 +6,8 @@ import {
   getText, createWord, updateWord, updateLastRead, completeText, getBook, // Replaced completeLesson with completeText
   translateText, /*translateSentence,*/ translateFullText, updateUserSettings, // Added updateUserSettings, removed unused getUserSettings
   batchTranslateWords, addTermsBatch, getLanguage, // Added getLanguage (Phase 3)
-  API_URL
+  API_URL,
+  getAudioLessonProgress, updateAudioLessonProgress // Added audio lesson progress API functions
 } from '../utils/api';
 import TranslationPopup from '../components/TranslationPopup';
 import AudiobookPlayer from '../components/AudiobookPlayer'; // Import AudiobookPlayer
@@ -190,17 +191,9 @@ const TextDisplay = () => {
       });
       if (!response.ok) throw new Error('Failed to fetch language words');
       const allLanguageWords = await response.json();
-      setWords(prevWords => {
-          const prevWordMap = new Map(prevWords.map(w => [w.term.toLowerCase(), w]));
-          allLanguageWords.forEach(langWord => {
-              const key = langWord.term.toLowerCase();
-              // Only add if not already present from the initial text fetch, or update if needed (though API returns full state)
-              if (!prevWordMap.has(key)) {
-                  prevWordMap.set(key, langWord);
-              }
-          });
-          return Array.from(prevWordMap.values());
-      });
+      // Replace the entire words state with the newly fetched data
+      setWords(allLanguageWords);
+      console.log(`[fetchAllLanguageWords] Replaced words state with ${allLanguageWords.length} words from backend.`);
     } catch (error) { console.error('Error fetching language words:', error); }
   }, [setWords]); // Dependency: setWords
 
@@ -387,14 +380,19 @@ const TextDisplay = () => {
           setSrtLines(parseSrtContent(data.srtContent));
           setDisplayMode('audio');
 
-          // --- Restore Audio Time ---
-          const savedTime = localStorage.getItem(`audioTime-${textId}`);
-          if (savedTime && !isNaN(parseFloat(savedTime))) {
-             console.log(`[Audio Restore] Found saved time: ${savedTime}`);
-             setInitialAudioTime(parseFloat(savedTime));
-          } else {
-             console.log(`[Audio Restore] No valid saved time found for textId: ${textId}`);
-          }
+          // --- Restore Audio Time from Backend ---
+          getAudioLessonProgress(textId).then(progress => {
+            if (progress && progress.currentPosition != null && progress.currentPosition > 0) {
+              console.log(`[Audio Restore - Backend] Restored time: ${progress.currentPosition} for textId: ${textId}`);
+              setInitialAudioTime(progress.currentPosition); // Set state to trigger seek on metadata load
+            } else {
+              console.log(`[Audio Restore - Backend] No progress found or position is 0 for textId: ${textId}.`);
+              setInitialAudioTime(0); // Ensure it starts at 0 if no progress
+            }
+          }).catch(err => {
+            console.error("[Audio Restore - Backend] Failed to get audio lesson progress:", err);
+            setInitialAudioTime(0); // Start at 0 on error
+          });
           // --- End Restore Audio Time ---
 
         } else {
@@ -445,11 +443,15 @@ const TextDisplay = () => {
       console.log(`[TextDisplay Cleanup] State at cleanup: isAudioLesson=${isAudioLesson}, text exists=${!!text}, languageId=${text?.languageId}`);
       try {
         // Save Current Playback Position using the variable captured in the effect scope
+        // Save Current Playback Position using the variable captured in the effect scope
         if (currentAudioElement && isAudioLesson) {
           const currentTime = currentAudioElement.currentTime;
           if (currentTime > 0) {
-            console.log(`[Audio Save - Unmount] Saving position: ${currentTime} for textId: ${textId}`);
-            localStorage.setItem(`audioTime-${textId}`, currentTime.toString());
+            console.log(`[Audio Save - Unmount] Saving position via API: ${currentTime} for textId: ${textId}`);
+            // Use API instead of localStorage
+            updateAudioLessonProgress(textId, { currentPosition: currentTime })
+              .then(() => console.log(`[Audio Save - Unmount API] Success for textId: ${textId}`))
+              .catch(err => console.error(`[Audio Save - Unmount API] Failed for textId: ${textId}:`, err));
           }
         }
 
@@ -552,9 +554,14 @@ const TextDisplay = () => {
       if (isAudioLesson && audioCurrentTime > 0) { // Only save if playing and valid time
           const now = Date.now();
           if (now - lastSaveTimeRef.current > saveInterval) {
-              console.log(`[Audio Save - Throttled] Saving time: ${audioCurrentTime} for textId: ${textId}`);
-              localStorage.setItem(`audioTime-${textId}`, audioCurrentTime.toString());
-              lastSaveTimeRef.current = now;
+              console.log(`[Audio Save - Throttled API] Saving time: ${audioCurrentTime} for textId: ${textId}`);
+              // Use API instead of localStorage
+              updateAudioLessonProgress(textId, { currentPosition: audioCurrentTime })
+                .then(() => {
+                  console.log(`[Audio Save - Throttled API] Success for textId: ${textId}`);
+                  lastSaveTimeRef.current = Date.now(); // Update last save time only on success
+                })
+                .catch(err => console.error(`[Audio Save - Throttled API] Failed for textId: ${textId}:`, err));
           }
       }
   }, [audioCurrentTime, isAudioLesson, textId]); // Depend on time, lesson status, and textId
@@ -675,9 +682,23 @@ const TextDisplay = () => {
         const translations = await batchTranslateWords(unknownWords, 'EN', text.languageCode);
         const originalCaseMap = new Map();
         textWords.forEach(w => { const lower = w.toLowerCase(); if (!originalCaseMap.has(lower)) { originalCaseMap.set(lower, w); } });
-        const termsToAdd = unknownWords.map(word => ({ term: originalCaseMap.get(word) || word, translation: translations[word.toLowerCase()] || '' })).filter(t => t.translation);
+        const termsToAdd = unknownWords.map(word => ({
+          term: originalCaseMap.get(word) || word,
+          translation: translations[word.toLowerCase()] || ''
+        })).filter(t => t.translation);
+        
         if (termsToAdd.length === 0) { alert("No translations received."); setTranslatingUnknown(false); return; } // Exit early
-        await addTermsBatch(text.languageId, termsToAdd);
+        
+        // Two-step workflow: first fetch translations, then save terms+translations
+        try {
+          await addTermsBatch(text.languageId, termsToAdd);
+        } catch (saveError) {
+          console.error("Error saving translated terms:", saveError);
+          setTranslateUnknownError(`Failed to save terms: ${saveError.message}`);
+          alert(`Error saving terms: ${saveError.message}`);
+          setTranslatingUnknown(false);
+          return;
+        }
         await fetchAllLanguageWords(text.languageId);
         alert(`Successfully translated and updated ${termsToAdd.length} words.`);
       } catch (err) { console.error("Error translating unknown words:", err); setTranslateUnknownError(`Failed: ${err.message}`); alert(`Error: ${err.message}`); }

@@ -940,6 +940,29 @@ export const getAudiobookProgress = async (bookId) => {
     return await fetchApi(`/api/activity/audiobookprogress/${bookId}`); // GET request by default
 };
 
+// --- Audio Lesson Progress ---
+
+// Update audio lesson progress (requires textId)
+export const updateAudioLessonProgress = async (textId, progressData) => {
+  // progressData should be { currentPosition: number | null }
+  const payload = {
+    textId: textId,
+    currentPosition: progressData.currentPosition
+  };
+  console.log('[API] Updating audio lesson progress via UserActivityController:', payload);
+  return await fetchApi('/api/activity/audiolessonprogress', {
+    method: 'PUT',
+    body: JSON.stringify(payload)
+  });
+};
+
+// Get audio lesson progress (requires textId)
+export const getAudioLessonProgress = async (textId) => {
+    console.log(`[API] Getting audio lesson progress for text ${textId} via UserActivityController`);
+    // Point to the new endpoint in UserActivityController, appending textId
+    return await fetchApi(`/api/activity/audiolessonprogress/${textId}`); // GET request by default
+};
+
 // Added logListeningActivity function
 export const logListeningActivity = async (languageId, durationSeconds) => {
   console.log(`[API] Logging listening activity: Lang ${languageId}, Duration ${durationSeconds}s`);
@@ -981,14 +1004,20 @@ export const batchTranslateWords = async (words, targetLanguageCode, sourceLangu
 
 // Add near other word functions
 
+/**
+ * Add a batch of terms and their translations to the database.
+ * @param {string} languageId - The language ID.
+ * @param {Array<{term: string, translation: string}>} terms - Array of objects with term and translation.
+ * @returns {Promise<any>}
+ */
 export const addTermsBatch = async (languageId, terms) => {
   try {
+    // The backend expects: [{ term: string, translation: string }]
+    // The endpoint is /api/words/batch
     const payload = {
       languageId,
-      terms // Array of { term: string, translation: string }
+      terms
     };
-     console.log(`[API] Sending batch add terms request for ${terms.length} terms for language ${languageId}`);
-    // Assuming the endpoint is /api/words/batch based on backend changes
     return await fetchApi('/api/words/batch', {
       method: 'POST',
       body: JSON.stringify(payload)

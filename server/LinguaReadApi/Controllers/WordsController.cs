@@ -347,87 +347,78 @@ namespace LinguaReadApi.Controllers
             // Fetch existing words for this user and language efficiently
             var existingWords = await _context.Words
                 .Include(w => w.Translation)
-                .Where(w => w.UserId == userId && w.LanguageId == languageId && termStrings.Contains(w.Term))
-                .ToDictionaryAsync(w => w.Term, w => w); // Use Trimmed term as key? Assuming Term is stored trimmed.
+                .Where(w => w.UserId == userId && w.LanguageId == languageId)
+                .ToListAsync();
 
             var wordsToCreate = new List<Word>();
             var translationsToCreate = new List<WordTranslation>();
-            // EF Core tracks changes to existingWords automatically
+            // Build a case-insensitive lookup for existing words
+            var existingWordsLookup = new Dictionary<string, Word>(StringComparer.OrdinalIgnoreCase);
+            foreach (var w in existingWords)
+            {
+                existingWordsLookup[w.Term.Trim()] = w;
+            }
 
             foreach (var termDto in termsToAdd)
             {
-                var trimmedTerm = termDto.Term?.Trim(); // Trim term for lookup and creation
-                // Skip if term is empty or whitespace after trimming
+                var trimmedTerm = termDto.Term?.Trim();
                 if (string.IsNullOrWhiteSpace(trimmedTerm)) continue;
 
-                if (existingWords.TryGetValue(trimmedTerm, out var existingWord))
+                if (existingWordsLookup.TryGetValue(trimmedTerm, out var existingWord))
                 {
-                    // Word exists - Update status to 5 (Known) if it's lower
-                    // bool needsSave = false; // Removed unused variable
+                    // Word exists - update status if needed
                     if (existingWord.Status < 5)
                     {
                         existingWord.Status = 5;
-                        // needsSave = true; // Removed unused assignment
                     }
-
                     // Handle translation only if provided in the DTO
                     if (!string.IsNullOrEmpty(termDto.Translation))
                     {
                         if (existingWord.Translation == null)
                         {
-                             // Add new translation if missing
-                             translationsToCreate.Add(new WordTranslation
-                             {
-                                 Word = existingWord, // Link for EF Core relationship fixup
-                                 Translation = termDto.Translation,
-                                 CreatedAt = DateTime.UtcNow
-                             });
-                            // needsSave = true; // Removed unused assignment
+                            translationsToCreate.Add(new WordTranslation
+                            {
+                                Word = existingWord,
+                                Translation = termDto.Translation,
+                                CreatedAt = DateTime.UtcNow
+                            });
                         }
                         else if (existingWord.Translation.Translation != termDto.Translation)
                         {
-                            // Update existing translation only if different
                             existingWord.Translation.Translation = termDto.Translation;
                             existingWord.Translation.UpdatedAt = DateTime.UtcNow;
-                            // needsSave = true; // Removed unused assignment
                         }
                     }
-                    // EF Core's change tracker will handle the update on SaveChangesAsync if changes were made
                 }
                 else
                 {
-                    // Word doesn't exist - Create new Word
-                    // Use status from DTO if valid (1-5), otherwise default to 5 (Known)
                     int initialStatus = (termDto.Status.HasValue && termDto.Status.Value >= 1 && termDto.Status.Value <= 5)
-                                        ? termDto.Status.Value
-                                        : 5;
+                        ? termDto.Status.Value
+                        : 5;
 
                     var newWord = new Word
                     {
-                        Term = trimmedTerm, // Use trimmed term
-                        Status = initialStatus, // Use determined initial status
+                        Term = trimmedTerm,
+                        Status = initialStatus,
                         UserId = userId,
                         LanguageId = languageId,
                         CreatedAt = DateTime.UtcNow
                     };
                     wordsToCreate.Add(newWord);
 
-                    // Only add translation if provided
                     if (!string.IsNullOrEmpty(termDto.Translation))
                     {
                         translationsToCreate.Add(new WordTranslation
                         {
-                            Word = newWord, // Link navigation property
+                            Word = newWord,
                             Translation = termDto.Translation,
                             CreatedAt = DateTime.UtcNow
                         });
                     }
-
-                    // Add to dictionary to handle potential duplicates in the input list affecting future checks in this loop
-                    existingWords[newWord.Term] = newWord; // Use trimmed term as key
+                    // Add to lookup to prevent duplicate inserts in this batch
+                    existingWordsLookup[trimmedTerm] = newWord;
                 }
             }
-
             if (wordsToCreate.Any())
             {
                 _context.Words.AddRange(wordsToCreate);

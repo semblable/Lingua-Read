@@ -130,6 +130,67 @@ npm start
 yarn start
 ```
 
+
+## Installation with Docker
+
+This is the recommended way to run LinguaRead for development or testing.
+
+### Prerequisites
+
+- Docker ([Install Docker](https://docs.docker.com/get-docker/))
+- Docker Compose ([Install Docker Compose](https://docs.docker.com/compose/install/))
+
+### Running the Application
+
+1.  **Clone the repository** (if you haven't already).
+2.  **Navigate to the project root directory** (where `docker-compose.yml` is located).
+3.  **Run the following command:**
+
+    ```bash
+    docker-compose up --build -d
+    ```
+
+    - This command will build the Docker images for the frontend (React) and backend (.NET API) if they don't exist locally.
+    - It will then start containers for the frontend, backend, and the PostgreSQL database.
+    - The `-d` flag runs the containers in detached mode (in the background).
+
+
+### Deploying to a New Machine
+
+To run LinguaRead on a different machine using the Docker setup:
+
+1.  **Ensure Prerequisites:** Make sure Docker and Docker Compose are installed on the new machine.
+2.  **Clone the Repository:** Obtain the project code:
+    ```bash
+    git clone <repository_url> # Replace <repository_url> with the actual URL
+    ```
+3.  **Navigate to Project Directory:** Change into the cloned project's root directory:
+    ```bash
+    cd Lingua_Read # Or the name you cloned the repository into
+    ```
+4.  **Start the Application:** Use the same command to build (if needed) and start the services:
+    ```bash
+    docker-compose up --build -d
+    ```
+This will set up the database, backend API, and frontend client.
+
+
+### Accessing the Application
+
+- The frontend will be available at: **http://localhost:3000**
+- The backend API will be available at: **http://localhost:5000** (or the port specified in `docker-compose.yml` if changed)
+
+### Stopping the Application
+
+To stop and remove the containers, networks, and volumes created by `docker-compose up`, run:
+
+```bash
+docker-compose down
+```
+
+---
+
+
 ## CSV Import/Export Format for Terms
 
 - **Columns:** `Term`, `Translation`, `Status` (optional)

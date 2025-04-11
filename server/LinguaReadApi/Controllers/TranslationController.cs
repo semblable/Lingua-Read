@@ -15,11 +15,16 @@ namespace LinguaReadApi.Controllers
     {
         private readonly ITranslationService _translationService;
         private readonly ILanguageService _languageService; // Inject LanguageService
+        private readonly ILogger<TranslationController> _logger;
 
-        public TranslationController(ITranslationService translationService, ILanguageService languageService)
+        public TranslationController(
+            ITranslationService translationService,
+            ILanguageService languageService,
+            ILogger<TranslationController> logger)
         {
             _translationService = translationService;
             _languageService = languageService; // Assign injected service
+            _logger = logger;
         }
 
         /// <summary>
@@ -94,6 +99,7 @@ namespace LinguaReadApi.Controllers
         /// <returns>A dictionary mapping original words to their translations.</returns>
         [HttpPost("batch")] // Added route segment "batch"
         public async Task<ActionResult<Dictionary<string, string>>> TranslateBatch([FromBody] BatchTranslationRequest request)
+
         {
             if (request.Words == null || request.Words.Count == 0)
             {
@@ -104,22 +110,11 @@ namespace LinguaReadApi.Controllers
                 return BadRequest("Target language code cannot be empty.");
             }
 
-            try
-            {
-                // SourceLanguageCode is optional for DeepL, service handles null
-                var translations = await _translationService.TranslateBatchAsync(
-                    request.Words,
-                    request.TargetLanguageCode,
-                    request.SourceLanguageCode); // Pass sourceLang if provided
-
-                return Ok(translations);
-            }
-            catch (Exception ex)
-            {
-                // Log the exception details
-                // Consider returning a more specific error response
-                return StatusCode(500, $"Batch translation failed: {ex.Message}");
-            }
+            var translations = await _translationService.TranslateBatchAsync(
+                request.Words,
+                request.TargetLanguageCode,
+                request.SourceLanguageCode);
+            return Ok(translations);
         }
     } // End of Controller class
 

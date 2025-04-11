@@ -521,16 +521,128 @@ private DateTime CalculateStartDate(string period)
             }
         }
 
-        // Moved GetUserId inside the class
-        private Guid GetUserId()
+        // --- Endpoints for Audio Lesson Progress ---
+
+        // DTO for updating audio lesson progress
+        public class UpdateAudioLessonProgressRequest
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-            {
-                throw new UnauthorizedAccessException("User ID not found or invalid in token.");
-            }
-            return userId;
+            [Required]
+            public int TextId { get; set; } // ID of the Text entity representing the lesson
+            public double? CurrentPosition { get; set; } // Nullable position
         }
 
-    } // End of UserActivityController class
-} // End of namespace
+        [HttpPut("audiolessonprogress")]
+        public async Task<IActionResult> UpdateAudioLessonProgress([FromBody] UpdateAudioLessonProgressRequest request)
+        {
+            _logger.LogInformation("---- BEGIN UpdateAudioLessonProgress ----");
+            _logger.LogInformation("Received request body: TextId={TextId}, Position={Position}", request?.TextId, request?.CurrentPosition);
+
+            if (request == null)
+            {
+                _logger.LogWarning("Request body is null.");
+                return BadRequest("Request body cannot be null.");
+            }
+
+            var userId = GetUserId(); // Use helper method
+            if (userId == Guid.Empty)
+            {
+                _logger.LogWarning("Failed to get UserId from token claim for UpdateAudioLessonProgress.");
+                return Unauthorized("User ID not found or invalid in token.");
+            }
+            _logger.LogInformation("Attempting to find/update UserAudioLessonProgress for UserId: {UserId}, TextId: {TextId}", userId, request.TextId);
+
+            try
+            {
+                var progressRecord = await _context.UserAudioLessonProgresses.FindAsync(userId, request.TextId);
+
+                if (progressRecord == null)
+                {
+                    _logger.LogInformation("UserAudioLessonProgress record not found for UserId: {UserId}, TextId: {TextId}. Creating new record.", userId, request.TextId);
+                    progressRecord = new UserAudioLessonProgress
+                    {
+                        UserId = userId,
+                        TextId = request.TextId,
+                        CurrentPosition = request.CurrentPosition, // Can be null
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _context.UserAudioLessonProgresses.Add(progressRecord);
+                    _logger.LogInformation("Added new UserAudioLessonProgress to context for UserId: {UserId}, TextId: {TextId}", userId, request.TextId);
+                }
+                else
+                {
+                    _logger.LogInformation("Found existing UserAudioLessonProgress for UserId: {UserId}, TextId: {TextId}. Updating.", userId, request.TextId);
+                    _logger.LogInformation("Updating UserAudioLessonProgress: Old Position={OldPosition}", progressRecord.CurrentPosition);
+                    progressRecord.CurrentPosition = request.CurrentPosition; // Update position (can be null)
+                    progressRecord.UpdatedAt = DateTime.UtcNow;
+                    _logger.LogInformation("Updating UserAudioLessonProgress: New Position={NewPosition}", progressRecord.CurrentPosition);
+                }
+
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("SaveChangesAsync completed successfully for UserAudioLessonProgress for UserId: {UserId}, TextId: {TextId}", userId, request.TextId);
+                _logger.LogInformation("---- END UpdateAudioLessonProgress (Success) ----");
+                return Ok(new { message = "Audio lesson progress updated successfully." });
+            }
+            catch (DbUpdateException dbEx)
+            {
+                _logger.LogError(dbEx, "Database error updating audio lesson progress for UserId: {UserId}, TextId: {TextId}. InnerException: {InnerMessage}", userId, request.TextId, dbEx.InnerException?.Message);
+                _logger.LogInformation("---- END UpdateAudioLessonProgress (DB Error) ----");
+                return StatusCode(500, $"A database error occurred while updating progress: {dbEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error updating audio lesson progress for UserId: {UserId}, TextId: {TextId}", userId, request.TextId);
+                _logger.LogInformation("---- END UpdateAudioLessonProgress (Error) ----");
+                return StatusCode(500, $"An unexpected error occurred while updating progress: {ex.Message}");
+            }
+        }
+
+        [HttpGet("audiolessonprogress/{textId}")]
+        public async Task<IActionResult> GetAudioLessonProgress(int textId)
+        {
+            _logger.LogInformation("Received request to get audio lesson progress for TextId: {TextId}", textId);
+
+            var userId = GetUserId();
+            if (userId == Guid.Empty)
+            {
+                _logger.LogWarning("Could not parse UserId from token for getting audio lesson progress for TextId: {TextId}.", textId);
+                return Unauthorized("User ID not found in token.");
+            }
+            _logger.LogInformation("Attempting to get audio lesson progress for UserId: {UserId}, TextId: {TextId}", userId, textId);
+
+            try
+            {
+                var progressRecord = await _context.UserAudioLessonProgresses.FindAsync(userId, textId);
+
+                if (progressRecord == null)
+                {
+                    _logger.LogInformation("UserAudioLessonProgress record not found for UserId: {UserId}, TextId: {TextId}. Returning default progress.", userId, textId);
+                    return Ok(new { currentPosition = (double?)null }); // Return null if no record found
+                }
+
+                _logger.LogInformation("Successfully retrieved audio lesson progress from UserAudioLessonProgress for UserId: {UserId}, TextId: {TextId}. Position: {Position}", userId, textId, progressRecord.CurrentPosition);
+                return Ok(new
+                {
+                    currentPosition = progressRecord.CurrentPosition
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving audio lesson progress for UserId: {UserId}, TextId: {TextId}", userId, textId);
+                return StatusCode(500, "An error occurred while retrieving audio lesson progress.");
+            }
+        }
+
+        // --- Helper Methods ---
+
+        private Guid GetUserId()
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (Guid.TryParse(userIdString, out Guid userId))
+            {
+                return userId;
+            }
+            _logger.LogWarning("GetUserId: Failed to parse UserId from token claim '{UserIdString}'. Returning Guid.Empty.", userIdString);
+            return Guid.Empty; // Return empty Guid if parsing fails
+        }
+    }
+}
