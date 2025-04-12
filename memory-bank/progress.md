@@ -23,8 +23,6 @@ This file tracks the project's progress using a task list format.
 *   [2025-04-10 18:43:58] - Implemented and confirmed audiobook player enhancements: volume slider and mute toggle via speaker icon.
 *   [2025-04-10 18:58:01] - Implemented "Reset Statistics" feature (backend endpoint, frontend button in User Settings). Verified implementation and visibility.
 
-*   [2025-04-11 15:10:40] - Updated README.md with Docker installation instructions.
-
 ## Current Tasks
 
 *   [2025-04-10 23:39:49] - Resolved batch translation issues: Corrected frontend workflow (`TextDisplay.js`, `api.js`) for fetch/save. Fixed backend (`WordsController.AddTermsBatch`) upsert logic for duplicates. Fixed frontend (`TextDisplay.js`) state update logic (`fetchAllLanguageWords`) to fully replace state after save, ensuring immediate UI refresh.

@@ -95,6 +95,3 @@ client/lingua-read-client/.env.production.local
 *.log.*
 *.pid
 *.pid.lock
-
-# Docker Volumes
-postgres-data/
