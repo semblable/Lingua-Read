@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LinguaReadApi.Data;
 using LinguaReadApi.Models;
+using Microsoft.AspNetCore.Identity; // Added for Identity
 
 namespace LinguaReadApi.Controllers
 {
@@ -16,12 +17,19 @@ namespace LinguaReadApi.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        // Remove direct DbContext dependency, use Identity managers instead
+        // private readonly AppDbContext _context;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly IConfiguration _configuration;
 
-        public AuthController(AppDbContext context, IConfiguration configuration)
+        public AuthController(
+            UserManager<User> userManager,
+            SignInManager<User> signInManager,
+            IConfiguration configuration)
         {
-            _context = context;
+            _userManager = userManager;
+            _signInManager = signInManager;
             _configuration = configuration;
         }
 
@@ -33,28 +41,28 @@ namespace LinguaReadApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Check if user already exists
-            if (await _context.Users.AnyAsync(u => u.Email == model.Email))
+            // Check if user already exists using UserManager
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
             {
                 return Conflict("User with this email already exists");
             }
 
-            // Hash the password
-            string passwordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
-
-            // Create new user
+            // Create new user using UserManager
             var user = new User
             {
-                // Id is handled by IdentityUser
-                UserName = model.Email, // Set UserName, e.g., using Email
+                UserName = model.Email, // Identity requires UserName
                 Email = model.Email,
-                PasswordHash = passwordHash,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow // Keep custom field if needed
             };
 
-            // Save user to database
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (!result.Succeeded)
+            {
+                // Log errors if needed: foreach (var error in result.Errors) { ... }
+                return BadRequest(result.Errors);
+            }
 
             // Generate JWT token
             var token = GenerateJwtToken(user);
@@ -71,18 +79,21 @@ namespace LinguaReadApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Find user by email
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
-            if (user == null)
+            // Use SignInManager to handle login attempt
+            var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, isPersistent: false, lockoutOnFailure: false);
+
+            if (!result.Succeeded)
             {
+                // Avoid giving specific reasons for failure (security)
                 return Unauthorized("Invalid email or password");
             }
 
-            // Verify password
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash);
-            if (!isPasswordValid)
+            // If successful, get the user to generate the token
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
             {
-                return Unauthorized("Invalid email or password");
+                 // Should not happen if PasswordSignInAsync succeeded, but handle defensively
+                 return Unauthorized("User not found after successful sign-in.");
             }
 
             // Generate JWT token

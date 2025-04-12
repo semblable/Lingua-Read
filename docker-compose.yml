@@ -25,6 +25,9 @@ services:
       dockerfile: server/LinguaReadApi/Dockerfile
     ports:
       - "5000:8080" # Map host port 5000 to container port 8080 (ASP.NET Core)
+    env_file:
+      - server/LinguaReadApi/.env # Load environment variables from this file
+
     environment:
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=linguaread_db;Username=linguaread_user;Password=linguaread_password

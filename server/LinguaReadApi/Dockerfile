@@ -28,5 +28,7 @@ WORKDIR /app
 EXPOSE 8080
 # Copy the published output from the publish stage
 COPY --from=publish /app/publish .
+COPY ["server/LinguaReadApi/.env", "."]
+
 # Set the entry point for the container
 ENTRYPOINT ["dotnet", "LinguaReadApi.dll"]
