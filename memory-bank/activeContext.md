@@ -17,8 +17,6 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-04-11 09:12:46] - Fixed audio lesson progress loss: Implemented backend storage (`UserAudioLessonProgress` table, API endpoints) and updated frontend (`TextDisplay.js`) to use API instead of localStorage.
 *   [2025-04-11 09:33:03] - Fixed batch translation UI refresh issue: Corrected state update logic in `TextDisplay.js` (`fetchAllLanguageWords`) to fully replace local state with fetched data, ensuring immediate UI update after batch translation and save.
 
-*   [2025-04-11 15:10:55] - Updated README.md with Docker instructions.
-
 *   
 
 ## Recent Changes
@@ -31,8 +29,6 @@ This file tracks the project's current status, including recent changes, current
 *   [2025-04-10 22:58:39] - Corrected frontend batch translation workflow (`client/lingua-read-client/src/utils/api.js`, `client/lingua-read-client/src/pages/TextDisplay.js`) to use two-step fetch/save process (`/api/translation/batch` then `/api/words/batch`).
 *   [2025-04-10 23:36:02] - Implemented upsert logic in backend `WordsController.AddTermsBatch` (`server/LinguaReadApi/Controllers/WordsController.cs`) to handle duplicate terms during batch save, resolving unique constraint errors.
 *   [2025-04-10 23:39:49] - Fixed frontend state update logic in `TextDisplay.js` (`fetchAllLanguageWords` function) to fully replace state after batch save, ensuring immediate UI refresh.
-
-*   [2025-04-11 15:10:55] - Added Docker installation instructions to README.md.
 
 *   
 

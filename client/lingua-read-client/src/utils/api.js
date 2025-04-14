@@ -4,10 +4,9 @@ import { Platform } from 'react-native';
 
 // Dynamically set API URL based on platform
 // For web development use localhost, for mobile use your computer's IP address
-// Use environment variable if available (e.g., in Docker), otherwise fallback
-export const API_URL = process.env.REACT_APP_API_URL || (Platform.OS === 'web'
-  ? 'http://localhost:5000' // Default for local web dev
-  : 'http://192.168.0.48:5000'); // Default for local mobile dev (replace with your IP)
+export const API_URL = Platform.OS === 'web' // Export the constant
+  ? 'http://localhost:5000'
+  : 'http://192.168.0.48:5000'; // Your Ethernet adapter IP address
 
 // Helper function to get token from storage
 const getToken = () => {

@@ -178,11 +178,6 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        // Apply pending migrations
-        var dbContext = services.GetRequiredService<AppDbContext>();
-        dbContext.Database.Migrate();
-
-
         DbInitializer.Initialize(services); // Restore seeding call
     }
     catch (Exception ex)
