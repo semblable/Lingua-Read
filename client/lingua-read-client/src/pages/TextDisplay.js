@@ -186,7 +186,8 @@ const TextDisplay = () => {
   const fetchAllLanguageWords = useCallback(async (languageId) => {
     if (!languageId) return; // Guard against missing languageId
     try {
-      const response = await fetch(`${API_URL}/api/words/language/${languageId}`, {
+      // Corrected URL construction: Removed redundant '/api' prefix
+      const response = await fetch(`${API_URL}/words/language/${languageId}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Accept': 'application/json' }
       });
       if (!response.ok) throw new Error('Failed to fetch language words');
@@ -376,7 +377,16 @@ const TextDisplay = () => {
         setWords(data.words || []);
         if (data.isAudioLesson && data.audioFilePath && data.srtContent) {
           setIsAudioLesson(true);
-          setAudioSrc(`${API_URL}/${data.audioFilePath}`);
+          // --- DEBUG: Log the path being used ---
+          console.log(`[Audio Lesson DEBUG] Setting audio source. data.audioFilePath = "${data.audioFilePath}"`);
+          // Correctly set audio source - remove API_URL prefix as it's a direct file path
+          const newAudioSrc = `/${data.audioFilePath}`;
+          setAudioSrc(newAudioSrc);
+          // --- DEBUG: Log after setting src and check if load() needs to be called ---
+          console.log(`[Audio Lesson DEBUG] Set audioSrc to: ${newAudioSrc}. Checking audioRef...`);
+          // Load call moved to a separate useEffect hook dependent on audioSrc
+          // --- END DEBUG ---
+          // --- END DEBUG ---
           setSrtLines(parseSrtContent(data.srtContent));
           setDisplayMode('audio');
 
@@ -482,7 +492,7 @@ const TextDisplay = () => {
                 };
                 console.log('[Audio Log - Unmount] API Payload:', payload);
                 console.log('[Audio Log - Unmount] Making fetch call to logListening...');
-                fetch(`${API_URL}/api/activity/logListening`, {
+                fetch(`${API_URL}/activity/logListening`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -566,6 +576,18 @@ const TextDisplay = () => {
       }
   }, [audioCurrentTime, isAudioLesson, textId]); // Depend on time, lesson status, and textId
   // --- End Save Audio Time ---
+
+  // --- Effect to Load Audio Source ---
+  // Use useLayoutEffect to ensure ref is attached before running
+  React.useLayoutEffect(() => {
+    if (isAudioLesson && audioSrc && displayMode === 'audio' && audioRef.current) {
+      console.log(`[Audio Load LayoutEffect] Conditions met. audioSrc: ${audioSrc}. Calling load() on audioRef.`);
+      audioRef.current.load();
+    } else {
+      console.log(`[Audio Load LayoutEffect] Skipping load(). isAudioLesson=${isAudioLesson}, audioSrc=${audioSrc}, displayMode=${displayMode}, audioRef exists=${!!audioRef.current}`);
+    }
+  }, [audioSrc, isAudioLesson, displayMode]);
+  // --- End Effect to Load Audio Source ---
 
 
   // --- Keyboard Shortcuts ---
@@ -753,13 +775,25 @@ const TextDisplay = () => {
       if (audioRef.current) {
           audioRef.current.playbackRate = playbackRate;
       }
+      // --- DEBUGGING: Log values before attempting seek ---
+      console.log(`[Audio Metadata DEBUG] Checking seek condition: audioRef.current exists=${!!audioRef.current}, initialAudioTime=${initialAudioTime}, initialAudioTime > 0=${initialAudioTime > 0}`);
+
       if (audioRef.current && initialAudioTime !== null && initialAudioTime > 0) {
-          console.log(`[Audio Metadata] Setting current time to: ${initialAudioTime}`);
+          // Pause before seeking to ensure correct position is set before play
+          audioRef.current.pause();
+          console.log(`[Audio Metadata] Paused audio. Current time BEFORE seek: ${audioRef.current.currentTime}`);
+          console.log(`[Audio Metadata] Attempting to set current time to: ${initialAudioTime}`);
           audioRef.current.currentTime = initialAudioTime;
+          // --- DEBUGGING: Log time immediately after setting ---
+          console.log(`[Audio Metadata DEBUG] Current time AFTER seek attempt: ${audioRef.current?.currentTime}`);
+          // Optionally, resume playback if desired (uncomment next line if you want auto-play)
+          // audioRef.current.play();
           // Reset initial time state after applying it once
           setInitialAudioTime(null);
       } else if (audioRef.current) {
-          console.log(`[Audio Metadata] No initial time to set or initial time is 0. Current time: ${audioRef.current.currentTime}`);
+          console.log(`[Audio Metadata] Condition NOT MET for setting initial time. initialAudioTime=${initialAudioTime}. Current time: ${audioRef.current.currentTime}`);
+      } else {
+          console.log(`[Audio Metadata DEBUG] Condition NOT MET because audioRef.current is null.`);
       }
   };
 
@@ -804,7 +838,7 @@ const TextDisplay = () => {
               };
               console.log('[Audio Tracking - Pause/End] API Payload:', payload);
               console.log('[Audio Tracking - Pause/End] Making fetch call to logListening...');
-              fetch(`${API_URL}/api/activity/logListening`, {
+              fetch(`${API_URL}/activity/logListening`, {
                   method: 'POST',
                   headers: {
                       'Content-Type': 'application/json',
@@ -940,8 +974,8 @@ const TextDisplay = () => {
                <p className="text-muted mb-0 small">Lang: {text.languageName || 'N/A'} | Words: {words.length}</p>
              </div>
              <div className="d-flex gap-2 flex-wrap mt-2 mt-md-0 align-items-center">
-               {/* Audiobook Player Integration */}
-               {book && book.audiobookTracks && book.audiobookTracks.length > 0 && (
+               {/* Audiobook Player Integration - ONLY if NOT an audio lesson */}
+               {!isAudioLesson && book && book.audiobookTracks && book.audiobookTracks.length > 0 && (
                  <div className="flex-grow-1 mx-2" style={{ minWidth: '450px' }}> {/* Increased minWidth significantly */}
                     <AudiobookPlayer book={book} />
                  </div>

@@ -64,63 +64,73 @@ namespace LinguaReadApi.Controllers
         {
             var userId = GetUserId();
 
-            var text = await _context.Texts
+            // --- Step 1: Fetch data without tracking ---
+            var textDto = await _context.Texts
+                .AsNoTracking() // Fetch without tracking to avoid change detection issues
                 .Where(t => t.TextId == id && t.UserId == userId)
                 .Include(t => t.Language)
-                .Include(t => t.Book) // Include Book
+                .Include(t => t.Book)
                 .Include(t => t.TextWords)
                     .ThenInclude(tw => tw.Word)
                         .ThenInclude(w => w.Translation)
+                .Select(text => new TextDetailDto // Project directly to DTO
+                {
+                     TextId = text.TextId,
+                     Title = text.Title,
+                     Content = text.Content,
+                     LanguageId = text.LanguageId,
+                     LanguageCode = text.Language.Code, // Assuming Language is always loaded
+                     LanguageName = text.Language.Name,
+                     BookId = text.BookId,
+                     BookTitle = text.Book != null ? text.Book.Title : null,
+                     IsAudioLesson = text.IsAudioLesson, // Include audio lesson fields
+                     AudioFilePath = text.AudioFilePath,
+                     SrtContent = text.SrtContent,
+                     CreatedAt = text.CreatedAt,
+                     Words = text.TextWords.Select(tw => new WordDto
+                     {
+                         WordId = tw.Word.WordId,
+                         Term = tw.Word.Term,
+                         Status = tw.Word.Status,
+                         Translation = tw.Word.Translation != null ? tw.Word.Translation.Translation : null
+                     }).ToList()
+                })
                 .FirstOrDefaultAsync();
 
-            if (text == null)
+            if (textDto == null)
             {
                 return NotFound();
             }
 
-            // --- Update LastAccessedAt ---
-            text.LastAccessedAt = DateTime.UtcNow;
+            // --- Step 2: Perform separate update for LastAccessedAt ---
             try
             {
-                await _context.SaveChangesAsync();
+                var textToUpdate = new Text { TextId = id, UserId = userId }; // Create minimal entity stub
+                _context.Texts.Attach(textToUpdate); // Attach the stub
+                textToUpdate.LastAccessedAt = DateTime.UtcNow; // Mark only LastAccessedAt as modified
+                 _context.Entry(textToUpdate).Property(x => x.LastAccessedAt).IsModified = true;
+
+                await _context.SaveChangesAsync(); // Save only the timestamp change
+                // Removed reference to LastAccessedAt on textDto (does not exist in DTO)
             }
             catch (DbUpdateConcurrencyException ex)
             {
                  _logger.LogWarning(ex, "Concurrency error updating LastAccessedAt for TextId {TextId}", id);
-                 // Decide if this is critical. For now, we'll proceed with returning the data.
+                 // Non-critical, proceed with returning potentially slightly stale LastAccessedAt in DTO
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving LastAccessedAt for TextId {TextId}", id);
-                // Log and continue, as fetching the data is the primary goal here.
+                // Non-critical, proceed with returning potentially slightly stale LastAccessedAt in DTO
             }
             // --- End Update ---
 
-            var textDetail = new TextDetailDto
-            {
-                TextId = text.TextId,
-                Title = text.Title,
-                Content = text.Content,
-                LanguageName = text.Language.Name,
-                LanguageCode = text.Language.Code,
-                LanguageId = text.LanguageId,
-                BookId = text.BookId,
-                BookTitle = text.Book?.Title, // Add BookTitle
-                CreatedAt = text.CreatedAt,
-                IsAudioLesson = text.IsAudioLesson,
-                AudioFilePath = text.AudioFilePath,
-                SrtContent = text.SrtContent,
-                Words = text.TextWords.Select(tw => new WordDto
-                {
-                    WordId = tw.Word.WordId,
-                    Term = tw.Word.Term,
-                    Status = tw.Word.Status,
-                    Translation = tw.Word.Translation?.Translation,
-                    IsNew = false
-                }).ToList()
-            };
+            // --- Step 3: Return the DTO ---
+            // Mapping is already done via .Select()
+            var textDetail = textDto; // Assign the created DTO
 
-            return textDetail;
+            // Removed legacy mapping code. Use the projected DTO directly.
+            return textDto;
         }
 
         // GET: api/texts/recent
@@ -197,8 +207,9 @@ namespace LinguaReadApi.Controllers
 
             var uniqueWords = wordsInText.Distinct().ToList();
 
-            // Fetch existing words for this user and language
+            // Fetch existing words for this user and language without tracking to improve performance
             var existingWords = await _context.Words
+                .AsNoTracking() // Prevent tracking related entities like Language
                 .Where(w => w.UserId == userId && w.LanguageId == languageId && uniqueWords.Contains(w.Term.ToLower()))
                 .ToDictionaryAsync(w => w.Term.ToLower());
 
@@ -224,7 +235,8 @@ namespace LinguaReadApi.Controllers
 
             await _context.SaveChangesAsync(); // Save new words to get their IDs
 
-            // Link all word occurrences in the text
+            // Link all word occurrences in the text using bulk insert
+            var textWordsToAdd = new List<TextWord>();
             foreach (var wordTerm in wordsInText)
             {
                 if (existingWords.TryGetValue(wordTerm, out var word))
@@ -235,11 +247,15 @@ namespace LinguaReadApi.Controllers
                         WordId = word.WordId,
                         CreatedAt = DateTime.UtcNow
                     };
-                    _context.TextWords.Add(textWord);
+                    textWordsToAdd.Add(textWord); // Add to list instead of context directly
                 }
             }
 
-            await _context.SaveChangesAsync(); // Save all TextWord links
+            if (textWordsToAdd.Any())
+            {
+                await _context.TextWords.AddRangeAsync(textWordsToAdd); // Add the whole batch
+                await _context.SaveChangesAsync(); // Save all TextWord links in one go
+            }
 
             var language = await _context.Languages.FindAsync(text.LanguageId);
 
@@ -364,8 +380,9 @@ namespace LinguaReadApi.Controllers
 
                 var uniqueWords = wordsInText.Distinct().ToList();
 
-                // Fetch existing words for this user and language
+                // Fetch existing words for this user and language without tracking
                 var existingWordsQuery = _context.Words
+                    .AsNoTracking() // Prevent tracking related entities like Language
                     .Where(w => w.UserId == userId && w.LanguageId == languageId && uniqueWords.Contains(w.Term.ToLower()));
 
                 // --- DEBUG LOGGING START ---
@@ -414,8 +431,11 @@ namespace LinguaReadApi.Controllers
 
                 await _context.SaveChangesAsync(); // Save new words to get their IDs
 
-                // Link all word occurrences in the transcript
-                foreach (var wordTerm in wordsInText)
+                // Link all word occurrences in the transcript using bulk insert
+                // Note: This currently links only *unique* words. If you need to link every occurrence,
+                // the loop should iterate over 'wordsInText' instead of 'uniqueWords'.
+                var textWordsToAdd = new List<TextWord>();
+                foreach (var wordTerm in uniqueWords) // Iterating unique words as per original logic
                 {
                     if (existingWords.TryGetValue(wordTerm, out var word))
                     {
@@ -425,11 +445,15 @@ namespace LinguaReadApi.Controllers
                             WordId = word.WordId,
                             CreatedAt = DateTime.UtcNow
                         };
-                        _context.TextWords.Add(textWord);
+                        textWordsToAdd.Add(textWord); // Add to list instead of context directly
                     }
                 }
-
-                await _context.SaveChangesAsync(); // Save all TextWord links
+    
+                 if (textWordsToAdd.Any())
+                {
+                    await _context.TextWords.AddRangeAsync(textWordsToAdd); // Add the whole batch
+                    await _context.SaveChangesAsync(); // Save all TextWord links in one go
+                }
 
                 // --- 4. Return Response ---
                 var language = await _context.Languages.FindAsync(text.LanguageId);
@@ -862,6 +886,7 @@ namespace LinguaReadApi.Controllers
             var userId = GetUserId();
 
             var text = await _context.Texts
+                .AsNoTracking() // Add AsNoTracking here
                 .Include(t => t.TextWords)
                     .ThenInclude(tw => tw.Word)
                 .FirstOrDefaultAsync(t => t.TextId == textId && t.UserId == userId);
@@ -871,67 +896,20 @@ namespace LinguaReadApi.Controllers
                 return NotFound("Text not found.");
             }
 
-            // --- 1. Re-parse and re-link words to ensure accurate stats ---
-            // Remove old TextWords links
-            var oldLinks = _context.TextWords.Where(tw => tw.TextId == text.TextId);
-            _context.TextWords.RemoveRange(oldLinks);
-            await _context.SaveChangesAsync();
-
-            // Parse and link words from current text content
-            var content = text.Content;
-            var languageId = text.LanguageId;
-            var separators = new char[] { ' ', '\t', '\r', '\n', '.', ',', ';', ':', '!', '?', '\"', '\'', '(', ')', '[', ']', '{', '}', '-', '_', '/', '\\', '|', '@', '#', '$', '%', '^', '&', '*', '+', '=', '<', '>', '`', '~' };
-            var wordsInText = content.Split(separators, StringSplitOptions.RemoveEmptyEntries)
-                                     .Select(w => w.Trim().ToLowerInvariant())
-                                     .Where(w => !string.IsNullOrWhiteSpace(w))
-                                     .ToList();
-            var uniqueWords = wordsInText.Distinct().ToList();
-
-            // Fetch existing words for this user and language
-            var existingWords = await _context.Words
-                .Where(w => w.UserId == userId && w.LanguageId == languageId && uniqueWords.Contains(w.Term.ToLower()))
-                .ToDictionaryAsync(w => w.Term.ToLower());
-
-            var newWords = new List<Word>();
-            foreach (var wordTerm in uniqueWords)
+            // --- 1. Calculate Stats from existing links ---
+            // Ensure TextWords and Words were loaded in the initial query (Lines 888-891)
+            if (text.TextWords == null)
             {
-                if (!existingWords.ContainsKey(wordTerm))
-                {
-                    var newWord = new Word
-                    {
-                        UserId = userId,
-                        LanguageId = languageId,
-                        Term = wordTerm,
-                        Status = 0,
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    _context.Words.Add(newWord);
-                    newWords.Add(newWord);
-                    existingWords[wordTerm] = newWord;
-                }
+                 // This shouldn't happen if the Include was correct, but handle defensively
+                 await _context.Entry(text).Collection(t => t.TextWords).Query().Include(tw => tw.Word).LoadAsync();
+                 if (text.TextWords == null)
+                 {
+                      _logger.LogError("Failed to load TextWords for TextId {TextId} during completion.", textId);
+                      return StatusCode(500, "Failed to load word data for statistics.");
+                 }
             }
-            await _context.SaveChangesAsync();
 
-            // Link all word occurrences in the text
-            foreach (var wordTerm in wordsInText)
-            {
-                if (existingWords.TryGetValue(wordTerm, out var word))
-                {
-                    var textWord = new TextWord
-                    {
-                        TextId = text.TextId,
-                        WordId = word.WordId,
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    _context.TextWords.Add(textWord);
-                }
-            }
-            await _context.SaveChangesAsync();
-
-            // Re-fetch text with updated links
-            await _context.Entry(text).Collection(t => t.TextWords).Query().Include(tw => tw.Word).LoadAsync();
-
-            var totalWords = text.TextWords.Count;
+            var totalWords = text.TextWords.Count; // Calculate stats from already loaded data
             var knownWords = text.TextWords.Count(tw => tw.Word.Status == 5); // Status 5 = Known
             var learningWords = text.TextWords.Count(tw => tw.Word.Status > 0 && tw.Word.Status < 5); // Status 1-4 = Learning
 

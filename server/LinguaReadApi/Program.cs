@@ -44,7 +44,8 @@ builder.Services.Configure<FormOptions>(options =>
 builder.Services.AddControllers();
 // Configure DbContext with PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .EnableSensitiveDataLogging()); // <-- Enable sensitive data logging
 
 // --- Add ASP.NET Core Identity ---
 // Make sure LinguaReadApi.Models.User exists and is the correct user class
@@ -136,7 +137,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowClientApp", policy =>
     {
         // Restore specific CORS policy
-        policy.WithOrigins("http://localhost:3000", "http://localhost:19006") // Allow specific frontend origins
+        policy.WithOrigins("http://localhost:3000", "http://localhost:19006", "http://localhost") // Allow specific frontend origins
               .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Explicitly allow needed methods + OPTIONS for preflight
               .WithHeaders("Content-Type", "Authorization", "Accept") // Explicitly allow common headers + Authorization
               .AllowCredentials(); // Allow cookies/auth headers
@@ -178,6 +179,10 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
+        // Apply database migrations automatically
+        var dbContext = services.GetRequiredService<AppDbContext>();
+        dbContext.Database.Migrate();
+
         DbInitializer.Initialize(services); // Restore seeding call
     }
     catch (Exception ex)
@@ -206,11 +211,16 @@ app.UseRouting();
 // Serve static files from wwwroot (e.g., uploaded audio)
 // Use default UseStaticFiles for general wwwroot content
 app.UseStaticFiles();
+
+// Ensure the audio_lessons directory exists before configuring static files for it
+var audioLessonsPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "audio_lessons");
+Directory.CreateDirectory(audioLessonsPath); // Create if it doesn't exist
+
 // Explicitly serve audio_lessons directory with a specific request path
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
-        Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "audio_lessons")),
+        audioLessonsPath), // Use the ensured path variable
     RequestPath = "/audio_lessons" // Map requests starting with /audio_lessons
 });
 // Ensure the base audiobooks directory exists before configuring static files for it
@@ -240,6 +250,6 @@ app.MapControllers();
 
 // Configure Kestrel to use port 5000
 app.Urls.Clear();
-app.Urls.Add("http://localhost:5000");
+app.Urls.Add("http://0.0.0.0:5000");
 
 app.Run();

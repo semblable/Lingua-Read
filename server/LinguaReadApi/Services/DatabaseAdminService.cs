@@ -43,7 +43,8 @@ namespace LinguaReadApi.Services
             _pgRestorePath = _configuration["PGRESTORE_PATH"] ?? "pg_restore";
 
             // Define a directory for temporary backup files
-            _backupDirectory = Path.Combine(Path.GetTempPath(), "linguaread_backups");
+            // Define a directory for temporary backup files within the app's working directory
+            _backupDirectory = Path.Combine(Directory.GetCurrentDirectory(), "temp_backups"); // Use relative path
             Directory.CreateDirectory(_backupDirectory); // Ensure it exists
         }
 

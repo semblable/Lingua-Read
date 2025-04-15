@@ -459,6 +459,7 @@ namespace LinguaReadApi.Controllers
             var userId = GetUserId();
 
             var query = _context.Words
+                .AsNoTracking() // Add AsNoTracking here
                 .Where(w => w.UserId == userId)
                 .Include(w => w.Translation)
                 .Include(w => w.Language) // Include Language for the name

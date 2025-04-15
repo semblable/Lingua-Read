@@ -8621,11 +8621,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj",
+      "projectUniqueName": "F:\\docker_lingua\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj",
       "projectName": "LinguaReadApi",
-      "projectPath": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj",
+      "projectPath": "F:\\docker_lingua\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj",
       "packagesPath": "C:\\Users\\kamil\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\kamil\\Dropbox\\Lingua_Read\\server\\LinguaReadApi\\obj\\",
+      "outputPath": "F:\\docker_lingua\\Lingua_Read\\server\\LinguaReadApi\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\kamil\\AppData\\Roaming\\NuGet\\NuGet.Config",

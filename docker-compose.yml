@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./server/LinguaReadApi
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      # For ASP.NET Core Connection String
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      # For pg_dump/pg_restore in DatabaseAdminService
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB}
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      # Other variables
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: http://backend:5000
+      Jwt__Audience: http://localhost
+      DeepL__ApiKey: ${DEEPL_API_KEY}
+      Gemini__ApiKey: ${GEMINI_API_KEY}
+    volumes:
+      - api_audio:/app/wwwroot
+    ports:
+      - "5000:5000" # Changed from expose to ports for potentially better connectivity/debugging
+
+  frontend:
+    build: ./client/lingua-read-client
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  db_data:
+  api_audio:

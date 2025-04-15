@@ -4,8 +4,8 @@ import { Platform } from 'react-native';
 
 // Dynamically set API URL based on platform
 // For web development use localhost, for mobile use your computer's IP address
-export const API_URL = Platform.OS === 'web' // Export the constant
-  ? 'http://localhost:5000'
+export const API_URL = Platform.OS === 'web'
+  ? '/api'
   : 'http://192.168.0.48:5000'; // Your Ethernet adapter IP address
 
 // Helper function to get token from storage
@@ -37,13 +37,26 @@ const fetchApi = async (endpoint, options = {}) => {
       'Content-Type': 'application/json'
     };
 
+    // --- DEBUG: Log token status specifically for /usersettings ---
+    if (endpoint === '/usersettings') {
+      console.log(`[fetchApi DEBUG /usersettings] Token check: token exists=${!!token}, type=${typeof token}, trimmed length=${token?.trim().length ?? 'N/A'}`);
+    }
+    // --- END DEBUG ---
+
     // Only add Authorization header if token exists and is a string
     if (token && typeof token === 'string' && token.trim() !== '') {
       const cleanToken = token.trim();
       headers.Authorization = `Bearer ${cleanToken}`;
       // Authorization header added
     } else {
-      if (endpoint !== '/api/auth/login' && endpoint !== '/api/auth/register' && endpoint !== '/api/languages') {
+       // Allow /usersettings even without token initially? Or rely on context to call only when logged in?
+       // For now, let's assume /usersettings REQUIRES auth like others, except login/register.
+      if (endpoint !== '/auth/login' && endpoint !== '/auth/register') {
+        // --- DEBUG: Log auth error trigger ---
+        if (endpoint === '/usersettings') {
+           console.log(`[fetchApi DEBUG /usersettings] Throwing 'Authentication required' because token check failed.`);
+        }
+        // --- END DEBUG ---
         throw new Error('Authentication required');
       }
     }
@@ -61,7 +74,7 @@ const fetchApi = async (endpoint, options = {}) => {
     };
 
     // Construct the full URL properly
-    const fullUrl = new URL(endpoint, API_URL);
+    const fullUrl = API_URL + endpoint; // Directly concatenate the relative path
 
     const response = await fetch(fullUrl.toString(), requestConfig);
 
@@ -136,7 +149,7 @@ const fetchApiDownload = async (endpoint, options = {}) => {
       mode: 'cors'
     };
 
-    const fullUrl = new URL(endpoint, API_URL);
+    const fullUrl = API_URL + endpoint; // Directly concatenate the relative path
     console.log('[API Download Debug] Full URL:', fullUrl.toString());
 
     const response = await fetch(fullUrl.toString(), requestConfig);
@@ -185,8 +198,9 @@ const fetchApiDownload = async (endpoint, options = {}) => {
 // Simple test function to check API connectivity
 export const testApiConnection = async () => {
   try {
-    console.log('Testing API connection to server');
-    const response = await fetch(`${API_URL}/api/languages`, {
+    console.log('Testing API connection to server using /api/Health');
+    // Use the dedicated, unauthenticated health check endpoint
+    const response = await fetch(`${API_URL}/Health`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json'
@@ -203,14 +217,14 @@ export const testApiConnection = async () => {
 
 // Auth API
 export const login = (email, password) => {
-  return fetchApi('/api/auth/login', {
+  return fetchApi('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password })
   });
 };
 
 export const register = (email, password) => {
-  return fetchApi('/api/auth/register', {
+  return fetchApi('/auth/register', {
     method: 'POST',
     body: JSON.stringify({ email, password })
   });
@@ -220,24 +234,24 @@ export const register = (email, password) => {
 export const getLanguages = () => {
   // Note: This might be fetching the translation-specific list.
   // Keep it for now, but the new functions below target the full config endpoint.
-  return fetchApi('/api/translation/languages'); // Assuming this is what it was intended for
+  return fetchApi('/translation/languages'); // Assuming this is what it was intended for
 };
 
 // --- Language Configuration API ---
 
 // Gets ALL languages with full configuration details
 export const getAllLanguages = () => {
-  return fetchApi('/api/languages');
+  return fetchApi('/languages');
 };
 
 // Gets a single language by ID with full configuration
 export const getLanguage = (languageId) => {
-  return fetchApi(`/api/languages/${languageId}`);
+  return fetchApi(`/languages/${languageId}`);
 };
 
 // Creates a new language configuration
 export const createLanguage = (languageData) => {
-  return fetchApi('/api/languages', {
+  return fetchApi('/languages', {
     method: 'POST',
     body: JSON.stringify(languageData)
   });
@@ -245,7 +259,7 @@ export const createLanguage = (languageData) => {
 
 // Updates an existing language configuration
 export const updateLanguage = (languageId, languageData) => {
-  return fetchApi(`/api/languages/${languageId}`, {
+  return fetchApi(`/languages/${languageId}`, {
     method: 'PUT',
     body: JSON.stringify(languageData)
   });
@@ -253,23 +267,23 @@ export const updateLanguage = (languageId, languageData) => {
 
 // Deletes a language configuration
 export const deleteLanguage = (languageId) => {
-  return fetchApi(`/api/languages/${languageId}`, {
+  return fetchApi(`/languages/${languageId}`, {
     method: 'DELETE'
   });
 };
 
 // Texts API
 export const getTexts = () => {
-  return fetchApi('/api/texts');
+  return fetchApi('/texts');
 };
 
 export const getText = (textId) => {
-  return fetchApi(`/api/texts/${textId}`);
+  return fetchApi(`/texts/${textId}`);
 };
 
 // Add getRecentTexts function
 export const getRecentTexts = () => {
-  return fetchApi('/api/texts/recent');
+  return fetchApi('/texts/recent');
 };
 
 // Modified to include optional tag
@@ -278,7 +292,7 @@ export const createText = (title, content, languageId, tag = null) => {
   if (tag) {
     payload.tag = tag;
   }
-  return fetchApi('/api/texts', {
+  return fetchApi('/texts', {
     method: 'POST',
     body: JSON.stringify(payload)
   });
@@ -286,7 +300,7 @@ export const createText = (title, content, languageId, tag = null) => {
 
 // Modified to include optional tag
 export const createAudioLesson = async (title, languageId, audioFile, srtFile, tag = null) => {
-  const endpoint = '/api/texts/audio';
+  const endpoint = '/texts/audio';
   console.log(`[API] Creating audio lesson: "${title}" with tag: ${tag || 'none'}`);
 
   try {
@@ -322,7 +336,7 @@ export const createAudioLesson = async (title, languageId, audioFile, srtFile, t
       mode: 'cors'           // Keep consistent with fetchApi
     };
 
-    const fullUrl = new URL(endpoint, API_URL);
+    const fullUrl = API_URL + endpoint; // Directly concatenate the relative path
     console.log('[API Debug] Full URL for audio lesson:', fullUrl.toString());
     console.log('[API Debug] Request config for audio lesson:', {
         method: requestConfig.method,
@@ -372,7 +386,7 @@ export const createAudioLesson = async (title, languageId, audioFile, srtFile, t
 // Add updateText function
 export const updateText = (textId, { title, content, tag }) => {
   const payload = { title, content, tag }; // Include tag in payload
-  return fetchApi(`/api/texts/${textId}`, {
+  return fetchApi(`/texts/${textId}`, {
     method: 'PUT',
     body: JSON.stringify(payload)
   });
@@ -380,7 +394,7 @@ export const updateText = (textId, { title, content, tag }) => {
 
 // Add deleteText function
 export const deleteText = (textId) => {
-  return fetchApi(`/api/texts/${textId}`, {
+  return fetchApi(`/texts/${textId}`, {
     method: 'DELETE'
   });
 };
@@ -388,7 +402,7 @@ export const deleteText = (textId) => {
 // Marks a text as completed and logs activity
 export const completeText = (textId) => {
   console.log(`[API] Marking text ${textId} as complete.`);
-  return fetchApi(`/api/texts/${textId}/complete`, {
+  return fetchApi(`/texts/${textId}/complete`, {
     method: 'PUT'
     // No body needed for this request
   });
@@ -398,16 +412,16 @@ export const completeText = (textId) => {
 
 // Books API
 export const getBooks = () => {
-  return fetchApi('/api/books');
+  return fetchApi('/books');
 };
 
 export const getBook = (bookId) => {
-  return fetchApi(`/api/books/${bookId}`);
+  return fetchApi(`/books/${bookId}`);
 };
 
 // Modified createBook to include tags
 export const createBook = (title, description, languageId, content, splitMethod = 'paragraph', maxSegmentSize = 3000, tags = []) => {
-  return fetchApi('/api/books', {
+  return fetchApi('/books', {
     method: 'POST',
     body: JSON.stringify({
       title,
@@ -423,7 +437,7 @@ export const createBook = (title, description, languageId, content, splitMethod 
 
 // Added uploadBook function for file uploads
 export const uploadBook = async (formData) => {
-  const endpoint = '/api/books/upload';
+  const endpoint = '/books/upload';
   console.log(`[API] Uploading book file...`);
 
   try {
@@ -447,7 +461,7 @@ export const uploadBook = async (formData) => {
       mode: 'cors'
     };
 
-    const fullUrl = new URL(endpoint, API_URL);
+    const fullUrl = API_URL + endpoint; // Directly concatenate the relative path
     console.log('[API Debug] Full URL for book upload:', fullUrl.toString());
 
     const response = await fetch(fullUrl.toString(), requestConfig);
@@ -484,7 +498,7 @@ export const uploadBook = async (formData) => {
 // Modified updateBook to include tags and description
 export const updateBook = (bookId, { title, description, tags }) => {
   const payload = { title, description, tags }; // Include description and tags
-  return fetchApi(`/api/books/${bookId}`, {
+  return fetchApi(`/books/${bookId}`, {
     method: 'PUT',
     body: JSON.stringify(payload)
   });
@@ -492,7 +506,7 @@ export const updateBook = (bookId, { title, description, tags }) => {
 
 // Added uploadAudiobookTracks function for MP3 uploads
 export const uploadAudiobookTracks = async (bookId, formData) => {
-  const endpoint = `/api/books/${bookId}/audiobook`;
+  const endpoint = `/books/${bookId}/audiobook`;
   console.log(`[API] Uploading audiobook tracks for book ${bookId}...`);
 
   try {
@@ -516,7 +530,7 @@ export const uploadAudiobookTracks = async (bookId, formData) => {
       mode: 'cors'
     };
 
-    const fullUrl = new URL(endpoint, API_URL);
+    const fullUrl = API_URL + endpoint; // Directly concatenate the relative path
     console.log('[API Debug] Full URL for audiobook upload:', fullUrl.toString());
 
     const response = await fetch(fullUrl.toString(), requestConfig);
@@ -557,7 +571,7 @@ export const uploadAudiobookTracks = async (bookId, formData) => {
 
 // Add createAudioLessonsBatch function
 export const createAudioLessonsBatch = async (languageId, tag, files) => {
-  const endpoint = '/api/texts/audio/batch';
+  const endpoint = '/texts/audio/batch';
   console.log(`[API] Creating batch audio lessons for language ${languageId} with tag: ${tag || 'none'}`);
 
   try {
@@ -593,7 +607,7 @@ export const createAudioLessonsBatch = async (languageId, tag, files) => {
       mode: 'cors'
     };
 
-    const fullUrl = new URL(endpoint, API_URL);
+    const fullUrl = API_URL + endpoint; // Directly concatenate the relative path
     console.log('[API Debug] Full URL for batch audio lesson:', fullUrl.toString());
 
     const response = await fetch(fullUrl.toString(), requestConfig);
@@ -635,13 +649,13 @@ export const createAudioLessonsBatch = async (languageId, tag, files) => {
 
 // Add deleteBook function
 export const deleteBook = (bookId) => {
-  return fetchApi(`/api/books/${bookId}`, {
+  return fetchApi(`/books/${bookId}`, {
     method: 'DELETE'
   });
 };
 
 export const updateLastRead = (bookId, textId) => {
-  return fetchApi(`/api/books/${bookId}/lastread`, {
+  return fetchApi(`/books/${bookId}/lastread`, {
     method: 'PUT',
     body: JSON.stringify({ textId })
   });
@@ -650,13 +664,13 @@ export const updateLastRead = (bookId, textId) => {
 export const completeLesson = (bookId, textId) => {
   if (bookId) {
     // Existing call for lessons within books
-    return fetchApi(`/api/books/${bookId}/complete-lesson`, {
+    return fetchApi(`/books/${bookId}/complete-lesson`, {
       method: 'PUT',
       body: JSON.stringify({ textId }) // Assuming textId is still needed in body
     });
   } else {
     // New call for standalone texts (Assumes backend endpoint PUT /api/texts/{textId}/complete exists)
-    return fetchApi(`/api/texts/${textId}/complete`, {
+    return fetchApi(`/texts/${textId}/complete`, {
       method: 'PUT'
       // Body might not be needed if textId is in the URL
     });
@@ -664,21 +678,21 @@ export const completeLesson = (bookId, textId) => {
 };
 
 export const finishBook = (bookId) => {
-  return fetchApi(`/api/books/${bookId}/finish`, {
+  return fetchApi(`/books/${bookId}/finish`, {
     method: 'PUT'
   });
 };
 
 // User Statistics API
 export const getUserStatistics = () => {
-  return fetchApi('/api/users/statistics');
+  return fetchApi('/users/statistics');
 };
 
 export const getReadingActivity = async (period = 'all', timezoneOffsetMinutes = null) => {
   try {
     const tzParam = timezoneOffsetMinutes !== null ? `&timezoneOffsetMinutes=${timezoneOffsetMinutes}` : '';
     console.log(`[API] Getting reading activity for period: ${period}, timezoneOffsetMinutes: ${timezoneOffsetMinutes}`);
-    const data = await fetchApi(`/api/users/reading-activity?period=${period}${tzParam}`);
+    const data = await fetchApi(`/users/reading-activity?period=${period}${tzParam}`);
     return data;
   } catch (error) {
     console.error('Error getting reading activity:', error);
@@ -694,7 +708,7 @@ export const getListeningActivity = async (period = 'all', timezoneOffsetMinutes
       tzParam = `&timezoneOffsetMinutes=${timezoneOffsetMinutes}`;
     }
     console.log(`[API] Fetching listening activity for period: ${period}, timezoneOffsetMinutes: ${timezoneOffsetMinutes}`);
-    const data = await fetchApi(`/api/users/listening-activity?period=${period}${tzParam}`);
+    const data = await fetchApi(`/users/listening-activity?period=${period}${tzParam}`);
     return data;
   } catch (error) {
     console.error('Error getting listening activity:', error);
@@ -706,7 +720,7 @@ export const getListeningActivity = async (period = 'all', timezoneOffsetMinutes
 // User Statistics API
 export const resetUserStatistics = () => {
   console.log('[API] Resetting user statistics.');
-  return fetchApi('/api/users/reset-statistics', {
+  return fetchApi('/users/reset-statistics', {
     method: 'POST'
     // No body needed for this request
   });
@@ -730,7 +744,7 @@ export const createWord = async (textId, term, status, translation) => {
       translation: translation || null
     };
 
-    const response = await fetchApi('/api/words', {
+    const response = await fetchApi('/words', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json; charset=utf-8'
@@ -756,7 +770,7 @@ export const updateWord = async (wordId, status, translation) => {
       translation: translation || null
     };
 
-    const response = await fetchApi(`/api/words/${wordId}`, {
+    const response = await fetchApi(`/words/${wordId}`, {
       method: 'PUT',
       body: JSON.stringify(payload)
     });
@@ -781,7 +795,7 @@ export const getWordsByLanguage = (languageId, statusFilter = [], sortBy = 'term
     params.append('searchTerm', searchTerm.trim());
   }
   const queryString = params.toString();
-  const endpoint = `/api/words/language/${languageId}${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/words/language/${languageId}${queryString ? `?${queryString}` : ''}`;
   return fetchApi(endpoint);
 };
 
@@ -795,7 +809,7 @@ export const exportWordsCsv = (languageId = null, statusFilter = []) => {
     params.append('status', statusFilter.join(','));
   }
   const queryString = params.toString();
-  const endpoint = `/api/words/export${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/words/export${queryString ? `?${queryString}` : ''}`; // Remove leading /api
   // Use fetchApiDownload for file downloads
   return fetchApiDownload(endpoint);
 };
@@ -808,7 +822,7 @@ export const translateText = async (text, sourceLanguageCode, targetLanguageCode
       sourceLanguageCode,
       targetLanguageCode
     };
-    return await fetchApi('/api/translation', {
+    return await fetchApi('/translation', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
@@ -827,7 +841,7 @@ export const generateStory = async (prompt, language, level, maxLength) => {
       level,
       maxLength
     };
-    return await fetchApi('/api/storygeneration', {
+    return await fetchApi('/storygeneration', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
@@ -847,7 +861,7 @@ export const translateSentence = async (text, sourceLanguageCode, targetLanguage
       targetLanguageCode
     };
 
-    const response = await fetchApi('/api/sentencetranslation', {
+    const response = await fetchApi('/sentencetranslation', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json; charset=utf-8'
@@ -872,7 +886,7 @@ export const translateFullText = async (text, sourceLanguageCode, targetLanguage
       targetLanguageCode
     };
 
-    const response = await fetchApi('/api/sentencetranslation/full-text', {
+    const response = await fetchApi('/sentencetranslation/full-text', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json; charset=utf-8'
@@ -888,18 +902,18 @@ export const translateFullText = async (text, sourceLanguageCode, targetLanguage
 };
 
 export const getSupportedLanguages = () => {
-  return fetchApi('/api/translation/languages');
+  return fetchApi('/translation/languages'); // Keep this one as /api/translation/languages might be distinct
 };
 
 // Get next lesson from a book
 export const getNextLesson = (bookId, currentTextId) => {
-  return fetchApi(`/api/books/${bookId}/next-lesson?currentTextId=${currentTextId}`);
+  return fetchApi(`/books/${bookId}/next-lesson?currentTextId=${currentTextId}`);
 };
 
 // User Settings API
 export const getUserSettings = async () => {
   try {
-    return await fetchApi('/api/usersettings');
+    return await fetchApi('/usersettings');
   } catch (error) {
     console.error('Failed to get user settings:', error);
     throw error;
@@ -908,7 +922,7 @@ export const getUserSettings = async () => {
 
 export const updateUserSettings = async (settings) => {
   try {
-    return await fetchApi('/api/usersettings', {
+    return await fetchApi('/usersettings', {
       method: 'PUT',
       body: JSON.stringify(settings)
     });
@@ -927,7 +941,7 @@ export const updateAudiobookProgress = async (bookId, progressData) => {
     currentAudiobookPosition: progressData.currentAudiobookPosition
   };
   console.log('[API] Updating audiobook progress via UserActivityController:', payload);
-  return await fetchApi('/api/activity/audiobookprogress', {
+  return await fetchApi('/activity/audiobookprogress', {
     method: 'PUT',
     body: JSON.stringify(payload)
   });
@@ -937,7 +951,7 @@ export const updateAudiobookProgress = async (bookId, progressData) => {
 export const getAudiobookProgress = async (bookId) => {
     console.log(`[API] Getting audiobook progress for book ${bookId} via UserActivityController`);
     // Point to the new endpoint in UserActivityController, appending bookId
-    return await fetchApi(`/api/activity/audiobookprogress/${bookId}`); // GET request by default
+    return await fetchApi(`/activity/audiobookprogress/${bookId}`); // GET request by default
 };
 
 // --- Audio Lesson Progress ---
@@ -950,7 +964,7 @@ export const updateAudioLessonProgress = async (textId, progressData) => {
     currentPosition: progressData.currentPosition
   };
   console.log('[API] Updating audio lesson progress via UserActivityController:', payload);
-  return await fetchApi('/api/activity/audiolessonprogress', {
+  return await fetchApi('/activity/audiolessonprogress', {
     method: 'PUT',
     body: JSON.stringify(payload)
   });
@@ -960,14 +974,14 @@ export const updateAudioLessonProgress = async (textId, progressData) => {
 export const getAudioLessonProgress = async (textId) => {
     console.log(`[API] Getting audio lesson progress for text ${textId} via UserActivityController`);
     // Point to the new endpoint in UserActivityController, appending textId
-    return await fetchApi(`/api/activity/audiolessonprogress/${textId}`); // GET request by default
+    return await fetchApi(`/activity/audiolessonprogress/${textId}`); // GET request by default
 };
 
 // Added logListeningActivity function
 export const logListeningActivity = async (languageId, durationSeconds) => {
   console.log(`[API] Logging listening activity: Lang ${languageId}, Duration ${durationSeconds}s`);
   const payload = { languageId, durationSeconds };
-  return await fetchApi('/api/activity/logListening', {
+  return await fetchApi('/activity/logListening', {
     method: 'POST',
     body: JSON.stringify(payload)
   });
@@ -976,7 +990,7 @@ export const logListeningActivity = async (languageId, durationSeconds) => {
 // Add logManualActivity function
 export const logManualActivity = async (payload) => {
   console.log('[API] Logging manual activity:', payload);
-  return await fetchApi('/api/activity/logManual', {
+  return await fetchApi('/activity/logManual', {
     method: 'POST',
     body: JSON.stringify(payload)
   });
@@ -992,7 +1006,7 @@ export const batchTranslateWords = async (words, targetLanguageCode, sourceLangu
     };
     console.log(`[API] Sending batch translation request for ${words.length} words to ${targetLanguageCode}`);
     // Assuming the endpoint is /api/translation/batch based on backend changes
-    return await fetchApi('/api/translation/batch', {
+    return await fetchApi('/translation/batch', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
@@ -1018,7 +1032,7 @@ export const addTermsBatch = async (languageId, terms) => {
       languageId,
       terms
     };
-    return await fetchApi('/api/words/batch', {
+    return await fetchApi('/words/batch', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
@@ -1033,7 +1047,7 @@ export const addTermsBatch = async (languageId, terms) => {
 export const backupDatabase = async () => {
   console.log('[API] Requesting database backup download');
   // Use the specialized download helper
-  const { blob, filename } = await fetchApiDownload('/api/datamanagement/backup', { // Updated route
+  const { blob, filename } = await fetchApiDownload('/datamanagement/backup', { // Remove leading /api
     method: 'GET',
   });
 
@@ -1086,7 +1100,7 @@ export const restoreDatabase = async (backupFile) => {
       mode: 'cors'
     };
 
-    const fullUrl = new URL(endpoint, API_URL);
+    const fullUrl = API_URL + endpoint; // Directly concatenate the relative path
     console.log('[API Debug] Full URL for restore:', fullUrl.toString());
 
     const response = await fetch(fullUrl.toString(), requestConfig);

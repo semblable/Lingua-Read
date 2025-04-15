@@ -215,14 +215,29 @@ const AudiobookPlayer = ({ book }) => {
     console.log("[AudioPlayer] Current Track Data:", currentTrack);
     console.log(`[AudioPlayer] Constructed Audio URL: ${newSrc}`);
 
-    if (audio.src !== newSrc) {
+    // Check if the source needs to be updated
+    const needsSourceUpdate = audio.src !== newSrc;
+
+    if (needsSourceUpdate) {
+      // --- DEBUGGING: Log source change ---
+      console.log(`[AudioPlayer DEBUG] Source change detected! Old src: ${audio.src}, New src: ${newSrc}`);
       console.log(`[AudioPlayer] Applying new src to audio element.`);
       audio.src = newSrc;
       sourceChanged = true;
       setDuration(0); // Reset duration
-      // console.log(`[AudioPlayer Log] setCurrentTime(0) from useEffect (src changed)`); // Removed - Let loadedmetadata handle initial time
-      // setCurrentTime(0); // Reset time state - Let loadedmetadata handle initial time
-      initialSeekPositionRef.current = 0; // Explicitly set initial seek to 0 for new track
+
+      // --- FIX: Only reset seek position if it's not the initial load ---
+      // If the old source was empty, it means this is the initial load for this component instance.
+      // In this case, we *keep* the initialSeekPositionRef loaded from the backend.
+      // If the old source was *not* empty, it means the track is actually changing, so reset to 0.
+      if (audio.src && audio.src !== newSrc) { // Check if old src existed and is different
+         console.log(`[AudioPlayer DEBUG] Actual track change detected. Resetting initialSeekPositionRef to 0.`);
+         initialSeekPositionRef.current = 0;
+      } else {
+         console.log(`[AudioPlayer DEBUG] Initial source load. Preserving initialSeekPositionRef (${initialSeekPositionRef.current}).`);
+      }
+      // --- END FIX ---
+
       setIsLoadingAudio(isPlaying); // Set loading if intent was to play
     }
 

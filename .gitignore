@@ -2,6 +2,8 @@
 .DS_Store
 Thumbs.db
 *.log
+# Ignore .env file at this level (Lingua_Read/.env)
+.env
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
