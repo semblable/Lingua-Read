@@ -86,7 +86,7 @@ namespace LinguaReadApi.Services
                 _logger.LogDebug($"Request payload: {jsonPayload}");
 
                 // Create the request
-                var endpoint = $"{_baseUrl}/models/gemini-2.5-pro-exp-03-25:generateContent?key={_apiKey}";
+                var endpoint = $"{_baseUrl}/models/gemini-2.0-flash:generateContent?key={_apiKey}";
                 var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                 
                 // Send the request
