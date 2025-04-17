@@ -786,7 +786,7 @@ namespace LinguaReadApi.Controllers
                 {
                     UserId = userId,
                     LanguageId = language.LanguageId,
-                    ActivityType = "LessonCompleted",
+                    ActivityType = "TextCompleted",
                     WordCount = totalWordCount,
                     Timestamp = DateTime.UtcNow
                 };
@@ -795,6 +795,29 @@ namespace LinguaReadApi.Controllers
                 // Save the change immediately
                 await _context.SaveChangesAsync();
             }
+            
+            // Update UserLanguageStatistics for completed lesson
+            var stats = await _context.UserLanguageStatistics
+                .FirstOrDefaultAsync(uls => uls.UserId == userId && uls.LanguageId == language.LanguageId);
+            if (stats == null)
+            {
+                stats = new UserLanguageStatistics
+                {
+                    UserId = userId,
+                    LanguageId = language.LanguageId,
+                    TotalWordsRead = totalWordCount,
+                    TotalTextsCompleted = 1,
+                    LastUpdatedAt = DateTime.UtcNow
+                };
+                _context.UserLanguageStatistics.Add(stats);
+            }
+            else
+            {
+                stats.TotalWordsRead += totalWordCount;
+                stats.TotalTextsCompleted += 1;
+                stats.LastUpdatedAt = DateTime.UtcNow;
+            }
+            await _context.SaveChangesAsync();
             
             // Get unique words from this text
             var textWords = text.TextWords.Select(tw => tw.Word).ToList();
