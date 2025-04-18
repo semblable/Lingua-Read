@@ -62,8 +62,25 @@ namespace LinguaReadApi.Services
 
                 _logger.LogInformation($"Translating text ({text.Length} chars) from {sourceLanguage} to {finalGeminiTargetCode}");
 
-                // Prepare a clear prompt specifically for translation using the final target code
-                string prompt = $"Translate the following text from {sourceLanguage} to {finalGeminiTargetCode}. Maintain all formatting, punctuation, and special characters. Return ONLY the translated text with no additional text.\n\nText to translate: {text}";
+                // Prepare a prompt asking for paired, numbered original and translated sentences
+                string prompt = $@"Translate the following text from {sourceLanguage} to {finalGeminiTargetCode}, sentence by sentence.
+**Strict Instructions:**
+1. For EACH sentence in the original text:
+   - Output the original sentence wrapped EXACTLY like this: `<o s=""N"">Original Sentence</o>`
+   - Immediately follow it with its translation wrapped EXACTLY like this: `<t s=""N"">Translated Sentence</t>`
+   - Replace 'N' with the sentence number, starting from 1.
+2. Maintain ALL original formatting and punctuation within the sentences inside the tags.
+3. **CRITICAL:** Your response MUST contain ONLY the sequence of `<o s=""N"">...</o><t s=""N"">...</t>` pairs. Do NOT include ANY introductory text, concluding remarks, explanations, apologies, or any other text outside these specific tags.
+
+Example Input Text:
+Hello world. How are you?
+
+Example Output:
+<o s=""1"">Hello world.</o><t s=""1"">Bonjour le monde.</t><o s=""2"">How are you?</o><t s=""2"">Comment allez-vous?</t>
+
+**Text to translate:**
+{text}";
+                _logger.LogDebug("Using paired sentence tag translation prompt."); // Log new prompt type
 
                 // Create request payload according to Gemini API specs
                 var requestPayload = new GeminiRequest
@@ -83,8 +100,13 @@ namespace LinguaReadApi.Services
                         Temperature = 0.3,
                         TopK = 32,
                         TopP = 1.0,
-                        MaxOutputTokens = 60000,
-                        ResponseMimeType = "text/plain"
+                        MaxOutputTokens = 65535,
+                        ResponseMimeType = "text/plain",
+                        // Add ThinkingConfig with budget set to 0
+                        ThinkingConfig = new ThinkingConfig
+                        {
+                            ThinkingBudget = 0
+                        }
                     }
                 };
 
@@ -99,7 +121,7 @@ namespace LinguaReadApi.Services
                 _logger.LogDebug($"Request payload: {jsonPayload}");
 
                 // Create the request
-                var endpoint = $"{_baseUrl}/models/gemini-2.0-flash:generateContent?key={_apiKey}";
+                var endpoint = $"{_baseUrl}/models/gemini-2.5-flash-preview-04-17:generateContent?key={_apiKey}";
                 var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                 
                 // Send the request

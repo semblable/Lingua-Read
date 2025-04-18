@@ -48,5 +48,16 @@ namespace LinguaReadApi.Services
 
         [JsonPropertyName("responseMimeType")]
         public string ResponseMimeType { get; set; } = "text/plain"; // Initialize to default
+
+        [JsonPropertyName("thinkingConfig")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] // Don't serialize if null
+        public ThinkingConfig? ThinkingConfig { get; set; } // Add ThinkingConfig property
+    }
+
+    // Add ThinkingConfig class definition
+    public class ThinkingConfig
+    {
+        [JsonPropertyName("thinkingBudget")]
+        public int ThinkingBudget { get; set; }
     }
 }

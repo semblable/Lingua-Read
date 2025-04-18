@@ -47,3 +47,15 @@
   /* background-color: #212529; /* Darker gray for dark mode */
   background-color: #1c1f23; /* Even darker gray for dark mode */
 }
+
+/* Removed previous .original/.translated styles */
+/* .sentence-block class added in TranslationPopup.js has padding/margin applied via Bootstrap classes (p-2 mb-2) */
+
+/* Improve text visibility in sentence blocks */
+.sentence-block {
+  color: #212529; /* Default dark text for light backgrounds */
+}
+
+[data-bs-theme="dark"] .sentence-block {
+  color: #e9ecef; /* Lighter text for dark backgrounds */
+}
