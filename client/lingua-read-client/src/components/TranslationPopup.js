@@ -74,30 +74,77 @@ const TranslationPopup = ({
   }, []); // No dependencies needed as refs are stable
 
 
-  // Effect to synchronize sentence block heights
+  // Effect to synchronize sentence block heights using ResizeObserver
   useEffect(() => {
-    if (sentencePairs.length > 0 && !isTranslating) {
-      // Allow DOM to update before measuring
-      requestAnimationFrame(() => {
-        sentencePairs.forEach(pair => {
-          const originalEl = document.getElementById(`orig-block-${pair.number}`);
-          const translatedEl = document.getElementById(`trans-block-${pair.number}`);
-
-          if (originalEl && translatedEl) {
-            // Reset heights first to get natural height
-            originalEl.style.minHeight = 'auto';
-            translatedEl.style.minHeight = 'auto';
-
-            const originalHeight = originalEl.scrollHeight;
-            const translatedHeight = translatedEl.scrollHeight;
-            const maxHeight = Math.max(originalHeight, translatedHeight);
-
-            originalEl.style.minHeight = `${maxHeight}px`;
-            translatedEl.style.minHeight = `${maxHeight}px`;
-          }
-        });
+    const observer = new ResizeObserver(entries => {
+      // Use a Set to avoid redundant processing if both elements trigger the observer simultaneously
+      const elementsToSync = new Set();
+      for (let entry of entries) {
+        // Find the corresponding pair element based on the ID structure
+        const id = entry.target.id;
+        const parts = id.split('-');
+        const type = parts[0]; // 'orig' or 'trans'
+        const number = parts[parts.length - 1];
+        const counterpartType = type === 'orig' ? 'trans' : 'orig';
+        const counterpartId = `${counterpartType}-block-${number}`;
+        const counterpartEl = document.getElementById(counterpartId);
+        if (counterpartEl) {
+           // Add both elements of the pair to the set for syncing
+           elementsToSync.add(entry.target);
+           elementsToSync.add(counterpartEl);
+        }
+      }
+      // Process sync requests, ensuring pairs are handled together
+      const processedPairs = new Set();
+      elementsToSync.forEach(el => {
+         const id = el.id;
+         const number = id.split('-').pop();
+         if (!processedPairs.has(number)) {
+            const originalEl = document.getElementById(`orig-block-${number}`);
+            const translatedEl = document.getElementById(`trans-block-${number}`);
+            syncPairHeight(originalEl, translatedEl);
+            processedPairs.add(number);
+         }
       });
+    });
+
+    const syncPairHeight = (originalEl, translatedEl) => {
+      if (originalEl && translatedEl) {
+        // Temporarily reset minHeight to measure natural height accurately
+        originalEl.style.minHeight = '0px';
+        translatedEl.style.minHeight = '0px';
+
+        // Use offsetHeight as it includes padding and borders
+        const originalHeight = originalEl.offsetHeight;
+        const translatedHeight = translatedEl.offsetHeight;
+        const maxHeight = Math.max(originalHeight, translatedHeight);
+
+        // Set minHeight to the max height
+        originalEl.style.minHeight = `${maxHeight}px`;
+        translatedEl.style.minHeight = `${maxHeight}px`;
+      }
+    };
+
+    // Observe elements after initial render/update
+    if (sentencePairs.length > 0 && !isTranslating) {
+       sentencePairs.forEach(pair => {
+           const originalEl = document.getElementById(`orig-block-${pair.number}`);
+           const translatedEl = document.getElementById(`trans-block-${pair.number}`);
+           if (originalEl && translatedEl) {
+               // Initial sync
+               syncPairHeight(originalEl, translatedEl);
+               // Observe both elements
+               observer.observe(originalEl);
+               observer.observe(translatedEl);
+           }
+       });
     }
+
+    // Cleanup function to disconnect the observer
+    return () => {
+      console.log('[TranslationPopup] Disconnecting ResizeObserver.');
+      observer.disconnect();
+    };
   }, [sentencePairs, isTranslating]); // Rerun when pairs change or translation finishes
 
   return (
