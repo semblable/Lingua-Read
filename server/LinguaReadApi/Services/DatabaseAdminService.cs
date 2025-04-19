@@ -38,9 +38,9 @@ namespace LinguaReadApi.Services
             _pgUser = _configuration["PGUSER"] ?? throw new InvalidOperationException("PGUSER not configured.");
             _pgPassword = _configuration["PGPASSWORD"] ?? throw new InvalidOperationException("PGPASSWORD not configured.");
 
-            // Read tool paths (optional, defaults to assuming they are in PATH)
-            _pgDumpPath = _configuration["PGDUMP_PATH"] ?? "pg_dump";
-            _pgRestorePath = _configuration["PGRESTORE_PATH"] ?? "pg_restore";
+            // Read tool paths (optional, defaults to assuming they are in PATH, but use full path as fallback for container)
+            _pgDumpPath = _configuration["PGDUMP_PATH"] ?? "/usr/bin/pg_dump"; // Use full path as default
+            _pgRestorePath = _configuration["PGRESTORE_PATH"] ?? "/usr/bin/pg_restore"; // Use full path as default
 
             // Define a directory for temporary backup files
             // Define a directory for temporary backup files within the app's working directory

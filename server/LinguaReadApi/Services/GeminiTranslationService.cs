@@ -105,7 +105,7 @@ Example Output:
                         // Add ThinkingConfig with budget set to 0
                         ThinkingConfig = new ThinkingConfig
                         {
-                            ThinkingBudget = 0
+                            ThinkingBudget = 1024
                         }
                     }
                 };

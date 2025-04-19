@@ -91,14 +91,16 @@ namespace LinguaReadApi.Controllers
                     else
                     {
                         _logger.LogError("Database restore failed in service.");
-                        return StatusCode(500, "Database restore failed.");
+                        // Return JSON error object
+                        return StatusCode(500, new { error = "Database restore failed in service." });
                     }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Exception occurred during database restore request processing.");
-                return StatusCode(500, $"Internal server error during restore: {ex.Message}");
+                // Return JSON error object
+                return StatusCode(500, new { error = $"Internal server error during restore: {ex.Message}" });
             }
         }
     }

@@ -1067,7 +1067,7 @@ export const backupDatabase = async () => {
 };
 // Restore Database
 export const restoreDatabase = async (backupFile) => {
-  const endpoint = '/api/datamanagement/restore'; // Updated route
+  const endpoint = '/datamanagement/restore'; // REMOVED leading /api
   console.log(`[API] Uploading database backup file: ${backupFile.name}`);
 
 

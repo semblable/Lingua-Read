@@ -21,7 +21,15 @@ COPY --from=build /app/publish ./
 
 # Install PostgreSQL client for pg_dump and pg_restore
 USER root
-RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client && \
+RUN apt-get update && \
+    # Add PostgreSQL repo setup for version 16 client tools
+    # Install lsb-release first to get codename - No longer needed, hardcoding bookworm
+    apt-get install -y --no-install-recommends curl ca-certificates gnupg lsb-release && \
+    curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/postgresql-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/postgresql-archive-keyring.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+    apt-get update && \
+    # Install specific client version
+    apt-get install -y --no-install-recommends postgresql-client-16 && \
     rm -rf /var/lib/apt/lists/* # Clean up
 
 # Create the directory the application needs at runtime and ensure correct ownership
