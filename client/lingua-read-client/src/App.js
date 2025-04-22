@@ -1,20 +1,19 @@
-import React, { useEffect } from 'react';
-// Removed redundant Router import
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { /*Container*/ } from 'react-bootstrap'; // Removed unused Container
+import React, { useEffect, useState } from 'react'; // Added useState
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom'; // Added Outlet
 import { useAuthStore } from './utils/store';
 import { jwtDecode } from 'jwt-decode';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
-import { SettingsProvider } from './contexts/SettingsContext'; // Import SettingsProvider
+import { SettingsProvider } from './contexts/SettingsContext';
+import { login } from './utils/api'; // Import the login API function
 
 // Components
 import Navigation from './components/Navigation';
 
 // Pages
 import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
+// import Login from './pages/Login'; // Removed
+// import Register from './pages/Register'; // Removed
 import TextList from './pages/TextList';
 import TextCreate from './pages/TextCreate';
 import TextDisplay from './pages/TextDisplay';
@@ -24,38 +23,86 @@ import BookDetail from './pages/BookDetail';
 import Statistics from './pages/Statistics';
 import UserSettings from './pages/UserSettings';
 import CreateAudioLesson from './pages/CreateAudioLesson';
-import LanguagesPage from './components/settings/LanguagesPage'; // <-- Import the new component
-import BatchAudioCreate from './pages/BatchAudioCreate'; // Import the batch create page
-import TermsPage from './pages/TermsPage'; // Import the new Terms page
+import LanguagesPage from './components/settings/LanguagesPage';
+import BatchAudioCreate from './pages/BatchAudioCreate';
+import TermsPage from './pages/TermsPage';
+
+// Simple loading component
+const Loading = () => <div className="d-flex justify-content-center align-items-center vh-100">Loading...</div>;
+
+// Protected Route Component
+const ProtectedRoute = ({ token, isLoading }) => {
+  if (isLoading) {
+    return <Loading />; // Show loading indicator while checking auth
+  }
+  return token ? <Outlet /> : <Navigate to="/" />; // Redirect to home if not authenticated after check
+};
+
+
 function App() {
   const { token, setToken, clearToken } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
 
-  // Check if token is valid on app load
+  // Check token and perform auto-login on app load
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      try {
-        const decodedToken = jwtDecode(storedToken);
-        const currentTime = Date.now() / 1000;
-        
-        if (decodedToken.exp < currentTime) {
-          // Token has expired
+    const attemptAutoLogin = async () => {
+      setIsLoading(true); // Start loading
+      const storedToken = localStorage.getItem('token');
+      let validTokenFound = false;
+
+      if (storedToken) {
+        try {
+          const decodedToken = jwtDecode(storedToken);
+          const currentTime = Date.now() / 1000;
+          if (decodedToken.exp >= currentTime) {
+            setToken(storedToken); // Set token in store
+            validTokenFound = true;
+            console.log("Valid token found in localStorage.");
+          } else {
+            console.log("Token expired, clearing.");
+            localStorage.removeItem('token'); // Explicitly remove expired token
+            clearToken();
+          }
+        } catch (error) {
+          console.error("Invalid token found, clearing.", error);
+          localStorage.removeItem('token'); // Explicitly remove invalid token
           clearToken();
-        } else {
-          // Token is valid
-          setToken(storedToken);
         }
       }
-      catch (error) {
-        // Invalid token
-        clearToken();
-      }
-    }
-  }, [setToken, clearToken]);
 
-  // Check for theme in localStorage and apply on initial load
+      // If no valid token was found in storage, attempt auto-login
+      if (!validTokenFound) {
+        console.log("No valid token in storage, attempting auto-login...");
+        try {
+          const response = await login(); // Call the modified login endpoint (no args needed)
+          if (response && response.token) {
+            console.log("Auto-login successful.");
+            const receivedToken = response.token; // Store in variable
+            localStorage.setItem('token', receivedToken); // Store the new token
+            setToken(receivedToken); // Set token in store
+            console.log("Token set in store after auto-login:", receivedToken ? `(length: ${receivedToken.length})` : 'null/undefined');
+          } else {
+             console.error("Auto-login failed: No token received from API.");
+             clearToken(); // Ensure state is clean if login fails
+          }
+        } catch (error) {
+          console.error("Error during auto-login API call:", error);
+          clearToken(); // Ensure state is clean on error
+        }
+      }
+      // Log the token state *just before* setting loading to false
+      const finalToken = useAuthStore.getState().token;
+      console.log("State before setting isLoading=false - Token:", finalToken ? `(length: ${finalToken.length})` : 'null/undefined');
+      setIsLoading(false); // Finish loading
+    };
+
+    attemptAutoLogin();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setToken, clearToken]); // Dependencies remain the same
+
+  // Theme management useEffect (unchanged)
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'light'; // Default to light if nothing saved
+    const savedTheme = localStorage.getItem('theme') || 'light';
 
     const applyTheme = (theme) => {
       if (theme === 'dark') {
@@ -64,7 +111,7 @@ function App() {
       } else if (theme === 'light') {
         document.body.classList.remove('dark-theme');
         document.body.classList.add('light-theme');
-      } else { // System theme
+      } else {
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         document.body.classList.toggle('dark-theme', prefersDark);
         document.body.classList.toggle('light-theme', !prefersDark);
@@ -73,7 +120,6 @@ function App() {
 
     applyTheme(savedTheme);
 
-    // Listener for system theme changes if 'system' is selected
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleSystemThemeChange = (e) => {
       if (localStorage.getItem('theme') === 'system') {
@@ -83,42 +129,61 @@ function App() {
 
     mediaQuery.addEventListener('change', handleSystemThemeChange);
 
-    // Cleanup listener on component unmount
     return () => {
       mediaQuery.removeEventListener('change', handleSystemThemeChange);
     };
   }, []);
 
-  // Wrap the main content with SettingsProvider
-  // Also ensure Router is wrapping the provider and content
   return (
       <SettingsProvider>
         <div className="App">
-          <Navigation />
+          {/* Conditionally render Navigation only when not loading and potentially authenticated */}
+          {!isLoading && <Navigation />}
           <div className="container-fluid p-0 m-0">
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={!token ? <Login /> : <Navigate to="/books" />} />
-              <Route path="/register" element={!token ? <Register /> : <Navigate to="/books" />} />
+              {/* Root route: Show loading or Home component */}
+              <Route
+                path="/"
+                element={
+                  isLoading ? (
+                    <Loading />
+                  ) : (
+                     // Always render Home component after loading,
+                     // as user will be auto-logged in.
+                     // ProtectedRoute handles guarding other routes.
+                    <Home />
+                  )
+                }
+              />
+              {/* Removed /login and /register routes */}
 
-              {/* Book routes */}
-              <Route path="/books" element={token ? <BookList /> : <Navigate to="/login" />} />
-              <Route path="/books/create" element={token ? <BookCreate /> : <Navigate to="/login" />} />
-              <Route path="/books/:bookId" element={token ? <BookDetail /> : <Navigate to="/login" />} />
+              {/* Protected Routes */}
+              {/* Ensure ProtectedRoute still redirects to "/" if token is somehow missing after loading */}
+              <Route element={<ProtectedRoute token={token} isLoading={isLoading} />}>
+                {/* Book routes */}
+                <Route path="/books" element={<BookList />} />
+                <Route path="/books/create" element={<BookCreate />} />
+                <Route path="/books/:bookId" element={<BookDetail />} />
 
-              {/* Text routes */}
-              <Route path="/texts" element={token ? <TextList /> : <Navigate to="/login" />} />
-              <Route path="/texts/create" element={token ? <TextCreate /> : <Navigate to="/login" />} />
-              <Route path="/texts/:textId" element={token ? <TextDisplay /> : <Navigate to="/login" />} />
-              <Route path="/texts/create-audio" element={token ? <CreateAudioLesson /> : <Navigate to="/login" />} />
-              <Route path="/texts/create-batch-audio" element={token ? <BatchAudioCreate /> : <Navigate to="/login" />} /> {/* Add route for batch audio creation */}
+                {/* Text routes */}
+                <Route path="/texts" element={<TextList />} />
+                <Route path="/texts/create" element={<TextCreate />} />
+                <Route path="/texts/:textId" element={<TextDisplay />} />
+                <Route path="/texts/create-audio" element={<CreateAudioLesson />} />
+                <Route path="/texts/create-batch-audio" element={<BatchAudioCreate />} />
 
-              {/* Statistics route */}
-              <Route path="/statistics" element={token ? <Statistics /> : <Navigate to="/login" />} />
-              <Route path="/terms" element={token ? <TermsPage /> : <Navigate to="/login" />} /> {/* Add route for Terms page */}
-              {/* Settings route */}
-              <Route path="/settings" element={token ? <UserSettings /> : <Navigate to="/login" />} />
-              <Route path="/settings/languages" element={token ? <LanguagesPage /> : <Navigate to="/login" />} /> {/* <-- Add route for Languages page */}
+                {/* Statistics route */}
+                <Route path="/statistics" element={<Statistics />} />
+                <Route path="/terms" element={<TermsPage />} />
+
+                {/* Settings route */}
+                <Route path="/settings" element={<UserSettings />} />
+                <Route path="/settings/languages" element={<LanguagesPage />} />
+              </Route>
+
+              {/* Fallback for any other route - maybe redirect to home or show a 404 */}
+              <Route path="*" element={<Navigate to="/" />} />
+
             </Routes>
           </div>
         </div>
@@ -126,4 +191,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

@@ -104,3 +104,21 @@
     height: 40vh !important;
   }
 }
+/* --- Bookmark Styles --- */
+.sentence {
+  /* Base style for sentences if needed, e.g., for positioning context */
+  position: relative; /* Useful if absolutely positioning the icon */
+  display: inline; /* Keep sentences flowing naturally */
+}
+
+.bookmark-icon {
+  cursor: default; /* Indicate it's not clickable itself */
+  margin-right: 0.3em; /* Space between icon and text */
+  font-size: 1em; /* Increase size */
+  color: #0d6efd; /* Use a noticeable blue color (Bootstrap primary) */
+  vertical-align: baseline; /* Align with text */
+  user-select: none; /* Prevent selecting the icon */
+  display: inline-block; /* Ensure margin/padding work */
+  font-weight: bold; /* Make it bolder */
+}
+/* --- End Bookmark Styles --- */

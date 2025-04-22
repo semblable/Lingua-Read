@@ -13,6 +13,7 @@ import TranslationPopup from '../components/TranslationPopup';
 import AudiobookPlayer from '../components/AudiobookPlayer'; // Import AudiobookPlayer
 import './TextDisplay.css';
 import { SettingsContext } from '../contexts/SettingsContext'; // Import SettingsContext
+import { getBookmarkedSentences, toggleBookmark } from '../utils/bookmarks'; // Import bookmark utils
 
 // --- SRT Parsing Utilities ---
 const parseSrtTime = (timeString) => {
@@ -179,6 +180,7 @@ const TextDisplay = () => {
   const [playbackRate, setPlaybackRate] = useState(1.0); // State for playback speed
   const [languageConfig, setLanguageConfig] = useState(null); // State for language settings (Phase 3)
   const [embeddedUrl, setEmbeddedUrl] = useState(null); // State for embedded dictionary iframe URL (Phase 3)
+  const [bookmarkedIndices, setBookmarkedIndices] = useState([]); // State for bookmarked sentence indices
   // --- End State Declarations ---
 
   // --- Helper Functions & Memoized Values (Define BEFORE useEffects that use them) ---
@@ -258,55 +260,237 @@ const TextDisplay = () => {
     }
   }, [getWordData, triggerAutoTranslation, setSelectedWord, setTranslation, setWordTranslationError, setDisplayedWord]); // Dependencies using globalSettings don't need it listed if context handles updates
 
-  // ** Define handleTextSelection HERE, before the useEffect that uses it **
-  const handleTextSelection = useCallback((selectedTextRaw) => {
-    const selectedText = selectedTextRaw.trim();
-    if (!selectedText) return;
-    handleWordClick(selectedText);
-  }, [handleWordClick]);
+  // Removed handleTextSelection as selection is now handled by onMouseUp on the container
+
+  // --- New Word-Granularity Selection Logic ---
+  const handleWordSelection = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !textContentRef.current || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    const container = textContentRef.current;
+
+    // Ensure the selection is within the text container
+    if (!container.contains(range.commonAncestorContainer)) {
+        // Optionally clear selection if it's outside? Or just ignore.
+        // selection.removeAllRanges();
+        return;
+    }
+
+    let startNode = range.startContainer;
+    let endNode = range.endContainer;
+    let startOffset = range.startOffset;
+    let endOffset = range.endOffset;
+
+    // Helper function to find the nearest ancestor word span
+    const findWordSpan = (node) => {
+        while (node && node !== container) {
+            if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('clickable-word')) {
+                return node;
+            }
+            node = node.parentNode;
+        }
+        return null;
+    };
+
+    // Helper function to find the word span containing or immediately preceding/following a text node offset
+     const findWordSpanNearText = (node, offset, lookForward) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+             // If the node itself is a word span
+             if (node.classList.contains('clickable-word')) return node;
+             // If offset points to a child node, check that child
+             const childNode = node.childNodes[offset];
+             if (childNode) return findWordSpan(childNode);
+        }
+
+        // If it's a text node or offset is within a text node
+        let current = node;
+        while (current && current !== container) {
+            if (current.nodeType === Node.ELEMENT_NODE && current.classList.contains('clickable-word')) {
+                return current; // Found ancestor word span
+            }
+            // Move to sibling or parent
+            const sibling = lookForward ? current.nextSibling : current.previousSibling;
+            if (sibling) {
+                current = sibling;
+                // If moving to a sibling element, check its children (especially if looking backward)
+                 if (current.nodeType === Node.ELEMENT_NODE) {
+                    let innerNode = lookForward ? current.firstChild : current.lastChild;
+                    while(innerNode) {
+                         const word = findWordSpan(innerNode);
+                         if(word) return word;
+                         innerNode = lookForward ? innerNode.nextSibling : innerNode.previousSibling;
+                    }
+                 } else { // Text node sibling
+                     const word = findWordSpan(current);
+                     if(word) return word;
+                 }
+
+            } else {
+                current = current.parentNode; // Move up if no more siblings
+            }
+        }
+        return null; // No word span found in traversal
+    };
+
+
+    let startWordSpan = findWordSpan(startNode) || findWordSpanNearText(startNode, startOffset, true);
+    let endWordSpan = findWordSpan(endNode) || findWordSpanNearText(endNode, endOffset, false);
+
+    // If selection starts/ends outside any word span, maybe abort
+    if (!startWordSpan || !endWordSpan) {
+         console.warn("Selection boundary outside clickable words.");
+         // Optionally clear selection or do nothing
+         // selection.removeAllRanges();
+         return;
+    }
+
+    // Ensure startWordSpan actually comes before endWordSpan in the DOM
+    if (startWordSpan.compareDocumentPosition(endWordSpan) & Node.DOCUMENT_POSITION_FOLLOWING) {
+        // Correct order
+    } else if (endWordSpan.compareDocumentPosition(startWordSpan) & Node.DOCUMENT_POSITION_FOLLOWING) {
+        // Swapped order, fix it
+        [startWordSpan, endWordSpan] = [endWordSpan, startWordSpan];
+    } else {
+        // Same node, which is fine
+    }
+
+
+    // Create a new range encompassing the start and end word spans
+    const newRange = document.createRange();
+    try {
+        newRange.setStartBefore(startWordSpan);
+        newRange.setEndAfter(endWordSpan);
+
+        // Update the selection visually
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+
+        // Get the text and trigger lookup (allow a tick for selection update)
+        const selectedText = newRange.toString().trim();
+        if (selectedText) {
+             // Use a slight delay to let the selection update render
+             setTimeout(() => {
+                handleWordClick(selectedText);
+             }, 0);
+        }
+    } catch (e) {
+        console.error("Error adjusting selection range:", e);
+        // Fallback or cleanup if range setting fails
+        selection.removeAllRanges();
+    }
+
+  }, [handleWordClick, textContentRef]); // Added textContentRef dependency
+  // --- End New Word-Granularity Selection Logic ---
+
 
   const processTextContent = useCallback((content) => {
     if (!content) return [];
-    const tokenRegex = new RegExp(
-      [
-        "\\p{L}+(['-]\\p{L}+)*", // words with hyphens/apostrophes
-        "[.,!?;:\"“”‘’…—–-]",    // punctuation
-        "\\s+"                   // whitespace
-      ].join("|"),
-      "gu"
-    );
-    const tokens = content.match(tokenRegex) || [];
+
+    // --- Phase 2: Phrase Recognition Logic ---
+    // 1. Get known phrases (terms with spaces) and sort longest first
+    const knownPhrases = words
+      .filter(w => w.term && w.term.includes(' '))
+      .sort((a, b) => b.term.length - a.term.length);
+
+    const elements = [];
+    let currentIndex = 0;
     let currentKeyIndex = 0;
-    const wordPattern = /^\p{L}+(['-]\p{L}+)*$/u;
-    return tokens.map((token) => {
-      if (!token) return null;
-      if (wordPattern.test(token)) {
-        const wordOnly = token;
-        const wordData = getWordData(wordOnly);
+    const wordPattern = /\p{L}|[']/u; // Match letters and apostrophes for word accumulation
+
+    while (currentIndex < content.length) {
+      let phraseMatched = false;
+
+      // 2. Check for known phrase matches at the current position
+      for (const phrase of knownPhrases) {
+        if (content.substring(currentIndex).startsWith(phrase.term)) {
+          const phraseData = phrase; // Already have the data
+          const phraseStatus = phraseData.status;
+          const phraseTranslation = phraseData.translation;
+          const phraseTerm = phraseData.term;
+
+          const phraseSpan = (
+            <span
+              key={`phrase-${currentKeyIndex++}-${phraseTerm.replace(/\s+/g, '-')}`}
+              style={{ ...styles.highlightedWord, ...getWordStyle(phraseStatus) }}
+              className={`clickable-word word-status-${phraseStatus}`} // Treat phrase like a word visually/interactively
+              onClick={(e) => { e.stopPropagation(); handleWordClick(phraseTerm); }}
+              onMouseEnter={() => setHoveredWordTerm(phraseTerm)}
+              onMouseLeave={() => setHoveredWordTerm(null)}
+            >
+              {phraseTerm}
+            </span>
+          );
+
+          elements.push(
+            phraseTranslation ? (
+              <OverlayTrigger key={`tooltip-phrase-${currentKeyIndex++}-${phraseTerm.replace(/\s+/g, '-')}`} placement="top" overlay={<Tooltip id={`tooltip-phrase-${currentKeyIndex}-${phraseTerm}`}>{phraseTranslation}</Tooltip>}>
+                {phraseSpan}
+              </OverlayTrigger>
+            ) : phraseSpan
+          );
+
+          currentIndex += phraseTerm.length;
+          phraseMatched = true;
+          break; // Stop checking phrases once the longest match is found
+        }
+      }
+
+      if (phraseMatched) {
+        continue; // Move to the next position in the content
+      }
+
+      // 3. If no phrase matched, process the next character(s)
+      const char = content[currentIndex];
+
+      // Check if it's the start of a potential word
+      if (wordPattern.test(char)) {
+        let currentWord = char;
+        let wordEndIndex = currentIndex + 1;
+        // Accumulate subsequent word characters
+        while (wordEndIndex < content.length && wordPattern.test(content[wordEndIndex])) {
+          currentWord += content[wordEndIndex];
+          wordEndIndex++;
+        }
+
+        // Process the accumulated word
+        const wordData = getWordData(currentWord);
         const wordStatus = wordData ? wordData.status : 0;
         const wordTranslation = wordData ? wordData.translation : null;
+
         const wordSpan = (
           <span
-            key={`word-${currentKeyIndex++}-${wordOnly}`}
+            key={`word-${currentKeyIndex++}-${currentWord}`}
             style={{ ...styles.highlightedWord, ...getWordStyle(wordStatus) }}
             className={`clickable-word word-status-${wordStatus}`}
-            onClick={(e) => { e.stopPropagation(); handleWordClick(wordOnly); }}
-            onMouseEnter={() => setHoveredWordTerm(wordOnly)}
+            onClick={(e) => { e.stopPropagation(); handleWordClick(currentWord); }}
+            onMouseEnter={() => setHoveredWordTerm(currentWord)}
             onMouseLeave={() => setHoveredWordTerm(null)}
           >
-            {token}
+            {currentWord}
           </span>
         );
-        return wordTranslation ? (
-          <OverlayTrigger key={`tooltip-${currentKeyIndex++}-${wordOnly}`} placement="top" overlay={<Tooltip id={`tooltip-${currentKeyIndex}-${wordOnly}`}>{wordTranslation}</Tooltip>}>
-            {wordSpan}
-          </OverlayTrigger>
-        ) : wordSpan;
+
+        elements.push(
+          wordTranslation ? (
+            <OverlayTrigger key={`tooltip-${currentKeyIndex++}-${currentWord}`} placement="top" overlay={<Tooltip id={`tooltip-${currentKeyIndex}-${currentWord}`}>{wordTranslation}</Tooltip>}>
+              {wordSpan}
+            </OverlayTrigger>
+          ) : wordSpan
+        );
+
+        currentIndex = wordEndIndex; // Move index past the processed word
       } else {
-        return <React.Fragment key={`sep-${currentKeyIndex++}`}>{token}</React.Fragment>;
+        // Process non-word character (punctuation, whitespace, etc.)
+        elements.push(<React.Fragment key={`sep-${currentKeyIndex++}`}>{char}</React.Fragment>);
+        currentIndex++;
       }
-    }).filter(Boolean);
-  }, [getWordData, getWordStyle, handleWordClick, setHoveredWordTerm]);
+    }
+
+    return elements;
+    // --- End Phase 2 Logic ---
+
+  }, [words, getWordData, getWordStyle, handleWordClick, setHoveredWordTerm]); // Added 'words' dependency
 
 
   const getFontFamilyForList = useCallback(() => {
@@ -345,6 +529,26 @@ const TextDisplay = () => {
       handleLineClick: handleLineClick,
       getFontStyling: getFontStyling
   }), [srtLines, currentSrtLineId, processTextContent, handleLineClick, getFontStyling]);
+
+  // --- Bookmark Helper Functions ---
+  const isBookmarked = useCallback((sentenceIndex) => {
+    return bookmarkedIndices.includes(sentenceIndex);
+  }, [bookmarkedIndices]);
+
+  const handleSentenceContextMenu = useCallback((event, sentenceIndex) => {
+    event.preventDefault(); // Prevent default browser menu
+    if (!text?.textId || typeof sentenceIndex !== 'number') return;
+
+    console.log(`[Bookmark] Toggling bookmark for text ${text.textId}, sentence ${sentenceIndex}`);
+    toggleBookmark(text.textId, sentenceIndex); // Call the utility
+
+    // Re-fetch bookmarks from storage and update state to trigger UI refresh
+    const updatedBookmarks = getBookmarkedSentences(text.textId);
+    setBookmarkedIndices(updatedBookmarks);
+  }, [text?.textId, setBookmarkedIndices]); // Dependencies: textId and the state setter
+
+  // --- End Bookmark Helper Functions ---
+
   // --- End Helper Functions & Memoized Values ---
 
 
@@ -370,7 +574,7 @@ const TextDisplay = () => {
     // --- End Set initial panel width ---
 
     const fetchText = async () => {
-      setLoading(true); setError(''); setBook(null); setNextTextId(null); setInitialAudioTime(null); // Reset initial time
+      setLoading(true); setError(''); setBook(null); setNextTextId(null); setInitialAudioTime(null); setBookmarkedIndices([]); // Reset bookmarks for new text
       try {
         const data = await getText(textId);
         setText(data);
@@ -438,6 +642,12 @@ const TextDisplay = () => {
                // Don't block text display if book fetch fails, but player won't show
           }
         }
+        // Load bookmarks after text is set
+        if (data?.textId) {
+          const loadedBookmarks = getBookmarkedSentences(data.textId);
+          setBookmarkedIndices(loadedBookmarks);
+          console.log(`[Bookmarks] Loaded ${loadedBookmarks.length} bookmarks for text ${data.textId}`);
+        }
       } catch (err) { setError(err.message || 'Failed to load text'); }
       finally { setLoading(false); }
     };
@@ -478,8 +688,17 @@ const TextDisplay = () => {
             } else {
                 console.log('[Audio Log - Unmount] Audio was paused/ended.');
             }
-            const durationInSeconds = Math.round(finalDurationMs / 1000);
-            console.log(`[Audio Log - Unmount] Calculated total duration (s): ${durationInSeconds} for languageId: ${text.languageId}`);
+            // --- Calculate final elapsed time if audio was playing on unmount ---
+            if (startTimeRef.current) {
+                const finalElapsed = Date.now() - startTimeRef.current;
+                accumulatedDurationRef.current += finalElapsed;
+                console.log(`[Audio Log - Unmount] Added final elapsed time: ${finalElapsed}ms. New Accumulated: ${accumulatedDurationRef.current}ms`);
+                startTimeRef.current = null; // Clear ref after calculation
+            }
+            // --- Use the final accumulated duration ---
+            const finalAccumulatedMs = accumulatedDurationRef.current; // Use the potentially updated value
+            const durationInSeconds = Math.round(finalAccumulatedMs / 1000);
+            console.log(`[Audio Log - Unmount] Calculated final total duration (s): ${durationInSeconds} for languageId: ${text.languageId}`);
 
             console.log(`[Audio Log - Unmount] Checking duration threshold (> 5s)... Duration is ${durationInSeconds}s.`);
 
@@ -644,23 +863,20 @@ const TextDisplay = () => {
   }, [hoveredWordTerm, processingWord, isTranslating, getWordData, setWords, selectedWord, displayedWord, text?.textId, globalSettings.autoTranslateWords, triggerAutoTranslation]); // Use globalSettings
   // --- End Keyboard Shortcuts ---
 
-  // Text selection listener (for phrases)
-  useEffect(() => {
-    const handleMouseUp = () => {
-        const selected = window.getSelection()?.toString();
-        if (selected && selected.trim().length > 0 && selected.includes(' ')) {
-           handleTextSelection(selected); // Now defined before this hook
-        }
-     };
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => document.removeEventListener('mouseup', handleMouseUp);
-  }, [text, handleTextSelection]); // handleTextSelection dependency is correct
+  // Removed redundant text selection listener useEffect hook
+  // Selection is now handled by onMouseUp on the text container div
   // --- End Effect Hooks ---
 
 
   // --- Event Handlers ---
-   const handleSaveWord = async (status) => {
-     if (!selectedWord || processingWord || isTranslating) return;
+
+   const handleSaveWord = useCallback(async (status) => {
+     // Ensure selectedWord is used here, as displayedWord might be slightly different if selection changed rapidly
+     const termToSave = selectedWord || displayedWord?.term;
+     if (!termToSave || processingWord || isTranslating) {
+        console.log(`[handleSaveWord] Aborted: termToSave=${termToSave}, processingWord=${processingWord}, isTranslating=${isTranslating}`); // Added logging
+        return;
+     }
      setSaveSuccess(false); setProcessingWord(true);
      try {
        const numericStatus = parseInt(status, 10);
@@ -679,7 +895,22 @@ const TextDisplay = () => {
        setSaveSuccess(true); setTimeout(() => setSaveSuccess(false), 2000);
      } catch (error) { console.error('Error saving word:', error); alert(`Failed to save word: ${error.message}`); }
      finally { setProcessingWord(false); }
-   };
+   }, [selectedWord, displayedWord, processingWord, isTranslating, translation, text?.textId, words, getWordData, setWords, setDisplayedWord, setSaveSuccess, setProcessingWord, updateWord, createWord]); // Added dependencies for useCallback
+
+  // Handler for saving translation via Enter key (Moved after handleSaveWord)
+  const handleTranslationKeyDown = useCallback((event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault(); // Prevent newline in textarea
+      if (displayedWord) {
+        // Determine the status to save (current status, or 1 if untracked)
+        const statusToSave = displayedWord.status > 0 ? displayedWord.status : 1;
+        console.log(`[Enter Save] Saving word: "${displayedWord.term}", Status: ${statusToSave}, Translation: "${translation}"`); // Added logging
+        handleSaveWord(statusToSave); // handleSaveWord is now defined before this
+      } else {
+         console.log('[Enter Save] No displayedWord, cannot save.'); // Added logging
+      }
+    }
+  }, [displayedWord, handleSaveWord, translation]); // handleSaveWord dependency is now safe
 
    const handleFullTextTranslation = async () => {
       if (!text || !text.content) return;
@@ -708,9 +939,9 @@ const TextDisplay = () => {
           term: originalCaseMap.get(word) || word,
           translation: translations[word.toLowerCase()] || ''
         })).filter(t => t.translation);
-        
+
         if (termsToAdd.length === 0) { alert("No translations received."); setTranslatingUnknown(false); return; } // Exit early
-        
+
         // Two-step workflow: first fetch translations, then save terms+translations
         try {
           await addTermsBatch(text.languageId, termsToAdd);
@@ -825,47 +1056,66 @@ const TextDisplay = () => {
           console.log(`[Audio Tracking] Paused/Ended. Elapsed: ${elapsed}ms. Accumulated: ${accumulatedDurationRef.current}ms`);
           startTimeRef.current = null; // Reset start time
 
-          // --- Attempt to log duration here ---
-          const durationInSeconds = Math.round(accumulatedDurationRef.current / 1000);
-          console.log(`[Audio Tracking - Pause/End] Checking duration threshold (> 5s)... Duration is ${durationInSeconds}s.`);
-
-          if (durationInSeconds > 5 && isAudioLesson && text?.languageId) { // Check conditions again
-              console.log('[Audio Tracking - Pause/End] Duration > 5s. Preparing API call...');
-              const token = localStorage.getItem('token');
-              const payload = {
-                languageId: text.languageId,
-                // Send the *accumulated* duration up to this point
-                durationSeconds: durationInSeconds
-              };
-              console.log('[Audio Tracking - Pause/End] API Payload:', payload);
-              console.log('[Audio Tracking - Pause/End] Making fetch call to logListening...');
-              fetch(`${API_URL}/activity/logListening`, {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'application/json',
-                      'Authorization': `Bearer ${token}`
-                  },
-                  body: JSON.stringify(payload)
-              })
-              .then(response => {
-                  if (!response.ok) {
-                      console.error('[Audio Tracking - Pause/End] API call failed:', response.statusText);
-                  } else {
-                      console.log('[Audio Tracking - Pause/End] API call successful (Note: This might log multiple times per session).');
-                      // Optionally reset accumulated duration after successful log?
-                      // accumulatedDurationRef.current = 0; // Consider implications
-                  }
-              })
-              .catch(error => {
-                  console.error('[Audio Tracking - Pause/End] API call error:', error);
-              });
-          } else {
-               console.log('[Audio Tracking - Pause/End] Duration <= 5s or not audio lesson/no languageId. Skipping API call.');
-          }
-          // --- End duration logging attempt ---
+          // --- Removed API logging from handlePauseOrEnd ---
+          // Logging is now handled only in the main useEffect cleanup function
       }
   };
   // --- End Audio Tracking Handlers ---
+
+  // --- New Sentence Rendering Logic ---
+  // Takes processed elements for a block (e.g., paragraph) and a starting index,
+  // returns rendered sentence elements and the next sentence index.
+  const renderProcessedContentAsSentences = useCallback((processedElements, startingSentenceIndex) => {
+    if (!processedElements || processedElements.length === 0) {
+      return { sentenceElements: null, nextSentenceIndex: startingSentenceIndex };
+    }
+
+    const sentenceElements = [];
+    let currentSentenceElements = [];
+    let sentenceIndex = startingSentenceIndex;
+    const sentenceEndRegex = /^[.!?…]$/;
+    const whitespaceRegex = /^\s+$/;
+
+    processedElements.forEach((element, idx) => {
+      currentSentenceElements.push(element);
+
+      let isEndOfSentence = false;
+      if (element.type === React.Fragment && element.props.children) {
+        const content = String(element.props.children).trim();
+        if (sentenceEndRegex.test(content)) {
+          const nextElement = processedElements[idx + 1];
+          if (!nextElement || (nextElement.type === React.Fragment && whitespaceRegex.test(String(nextElement.props.children)))) {
+            isEndOfSentence = true;
+          }
+        }
+      }
+
+      if (isEndOfSentence || idx === processedElements.length - 1) {
+        if (currentSentenceElements.some(el => el.type !== React.Fragment || !whitespaceRegex.test(String(el.props.children)))) {
+          const currentSentenceIndex = sentenceIndex++;
+          sentenceElements.push(
+            <span
+              key={`sentence-${currentSentenceIndex}`}
+              className="sentence"
+              data-sentence-index={currentSentenceIndex}
+              onContextMenu={(e) => handleSentenceContextMenu(e, currentSentenceIndex)}
+              style={{ display: 'inline' }} // Keep inline display
+            >
+              {isBookmarked(currentSentenceIndex) && (
+                <span className="bookmark-icon" aria-label="bookmark">🔖</span>
+              )}
+              {currentSentenceElements}
+            </span>
+          );
+        }
+        currentSentenceElements = [];
+      }
+    });
+
+    return { sentenceElements, nextSentenceIndex: sentenceIndex };
+  }, [handleSentenceContextMenu, isBookmarked]); // Dependencies
+
+  // --- End New Sentence Rendering Logic ---
 
 
   // --- Rendering Logic ---
@@ -885,13 +1135,28 @@ const TextDisplay = () => {
   const renderStandardText = () => {
     if (!text?.content) return null;
     const paragraphs = text.content.split(/(\n\s*){2,}/g).filter(p => p?.trim().length > 0);
+    let currentSentenceIndex = 0; // Track sentence index across paragraphs
+
     return (
-       <div className="text-content" style={{ fontSize: `${globalSettings.textSize}px`, lineHeight: '1.6', fontFamily: getFontFamilyForList(), padding: '15px' }}> {/* Use globalSettings */}
-        {paragraphs.map((paragraph, index) => (
-          <p key={`para-${index}`} className="mb-3" style={{ textIndent: '1.5em' }}>
-            {processTextContent(paragraph)}
-          </p>
-        ))}
+       <div
+         className="text-content"
+         ref={textContentRef}
+         style={{ fontSize: `${globalSettings.textSize}px`, lineHeight: '1.6', fontFamily: getFontFamilyForList(), padding: '15px' }} // Use globalSettings
+         onMouseUp={handleWordSelection} // Use the new word selection handler
+        >
+        {paragraphs.map((paragraph, index) => {
+          // Process paragraph into elements
+          const processedParaElements = processTextContent(paragraph);
+          // Render elements as sentences, passing and updating the global sentence index
+          const { sentenceElements, nextSentenceIndex } = renderProcessedContentAsSentences(processedParaElements, currentSentenceIndex);
+          currentSentenceIndex = nextSentenceIndex; // Update index for the next paragraph
+
+          return (
+            <p key={`para-${index}`} className="mb-3" style={{ textIndent: '1.5em' }}>
+              {sentenceElements}
+            </p>
+          );
+        })}
       </div>
     );
   };
@@ -903,7 +1168,7 @@ const TextDisplay = () => {
           <h5 className="fw-bold mb-2">{displayedWord.term}</h5>
           {saveSuccess && <Alert variant="success" size="sm">Saved!</Alert>}
           <p className="mb-1 small">Status: {displayedWord.status > 0 ? ['New','Learning','Familiar','Advanced','Known'][displayedWord.status-1] : 'Untracked'}</p>
-          <Form.Control as="textarea" rows={2} value={translation} onChange={(e) => setTranslation(e.target.value)} placeholder="Translation/Notes" disabled={isTranslating} size="sm"/>
+          <Form.Control as="textarea" rows={2} value={translation} onChange={(e) => setTranslation(e.target.value)} onKeyDown={handleTranslationKeyDown} placeholder="Translation/Notes (Enter to save)" disabled={isTranslating} size="sm"/>
           {isTranslating && <Spinner size="sm"/>}
           {wordTranslationError && <Alert variant="danger" size="sm">{wordTranslationError}</Alert>}
           <div className="d-flex flex-wrap gap-1 mt-2">

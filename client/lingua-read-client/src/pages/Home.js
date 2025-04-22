@@ -69,107 +69,59 @@ const Home = () => {
   };
 
   return (
-    <Container className="py-5">
+    // Reduced padding slightly
+    <Container className="py-4">
+      {/* Removed outer Row/Col structure that centered everything */}
+
+      {/* --- Continue Reading Section --- */}
+      {/* Keep token check here as it depends on fetched data */}
+      {token && (
+        <Row className="justify-content-center mb-4">
+          <Col md={10} lg={8}> {/* Adjusted column size */}
+            <Card className="shadow-sm">
+              <Card.Header as="h5">Continue Reading</Card.Header>
+              <Card.Body>
+                {renderRecentTexts()}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
+      {/* --- End Continue Reading Section --- */}
+
+      {/* --- Action Cards Section --- */}
+      {/* Removed the token check here - always show these actions */}
       <Row className="justify-content-center">
-        <Col md={8} className="text-center">
-          <h1 className="display-4 mb-4">Welcome to LinguaRead</h1>
-          <p className="lead mb-5">
-            Improve your language skills by reading texts and tracking your vocabulary progress.
-            LinguaRead helps you learn new words in context and remember them better.
-          </p>
-
-          {/* --- Continue Reading Section --- */}
-          {token && (
-            <Row className="justify-content-center mb-5">
-              <Col md={10}>
-                <Card className="shadow-sm">
-                  <Card.Header as="h5">Continue Reading</Card.Header>
-                  <Card.Body>
-                    {renderRecentTexts()}
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          )}
-          {/* --- End Continue Reading Section --- */}
-
-          {token ? (
-            <Row className="justify-content-center">
-              {/* Existing logged-in cards */}
-              <Col md={6} className="mb-4">
-                <Card className="h-100 shadow-sm">
-                  <Card.Body>
-                    <Card.Title>My Books</Card.Title> {/* Changed from My Texts */}
-                    <Card.Text>
-                      View your imported books and standalone texts.
-                    </Card.Text>
-                    <Button as={Link} to="/books" variant="primary">Go to My Books</Button> {/* Changed link */}
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col md={6} className="mb-4">
-                <Card className="h-100 shadow-sm">
-                  <Card.Body>
-                    <Card.Title>Add New Content</Card.Title>
-                    <Card.Text>
-                      Import a new book, create a text, or upload an audio lesson.
-                    </Card.Text>
-                    {/* Consider adding dropdown or separate buttons */}
-                    <Button as={Link} to="/books/create" variant="success" className="me-2">Add Book</Button>
-                    <Button as={Link} to="/texts/create-audio" variant="info">Add Audio Lesson</Button>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          ) : (
-             // Existing logged-out cards
-            <Row className="justify-content-center">
-              <Col md={6} className="mb-4">
-                <Card className="h-100 shadow-sm">
-                  <Card.Body>
-                    <Card.Title>Get Started</Card.Title>
-                    <Card.Text>
-                      Create an account to start tracking your language learning progress.
-                    </Card.Text>
-                    <Button as={Link} to="/register" variant="primary">Register</Button>
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col md={6} className="mb-4">
-                <Card className="h-100 shadow-sm">
-                  <Card.Body>
-                    <Card.Title>Already a User?</Card.Title>
-                    <Card.Text>
-                      Log in to access your saved texts and continue learning.
-                    </Card.Text>
-                    <Button as={Link} to="/login" variant="outline-primary">Login</Button>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          )}
-
-          <Row className="mt-5">
-            <Col>
-              <h2 className="mb-4">How It Works</h2>
-              <Row className="text-start">
-                <Col md={4} className="mb-4">
-                  <h4>1. Add Content</h4> {/* Updated */}
-                  <p>Import books, texts, or audio lessons in your target language.</p>
-                </Col>
-                <Col md={4} className="mb-4">
-                  <h4>2. Mark Words</h4>
-                  <p>Highlight words you're learning and track your progress.</p>
-                </Col>
-                <Col md={4} className="mb-4">
-                  <h4>3. Review & Learn</h4>
-                  <p>See your vocabulary growth over time as you read more.</p>
-                </Col>
-              </Row>
-            </Col>
-          </Row>
+        <Col md={6} lg={5} className="mb-4"> {/* Adjusted column size */}
+          <Card className="h-100 shadow-sm">
+            <Card.Body className="d-flex flex-column"> {/* Use flex for button alignment */}
+              <Card.Title>My Books</Card.Title>
+              <Card.Text>
+                View your imported books and standalone texts.
+              </Card.Text>
+              <Button as={Link} to="/books" variant="primary" className="mt-auto">Go to My Books</Button> {/* mt-auto pushes button down */}
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6} lg={5} className="mb-4"> {/* Adjusted column size */}
+          <Card className="h-100 shadow-sm">
+            <Card.Body className="d-flex flex-column"> {/* Use flex for button alignment */}
+              <Card.Title>Add New Content</Card.Title>
+              <Card.Text>
+                Import a new book, create a text, or upload an audio lesson.
+              </Card.Text>
+              <div className="mt-auto"> {/* Group buttons and push down */}
+                <Button as={Link} to="/books/create" variant="success" className="me-2 mb-2">Add Book</Button>
+                <Button as={Link} to="/texts/create" variant="secondary" className="me-2 mb-2">Add Text</Button> {/* Added Add Text button */}
+                <Button as={Link} to="/texts/create-audio" variant="info" className="mb-2">Add Audio Lesson</Button>
+              </div>
+            </Card.Body>
+          </Card>
         </Col>
       </Row>
+      {/* Removed the logged-out cards section entirely */}
+      {/* Removed the "How It Works" section entirely */}
+
     </Container>
   );
 };

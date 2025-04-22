@@ -173,22 +173,40 @@ app.Use(async (context, next) =>
 });
 // --- End early exception logging middleware ---
 
-// Seed the database
+// Apply Migrations and Seed the database
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>(); // Get logger instance
+
+    // --- Apply Migrations ---
     try
     {
-        // Apply database migrations automatically
+        logger.LogInformation("Attempting to apply database migrations...");
         var dbContext = services.GetRequiredService<AppDbContext>();
         dbContext.Database.Migrate();
-
-        DbInitializer.Initialize(services); // Restore seeding call
+        logger.LogInformation("Database migrations applied successfully (or were already up-to-date).");
     }
     catch (Exception ex)
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+        // Log the migration error AND stop the application if it fails.
+        logger.LogError(ex, "An error occurred during database migration. Halting application startup.");
+        throw; // Re-throw the exception to stop the application
+    }
+
+    // --- Seed Custom Data (Languages, Default User) ---
+    try
+    {
+        logger.LogInformation("Attempting to run DbInitializer...");
+        DbInitializer.Initialize(services); // Run custom seeding logic
+        logger.LogInformation("DbInitializer completed.");
+    }
+    catch (Exception ex)
+    {
+        // Log seeding errors separately
+        logger.LogError(ex, "An error occurred while running DbInitializer.");
+        // Depending on the severity, you might want to stop the application here
+        // throw;
     }
 }
 

@@ -216,19 +216,15 @@ export const testApiConnection = async () => {
 };
 
 // Auth API
-export const login = (email, password) => {
+// Modified for auto-login: No longer sends email/password
+export const login = () => {
   return fetchApi('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password })
+    method: 'POST'
+    // No body needed for the auto-login endpoint
   });
 };
 
-export const register = (email, password) => {
-  return fetchApi('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify({ email, password })
-  });
-};
+// REMOVED register function as it's no longer used
 
 // Languages API
 export const getLanguages = () => {

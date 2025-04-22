@@ -158,6 +158,7 @@ POSTGRES_USER=linguaread_user
 POSTGRES_PASSWORD=your_secure_postgres_password_here
 
 # JWT secret key for backend (Generate a new, secure 32+ character key)
+
 JWT_KEY="replace_this_with_your_very_long_and_secure_random_jwt_key"
 
 # DeepL API key for backend (Optional - Get from DeepL website, free tier recommended)
