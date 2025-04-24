@@ -774,8 +774,32 @@ namespace LinguaReadApi.Controllers
         private string NormalizeBaseName(string? name)
         {
             if (string.IsNullOrWhiteSpace(name)) return string.Empty;
-            // Simple normalization: lowercase, remove spaces, underscores, hyphens
-            return System.Text.RegularExpressions.Regex.Replace(name.ToLowerInvariant(), @"[\s_-]+", "");
+
+            // 1. Get filename without extension
+            string stem = Path.GetFileNameWithoutExtension(name);
+            if (string.IsNullOrWhiteSpace(stem)) return string.Empty;
+
+            // 2. Define known language/variant suffixes (longest first)
+            var suffixes = new List<string> {
+                "_fr", "_en", "_es", "_de", "_it", "_pt", "_ru", // Add more as needed
+                "fr", "en", "es", "de", "it", "pt", "ru" // Variants without underscore
+                // Add other potential separators/codes if necessary
+            };
+
+            // 3. Find and remove the longest matching suffix at the end
+            string? longestMatch = suffixes
+                                    .Where(suffix => stem.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                                    .OrderByDescending(suffix => suffix.Length)
+                                    .FirstOrDefault();
+
+            if (longestMatch != null)
+            {
+                stem = stem.Substring(0, stem.Length - longestMatch.Length);
+            }
+
+            // 4. Convert to lowercase (optional: remove extra spaces/hyphens if needed, but might be less robust)
+            // Keeping it simple for now to focus on pairing
+            return stem.ToLowerInvariant().Trim(); // Trim any potential leftover whitespace
         }
 
         // --- End: Fuzzy Parsing Helper ---
