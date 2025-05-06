@@ -1367,7 +1367,7 @@ const TextDisplay = () => {
 
       {/* Audio Player */}
       {isAudioLesson && audioSrc && displayMode === 'audio' && (
-        <div className="audio-player-container p-2 bg-light border-bottom">
+        <div className="audio-player-container p-2 border-bottom theme-aware-audio-player-container">
           <audio
             ref={audioRef}
             controls

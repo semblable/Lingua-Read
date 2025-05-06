@@ -123,3 +123,27 @@
   font-weight: bold; /* Make it bolder */
 }
 /* --- End Bookmark Styles --- */
+/* Theme-aware styles for the audio player container */
+.theme-aware-audio-player-container {
+  background-color: var(--theme-surface-bg, var(--light-surface-bg)); /* Fallback for safety */
+  border-bottom: 1px solid var(--theme-border-color, var(--light-border-color)); /* Fallback for safety */
+  /* Padding is handled by existing p-2 class, but can be adjusted here if needed */
+}
+
+/* Experimental: Minor tweaks for audio controls in dark themes */
+/* Apply cautiously, test thoroughly */
+body.dark-theme .theme-aware-audio-player-container audio::-webkit-media-controls-panel,
+body.classic-dark-theme .theme-aware-audio-player-container audio::-webkit-media-controls-panel {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+body.dark-theme .theme-aware-audio-player-container audio::-moz-media-controls-panel, /* Firefox specific if needed */
+body.classic-dark-theme .theme-aware-audio-player-container audio::-moz-media-controls-panel {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* For Edge/Chromium based browsers, the ::-webkit-media-controls-panel should cover it.
+   If specific issues arise with default controls on dark themes, more targeted selectors might be needed.
+   However, full cross-browser custom styling of audio controls is complex.
+   The filter is a broad approach.
+*/
