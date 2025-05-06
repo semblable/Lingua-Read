@@ -37,12 +37,12 @@ const BookList = () => {
   }
 
   return (
-    <Container className="py-5">
-      <div className="d-flex justify-content-between mb-4">
-        <h2>My Books</h2>
-        <Button 
-          variant="primary" 
+    <Container className="py-5 main-content-padding"> {/* Added main-content-padding */}
+      <div className="d-flex justify-content-between align-items-center mb-4"> {/* Added align-items-center */}
+        <h2 className="mb-0">My Books</h2> {/* Removed default h2 margin */}
+        <Button
           onClick={() => navigate('/books/create')}
+          className="btn-primary" // Ensure it uses global styles
         >
           Add New Book
         </Button>
@@ -56,35 +56,31 @@ const BookList = () => {
         </Alert>
       )}
 
-      <Row xs={1} md={2} lg={3} className="g-4">
+      <Row xs={1} md={2} lg={3} className="g-4"> {/* g-4 provides spacing between cards */}
         {books.map((book) => (
           <Col key={book.bookId}>
-            <Card className="h-100 shadow-sm book-card">
-              <Card.Body>
-                <Card.Title as="h5" className="text-truncate">{book.title}</Card.Title>
-                <Card.Subtitle className="mb-2 text-muted">
+            <Card className="h-100 d-flex flex-column book-card"> {/* Added d-flex flex-column for footer behavior, book-card is existing */}
+              <Card.Body className="d-flex flex-column flex-grow-1"> {/* flex-grow-1 to push footer down */}
+                <Card.Title as="h5" className="text-truncate mb-1">{book.title}</Card.Title> {/* Reduced margin slightly */}
+                <Card.Subtitle className="mb-3 text-muted"> {/* Increased margin */}
                   {book.languageName}
                 </Card.Subtitle>
-                <Card.Text className="text-truncate">
+                <Card.Text className="text-truncate mb-3"> {/* Added margin */}
                   {book.description || 'No description provided'}
                 </Card.Text>
-                
+
                 {/* Reading statistics */}
-                <div className="mb-2">
+                <div className="mb-3"> {/* Increased margin */}
                   <small className="text-muted d-block mb-1">Reading progress:</small>
-                  <ProgressBar 
-                    now={book.completionPercentage} 
-                    label={`${book.completionPercentage}%`} 
-                    variant={
-                      book.completionPercentage < 25 ? 'danger' : 
-                      book.completionPercentage < 50 ? 'warning' : 
-                      book.completionPercentage < 75 ? 'info' : 'success'
-                    }
+                  <ProgressBar
+                    now={book.completionPercentage}
+                    label={`${book.completionPercentage}%`}
+                    className="themed-progress-bar" // Added custom class
                   />
                 </div>
-                
+
                 {book.totalWords > 0 && (
-                  <div className="text-muted small mb-2">
+                  <div className="text-muted small mb-3"> {/* Increased margin */}
                     <Row>
                       <Col>Known: {book.knownWords}</Col>
                       <Col>Learning: {book.learningWords}</Col>
@@ -92,32 +88,31 @@ const BookList = () => {
                     </Row>
                   </div>
                 )}
-                
-                <div className="text-muted small mb-3">
+
+                <div className="text-muted small mt-auto"> {/* mt-auto to push to bottom if content is short */}
                   Parts: {book.partCount} | Added: {formatDate(book.createdAt)}
                   {book.lastReadAt && (
                     <> | Last read: {formatDate(book.lastReadAt)}</>
                   )}
                 </div>
               </Card.Body>
-              <Card.Footer className="bg-white d-flex">
-                <Link 
-                  to={`/books/${book.bookId}`} 
-                  className="btn btn-outline-primary flex-grow-1 me-2"
+              <Card.Footer className="d-flex p-3"> {/* Removed bg-white, added padding */}
+                <Link
+                  to={`/books/${book.bookId}`}
+                  className="btn btn-outline-primary flex-grow-1 me-2" // me-2 for spacing
                 >
                   View Book
                 </Link>
                 {book.lastReadTextId ? (
-                  <Link 
-                    to={`/texts/${book.lastReadTextId}`} 
+                  <Link
+                    to={`/texts/${book.lastReadTextId}`}
                     className="btn btn-primary flex-grow-1"
                   >
                     Continue Reading
                   </Link>
                 ) : book.partCount > 0 ? (
-                  <Button 
-                    variant="primary"
-                    className="flex-grow-1"
+                  <Button
+                    className="btn-primary flex-grow-1" // Ensure it uses global styles
                     onClick={() => navigate(`/texts/${book.parts?.[0]?.textId || ''}`)}
                     disabled={!book.parts?.[0]?.textId}
                   >

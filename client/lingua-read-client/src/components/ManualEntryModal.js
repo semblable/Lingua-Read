@@ -111,10 +111,10 @@ function ManualEntryModal({ show, onHide, onSubmitSuccess }) {
 
     return (
         <Modal show={show} onHide={onHide} onExited={handleExited} centered>
-            <Modal.Header closeButton>
-                <Modal.Title>Log Manual Activity</Modal.Title>
+            <Modal.Header closeButton className="p-3" style={{ borderBottom: '1px solid var(--border-color)' }}> {/* Added padding and themed border */}
+                <Modal.Title as="h5">Log Manual Activity</Modal.Title> {/* Use h5 for consistency */}
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body className="p-3"> {/* Added padding */}
                 {error && <Alert variant="danger">{error}</Alert>}
                 {isFetchingLanguages ? (
                     <div className="text-center">
@@ -168,10 +168,10 @@ function ManualEntryModal({ show, onHide, onSubmitSuccess }) {
                         </Form.Group>
 
                         <div className="d-grid gap-2">
-                             <Button variant="primary" type="submit" disabled={isLoading || isFetchingLanguages}>
+                             <Button type="submit" className="btn-primary" disabled={isLoading || isFetchingLanguages}> {/* Use global class */}
                                  {isLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : 'Log Activity'}
                              </Button>
-                             <Button variant="secondary" onClick={onHide} disabled={isLoading}>
+                             <Button onClick={onHide} className="btn-secondary" disabled={isLoading}> {/* Use global class */}
                                  Cancel
                              </Button>
                         </div>

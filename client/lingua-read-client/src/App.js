@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react'; // Added useState
+import React, { useEffect, useState, useContext } from 'react'; // Added useState and useContext
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'; // Added Outlet
 import { useAuthStore } from './utils/store';
 import { jwtDecode } from 'jwt-decode';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
-import { SettingsProvider } from './contexts/SettingsContext';
+import { SettingsProvider, SettingsContext } from './contexts/SettingsContext'; // Import SettingsContext
 import { login } from './utils/api'; // Import the login API function
 
 // Components
@@ -42,6 +42,7 @@ const ProtectedRoute = ({ token, isLoading }) => {
 function App() {
   const { token, setToken, clearToken } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true); // Add loading state
+  const settingsContext = useContext(SettingsContext); // Access settings context
 
   // Check token and perform auto-login on app load
   useEffect(() => {
@@ -105,16 +106,23 @@ function App() {
     const savedTheme = localStorage.getItem('theme') || 'light';
 
     const applyTheme = (theme) => {
+      document.body.classList.remove('light-theme', 'dark-theme', 'classic-dark-theme');
+
       if (theme === 'dark') {
         document.body.classList.add('dark-theme');
-        document.body.classList.remove('light-theme');
       } else if (theme === 'light') {
-        document.body.classList.remove('dark-theme');
         document.body.classList.add('light-theme');
-      } else {
+      } else if (theme === 'classic-dark') {
+        document.body.classList.add('classic-dark-theme');
+      } else { // Default to system preference (light/dark only) or light if not supported
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.body.classList.toggle('dark-theme', prefersDark);
-        document.body.classList.toggle('light-theme', !prefersDark);
+        // System preference currently only supports light/dark. Defaulting to light if 'classic-dark' is not explicitly chosen.
+        // Or, if system is dark, we could map it to 'dark-theme' or 'classic-dark-theme' based on a sub-preference if desired later.
+        if (prefersDark) {
+          document.body.classList.add('dark-theme'); // Or potentially 'classic-dark-theme' if we want system dark to map here
+        } else {
+          document.body.classList.add('light-theme');
+        }
       }
     };
 
@@ -133,6 +141,27 @@ function App() {
       mediaQuery.removeEventListener('change', handleSystemThemeChange);
     };
   }, []);
+
+  // Apply line spacing from settings
+  useEffect(() => {
+    if (settingsContext && settingsContext.settings && settingsContext.settings.lineSpacing) {
+      document.body.style.setProperty('--reading-line-height', settingsContext.settings.lineSpacing);
+      // Persist to localStorage as well, so it's available on next load before context initializes fully
+      localStorage.setItem('lineSpacing', settingsContext.settings.lineSpacing);
+    } else {
+      // Fallback or load from localStorage if context isn't ready
+      const savedLineSpacing = localStorage.getItem('lineSpacing') || '1.5'; // Default to 1.5
+      document.body.style.setProperty('--reading-line-height', savedLineSpacing);
+    }
+  }, [settingsContext]);
+
+  // Effect to load initial line spacing from localStorage on component mount
+  // This ensures it's set before the context might be fully populated, avoiding a flicker.
+  useEffect(() => {
+    const initialLineSpacing = localStorage.getItem('lineSpacing') || '1.5';
+    document.body.style.setProperty('--reading-line-height', initialLineSpacing);
+  }, []);
+
 
   return (
       <SettingsProvider>

@@ -15,7 +15,8 @@ const UserSettings = () => {
     highlightKnownWords: true,
     defaultLanguageId: 0,
     autoAdvanceToNextLesson: false,
-    showProgressStats: true
+    showProgressStats: true,
+    lineSpacing: 1.5 // Added lineSpacing setting
   });
 
   const [languages, setLanguages] = useState([]);
@@ -54,7 +55,8 @@ const UserSettings = () => {
            highlightKnownWords: data.highlightKnownWords ?? true,
            defaultLanguageId: data.defaultLanguageId || 0,
            autoAdvanceToNextLesson: data.autoAdvanceToNextLesson ?? false,
-           showProgressStats: data.showProgressStats ?? true
+           showProgressStats: data.showProgressStats ?? true,
+           lineSpacing: data.lineSpacing || 1.5 // Fetch lineSpacing
          });
        } catch (err) {
          setError('Failed to load settings. Please try again later.');
@@ -108,28 +110,53 @@ const UserSettings = () => {
 
        // Apply theme change immediately and save to localStorage
        localStorage.setItem('theme', settings.theme);
+       document.body.classList.remove('light-theme', 'dark-theme', 'classic-dark-theme'); // Clear existing theme classes
+
        if (settings.theme === 'dark') {
          document.body.classList.add('dark-theme');
-         document.body.classList.remove('light-theme'); // Ensure light theme is removed
        } else if (settings.theme === 'light') {
-         document.body.classList.remove('dark-theme');
-         document.body.classList.add('light-theme'); // Ensure light theme is added/kept
-       } else { // System theme
+         document.body.classList.add('light-theme');
+       } else if (settings.theme === 'classic-dark') {
+         document.body.classList.add('classic-dark-theme');
+       } else { // System theme (defaults to light/dark based on system)
          const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-         document.body.classList.toggle('dark-theme', prefersDark);
-         document.body.classList.toggle('light-theme', !prefersDark);
+         if (prefersDark) {
+           document.body.classList.add('dark-theme'); // Or classic-dark-theme if preferred for system dark
+         } else {
+           document.body.classList.add('light-theme');
+         }
        }
        
        // Update global context after successful API save
        updateSetting('theme', settings.theme);
+       localStorage.setItem('theme', settings.theme); // Ensure theme is saved here too
+
        updateSetting('textSize', settings.textSize);
+       localStorage.setItem('textSize', settings.textSize.toString());
+
        updateSetting('textFont', settings.textFont);
+       localStorage.setItem('textFont', settings.textFont);
+
        updateSetting('leftPanelWidth', settings.leftPanelWidth);
+       localStorage.setItem('leftPanelWidth', settings.leftPanelWidth.toString());
+
        updateSetting('autoTranslateWords', settings.autoTranslateWords);
+       localStorage.setItem('autoTranslateWords', settings.autoTranslateWords.toString());
+
        updateSetting('highlightKnownWords', settings.highlightKnownWords);
+       localStorage.setItem('highlightKnownWords', settings.highlightKnownWords.toString());
+
        updateSetting('defaultLanguageId', settings.defaultLanguageId);
+       localStorage.setItem('defaultLanguageId', settings.defaultLanguageId.toString());
+
        updateSetting('autoAdvanceToNextLesson', settings.autoAdvanceToNextLesson);
+       localStorage.setItem('autoAdvanceToNextLesson', settings.autoAdvanceToNextLesson.toString());
+
        updateSetting('showProgressStats', settings.showProgressStats);
+       localStorage.setItem('showProgressStats', settings.showProgressStats.toString());
+       
+       updateSetting('lineSpacing', settings.lineSpacing); // Update context for lineSpacing
+       localStorage.setItem('lineSpacing', settings.lineSpacing.toString()); // Save lineSpacing to localStorage
 
        setSuccess(true);
        // Hide success message after 3 seconds
@@ -272,6 +299,7 @@ const UserSettings = () => {
                    >
                      <option value="light">Light</option>
                      <option value="dark">Dark</option>
+                     <option value="classic-dark">Classic Dark</option>
                      <option value="system">System Default</option>
                    </Form.Select>
                  </Form.Group>
@@ -326,9 +354,22 @@ const UserSettings = () => {
                </div>
              </Form.Group>
 
+             <Form.Group className="mb-4" controlId="lineSpacing">
+               <Form.Label>Line Spacing</Form.Label>
+               <Form.Select
+                 name="lineSpacing"
+                 value={settings.lineSpacing}
+                 onChange={handleChange}
+               >
+                 <option value={1.5}>Default</option>
+                 <option value={1.75}>Relaxed</option>
+                 <option value={2.0}>Spacious</option>
+               </Form.Select>
+             </Form.Group>
 
-            {/* --- Existing Reading Preferences --- */}
-            <h4 className="mt-4 mb-3">Reading Preferences</h4>
+
+           {/* --- Existing Reading Preferences --- */}
+           <h4 className="mt-4 mb-3">Reading Preferences</h4>
             {/* ... (auto translate, highlight, default language) ... */}
              <Form.Group className="mb-3" controlId="autoTranslateWords">
                <Form.Check

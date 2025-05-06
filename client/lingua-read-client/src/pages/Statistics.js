@@ -11,7 +11,7 @@ import {
 import ManualEntryModal from '../components/ManualEntryModal'; // Import the modal component
 
 // Custom colors for charts
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+const THEMED_CHART_COLORS = ['#1ABC9C', '#3498DB', '#F1C40F', '#E74C3C', '#9B59B6', '#2ECC71'];
 const Statistics = () => {
   const location = useLocation();
   // If navigated with state { refreshStats: true }, force a stats refresh
@@ -824,7 +824,7 @@ uniqueLanguages[langId].totalSecondsListened = stat.TotalSecondsListened ?? stat
                      <YAxis />
                      <Tooltip />
                      <Legend />
-                     <Line type="monotone" dataKey="wordsRead" name="Words Read" stroke="#8884d8" activeDot={{ r: 8 }} />
+                     <Line type="monotone" dataKey="wordsRead" name="Words Read" stroke={THEMED_CHART_COLORS[1]} activeDot={{ r: 8 }} />
                    </LineChart>
                  </ResponsiveContainer>
                ) : (
@@ -849,7 +849,7 @@ uniqueLanguages[langId].totalSecondsListened = stat.TotalSecondsListened ?? stat
                      <YAxis />
                      <Tooltip />
                      <Legend />
-                     <Line type="monotone" dataKey="minutesListened" name="Minutes Listened" stroke="#82ca9d" activeDot={{ r: 8 }} />
+                     <Line type="monotone" dataKey="minutesListened" name="Minutes Listened" stroke={THEMED_CHART_COLORS[0]} activeDot={{ r: 8 }} />
                    </LineChart>
                  </ResponsiveContainer>
                ) : (

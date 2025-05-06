@@ -1,99 +1,145 @@
-# --- General ---
+# ===================================================================
+# Project Root (Lingua_Read/)
+# ===================================================================
+# Ignore .env file at the root level. This is critical for sensitive keys.
+.env
+
+# ===================================================================
+# OS-specific
+# ===================================================================
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*.bak
+*.orig
+*.tmp
+*.tmp.*
+*.tmp~
+*.swm
+
+# ===================================================================
+# IDEs / Editor specific
+# ===================================================================
+.vscode/
+.idea/
+.vs/ # Visual Studio
+*.sln.DotSettings.user # Visual Studio
+*.userosscache # Visual Studio
+*.sln.docstates # Visual Studio
+*.njsproj.user # Node.js Tools for Visual Studio
+*.vscode-test/ # VS Code test runner
+.cache/ # General cache, can be from various tools (e.g. Parcel, Next.js)
+.eslintcache # ESLint cache
+*.tsbuildinfo # TypeScript build info
+
+# ===================================================================
+# General Development / Logs
+# ===================================================================
+# Logs
 *.log
-# Ignore .env file at this level (Lingua_Read/.env)
-.env
+*.log.*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-*.tmp
 
-
-# --- Node.js / React Client (client/lingua-read-client) ---
-client/lingua-read-client/node_modules/
-client/lingua-read-client/build/
-client/lingua-read-client/.pnp.*
-# Expo specific cache/build files
-client/lingua-read-client/.expo/
-client/lingua-read-client/.env
-client/lingua-read-client/.env.*
-!client/lingua-read-client/.env.example
-client/lingua-read-client/coverage/
-client/lingua-read-client/*.tsbuildinfo
-client/lingua-read-client/.eslintcache
-
-# --- .NET Core Server (server/LinguaReadApi) ---
-server/LinguaReadApi/bin/
-server/LinguaReadApi/obj/
-server/LinguaReadApi/*.user
-server/LinguaReadApi/*.suo
-# Ignore server node_modules if it exists (e.g., for build tools)
-server/LinguaReadApi/node_modules/
-# Ignore entire wwwroot as nothing else needs tracking and it contains user uploads
-server/LinguaReadApi/wwwroot/
-# Development settings file (now safe to commit as secrets are in .env)
-# server/LinguaReadApi/appsettings.Development.json
-# Ignore the .env file itself
-server/LinguaReadApi/.env
-
-# --- Editor/IDE ---
-.vscode/
-.idea/
-.vs/
-*.sln.DotSettings.user
-
-# --- End ---
-
-# --- Additional Standard Patterns (Appended 2025-04-10) ---
-
-# ASP.NET Core (server/)
-server/LinguaReadApi/*.db
-server/LinguaReadApi/*.mdb
-server/LinguaReadApi/*.sqlite
-server/LinguaReadApi/*.pdb
-server/LinguaReadApi/*.cache
-server/LinguaReadApi/*.log
-server/LinguaReadApi/.vs/
-server/LinguaReadApi/TestResults/
-server/LinguaReadApi/.coverage
-server/LinguaReadApi/.coverage*
-server/LinguaReadApi/.ncrunch*
-server/LinguaReadApi/Generated_Code/
-server/LinguaReadApi/Properties/launchSettings.json
-
-# React (client/)
-client/lingua-read-client/.next/
-client/lingua-read-client/.cache/
-client/lingua-read-client/.parcel-cache/
-client/lingua-read-client/.turbo/
-client/lingua-read-client/.npm/
-client/lingua-read-client/.yarn/
-client/lingua-read-client/.sass-cache/
-client/lingua-read-client/.storybook/
-client/lingua-read-client/.env.local
-client/lingua-read-client/.env.development.local
-client/lingua-read-client/.env.test.local
-client/lingua-read-client/.env.production.local
-
-# General
-*.swp
-*.swo
-*.bak
-*.orig
-*.tmp.*
-*.tmp~
-*.swm
-*.userosscache
-*.sln.docstates
-*.njsproj.user
-*.vscode-test/
-*.coverage
-*.coverage*
-*.ncrunch*
-*.localhistory/
-*.log.*
+# Process IDs
 *.pid
 *.pid.lock
+
+# Local history files from some IDEs
+.localhistory/
+
+# NCrunch specific (can be general if NCrunch used outside .NET specific project parts)
+.ncrunch*
+
+# General coverage files are often better specified per project/tool.
+# e.g. /coverage/ in project root, or tool-specific output.
+# *.coverage
+# *.coverage*
+
+# ===================================================================
+# React Frontend (client/lingua-read-client/)
+# ===================================================================
+# Dependencies
+client/lingua-read-client/node_modules/
+
+# Build output
+client/lingua-read-client/build/
+
+# Yarn PnP
+client/lingua-read-client/.pnp.*
+
+# Expo specific cache/build files (if applicable)
+client/lingua-read-client/.expo/
+
+# Environment variables
+# Ignore all .env files in the client folder except .env.example
+client/lingua-read-client/.env
+client/lingua-read-client/.env.local
+client/lingua-read-client/.env.*.local
+!client/lingua-read-client/.env.example
+
+# Coverage reports for React client
+client/lingua-read-client/coverage/
+
+# Other React specific cache/build files
+client/lingua-read-client/.next/ # For Next.js
+client/lingua-read-client/.parcel-cache/ # For Parcel
+client/lingua-read-client/.turbo/ # For Turborepo
+client/lingua-read-client/.npm/ # npm cache
+client/lingua-read-client/.yarn/ # Yarn cache/metadata
+client/lingua-read-client/.sass-cache/ # Sass cache
+client/lingua-read-client/.storybook/ # For Storybook
+
+# ===================================================================
+# .NET Backend (server/LinguaReadApi/)
+# ===================================================================
+# Binaries and build outputs
+server/LinguaReadApi/bin/
+server/LinguaReadApi/obj/
+
+# User-specific files (Visual Studio)
+server/LinguaReadApi/*.user
+server/LinguaReadApi/*.suo
+
+# Build artifacts / Packages
+server/LinguaReadApi/**/*.nupkg
+server/LinguaReadApi/**/*.snupkg
+server/LinguaReadApi/*.pdb # Program Database Files (debug symbols)
+
+# Local settings files
+# appsettings.Development.json is usually committed.
+# Ignore appsettings.Local.json if used for local overrides.
+server/LinguaReadApi/appsettings.Local.json
+
+# Ignore .env file if used in the server project for local secrets
+server/LinguaReadApi/.env
+
+# ASP.NET Core specific
+server/LinguaReadApi/*.db # Local database files (e.g. SQLite)
+server/LinguaReadApi/*.mdb
+server/LinguaReadApi/*.sqlite
+# server/LinguaReadApi/*.log # Covered by general logs section
+server/LinguaReadApi/TestResults/ # Test results
+server/LinguaReadApi/Generated_Code/ # Generated code by tools like EF, etc.
+server/LinguaReadApi/Properties/launchSettings.json # User-specific launch settings
+
+# Coverage files for .NET backend
+server/LinguaReadApi/.coverage
+server/LinguaReadApi/.coverage*
+
+# Server-side node_modules (if any, e.g., for build tools like Webpack with ASP.NET Core)
+server/LinguaReadApi/node_modules/
+
+# wwwroot: If it contains only generated/user-uploaded content.
+# The original .gitignore mentioned:
+# "Ignore entire wwwroot as nothing else needs tracking and it contains user uploads"
+# This is a strong reason to keep it if it's true for this project.
+server/LinguaReadApi/wwwroot/
+
+# ===================================================================
+# End of .gitignore
+# ===================================================================

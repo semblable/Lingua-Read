@@ -22,15 +22,7 @@ const parsePairedTranslation = (taggedText) => {
 };
 
 
-// Define 5 colors for cycling
-const sentenceColors = [
-  '#e3f2fd', // light blue
-  '#fff9c4', // light yellow
-  '#e8f5e9', // light green
-  '#fce4ec', // light pink
-  '#f3e5f5', // light purple
-  // Removed 6th color
-];
+// sentenceColors array is no longer needed as we'll use CSS variables from themes.
 
 const TranslationPopup = ({
   show,
@@ -156,12 +148,12 @@ const TranslationPopup = ({
       centered
       dialogClassName="translation-modal-wide" /* Custom class for wider modal */
     >
-      <Modal.Header closeButton>
-        <Modal.Title id="translation-popup">
+      <Modal.Header closeButton className="p-3" style={{ borderBottom: '1px solid var(--border-color)' }}> {/* Added padding and themed border */}
+        <Modal.Title id="translation-popup" as="h5"> {/* Use h5 for consistency */}
           Translation ({sourceLanguage} → {targetLanguage})
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className="p-3"> {/* Added padding */}
         <Row>
           <Col md={6}>
             <h6>Original Text:</h6>
@@ -169,8 +161,15 @@ const TranslationPopup = ({
             <div
               ref={originalScrollRef}
               onScroll={() => handleScroll('original')}
-              className="p-1 border rounded h-100"
-              style={{ minHeight: '200px', maxHeight: '60vh', overflowY: 'auto', lineHeight: '1.8' }}
+              className="p-2 border rounded h-100" /* Increased padding slightly */
+              style={{
+                minHeight: '200px',
+                maxHeight: '60vh',
+                overflowY: 'auto',
+                lineHeight: '1.8',
+                borderColor: 'var(--border-color)',
+                backgroundColor: 'var(--popup-original-panel-bg)' /* Added themed background */
+              }}
             >
               {isTranslating ? (
                  <div className="d-flex justify-content-center align-items-center p-4 h-100"><span>Loading...</span></div>
@@ -180,10 +179,12 @@ const TranslationPopup = ({
                     id={`orig-block-${pair.number}`} // Add ID
                     key={`orig-${pair.number}`}
                     className="p-2 mb-2 rounded sentence-block"
-                    style={{ backgroundColor: sentenceColors[index % sentenceColors.length] }}
+                    style={{ backgroundColor: index % 2 === 0 ? 'var(--popup-sentence-bg-1)' : 'var(--popup-sentence-bg-2)' }}
                     // Render original text, potentially decoding HTML entities if needed later
                   >
-                    {pair.original}
+                    <span className={`translation-segment-color-${(index % 5) + 1}`}>
+                      {pair.original}
+                    </span>
                   </div>
                  ))
               ) : (
@@ -195,7 +196,7 @@ const TranslationPopup = ({
             <h6>Translation:</h6>
             {/* Translation Column - Add ref and onScroll */}
             {isTranslating ? (
-              <div className="d-flex justify-content-center align-items-center p-4 border rounded h-100" style={{ minHeight: '200px' }}>
+              <div className="d-flex justify-content-center align-items-center p-4 border rounded h-100" style={{ minHeight: '200px', borderColor: 'var(--border-color)' }}> {/* Themed border */}
                 <Spinner animation="border" className="me-2" />
                 <span>Translating text...</span>
               </div>
@@ -203,18 +204,27 @@ const TranslationPopup = ({
               <div
                 ref={translatedScrollRef}
                 onScroll={() => handleScroll('translated')}
-                className="p-1 border rounded h-100"
-                style={{ minHeight: '200px', maxHeight: '60vh', overflowY: 'auto', lineHeight: '1.8' }}
+                className="p-2 border rounded h-100" /* Increased padding slightly */
+                style={{
+                  minHeight: '200px',
+                  maxHeight: '60vh',
+                  overflowY: 'auto',
+                  lineHeight: '1.8',
+                  borderColor: 'var(--border-color)',
+                  backgroundColor: 'var(--popup-translated-panel-bg)' /* Added themed background */
+                }}
               >
                 {sentencePairs.map((pair, index) => (
                   <div
                     id={`trans-block-${pair.number}`} // Add ID
                     key={`trans-${pair.number}`}
                     className="p-2 mb-2 rounded sentence-block"
-                    style={{ backgroundColor: sentenceColors[index % sentenceColors.length] }}
+                    style={{ backgroundColor: index % 2 === 0 ? 'var(--popup-sentence-bg-1)' : 'var(--popup-sentence-bg-2)' }}
                     // Render translated text, potentially decoding HTML entities if needed later
                   >
-                    {pair.translated}
+                    <span className={`translation-segment-color-${(index % 5) + 1}`}>
+                      {pair.translated}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -224,8 +234,8 @@ const TranslationPopup = ({
           </Col>
         </Row>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
+      <Modal.Footer className="p-3" style={{ borderTop: '1px solid var(--border-color)' }}> {/* Added padding and themed border */}
+        <Button variant="secondary" onClick={handleClose} className="btn-secondary"> {/* Ensure it uses global styles */}
           Close
         </Button>
       </Modal.Footer>

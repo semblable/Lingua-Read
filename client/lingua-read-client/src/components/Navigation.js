@@ -15,8 +15,8 @@ const Navigation = () => {
   };
 
   return (
-    <Navbar bg="dark" variant="dark" expand="lg">
-      <Container>
+    <Navbar expand="lg" className="navbar-custom-bg"> {/* Use custom class */}
+      <Container fluid className="content-in-fluid"> {/* Use fluid container with padding class */}
         <Navbar.Brand as={Link} to="/">LinguaRead</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">

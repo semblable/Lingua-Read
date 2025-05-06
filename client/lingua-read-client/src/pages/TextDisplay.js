@@ -95,7 +95,7 @@ const styles = {
 // Defined outside TextDisplay as it doesn't need access to its state directly, props come via itemData
 const TranscriptLine = React.memo(({ index, style, data }) => {
   const {
-    lines, currentLineId, processLineContent, handleLineClick, getFontStyling
+    lines, currentLineId, processLineContent, handleLineClick, getFontStyling, currentLineSpacing // Added currentLineSpacing
   } = data;
   const line = lines[index];
   if (!line) return null;
@@ -106,7 +106,7 @@ const TranscriptLine = React.memo(({ index, style, data }) => {
         id={`srt-line-${line.id}`}
         className={`srt-line ${line.id === currentLineId ? 'active-srt-line' : ''}`}
         style={{
-          ...getFontStyling(),
+          ...getFontStyling(currentLineSpacing), // Call with currentLineSpacing
           marginBottom: '0.8rem',
           padding: '0.3rem 0.5rem',
           borderRadius: '4px',
@@ -183,7 +183,22 @@ const TextDisplay = () => {
   const [bookmarkedIndices, setBookmarkedIndices] = useState([]); // State for bookmarked sentence indices
   // --- End State Declarations ---
 
+  // --- Effects ---
+  useEffect(() => {
+    console.log('[TextDisplay] globalSettings.lineSpacing updated:', globalSettings.lineSpacing);
+  }, [globalSettings.lineSpacing]);
+  // --- End Effects ---
+
   // --- Helper Functions & Memoized Values (Define BEFORE useEffects that use them) ---
+
+  const handleLineSpacingChange = (newSpacing) => {
+    const numericSpacing = parseFloat(newSpacing);
+    if (!isNaN(numericSpacing)) {
+      updateSetting('lineSpacing', numericSpacing); // Update context
+      localStorage.setItem('lineSpacing', numericSpacing.toString()); // Persist to localStorage
+      document.body.style.setProperty('--reading-line-height', numericSpacing.toString()); // Apply immediately
+    }
+  };
 
   const fetchAllLanguageWords = useCallback(async (languageId) => {
     if (!languageId) return; // Guard against missing languageId
@@ -495,19 +510,20 @@ const TextDisplay = () => {
 
   const getFontFamilyForList = useCallback(() => {
     switch (globalSettings.textFont) { // Use globalSettings from context
-      case 'serif': return "'Georgia', serif";
-      case 'sans-serif': return "'Arial', sans-serif";
-      case 'monospace': return "'Courier New', monospace";
-      case 'dyslexic': return "'OpenDyslexic', sans-serif";
-      default: return "inherit";
+      case 'serif': return "var(--font-family-serif)"; // Use Lora via CSS variable
+      case 'sans-serif': return "var(--font-family-sans-serif)"; // Use Inter via CSS variable
+      case 'monospace': return "'Courier New', monospace"; // Keep monospace as is
+      case 'dyslexic': return "'OpenDyslexic', sans-serif"; // Keep dyslexic font as is
+      default: return "var(--font-family-sans-serif)"; // Default to Inter
     }
   }, [globalSettings.textFont]); // Use globalSettings from context
 
   // Use globalSettings from context
-  const getFontStyling = useCallback(() => ({
-      fontSize: `${globalSettings.textSize}px`,
-      fontFamily: getFontFamilyForList(), // Assumes getFontFamilyForList uses globalSettings.textFont
-  }), [globalSettings.textSize, getFontFamilyForList]);
+  const getFontStyling = useCallback((currentLineSpacing) => ({ // Added currentLineSpacing parameter
+    fontSize: `${globalSettings.textSize}px`,
+    fontFamily: getFontFamilyForList(), // Assuming getFontFamilyForList is stable or memoized
+    lineHeight: currentLineSpacing // Use the passed-in value directly
+  }), [globalSettings.textSize, globalSettings.textFont, getFontFamilyForList]); // Removed globalSettings.lineSpacing, kept getFontFamilyForList
 
   const handleLineClick = useCallback((startTime) => {
       console.log(`[handleLineClick] Attempting seek to: ${startTime} (Type: ${typeof startTime})`);
@@ -523,12 +539,20 @@ const TextDisplay = () => {
   }, []);
 
   const itemData = useMemo(() => ({
-      lines: srtLines,
-      currentLineId: currentSrtLineId,
-      processLineContent: processTextContent,
-      handleLineClick: handleLineClick,
-      getFontStyling: getFontStyling
-  }), [srtLines, currentSrtLineId, processTextContent, handleLineClick, getFontStyling]);
+    lines: srtLines,
+    currentLineId: currentSrtLineId,
+    processLineContent: processTextContent,
+    handleLineClick: handleLineClick,
+    getFontStyling, // Pass the function as defined in step 1
+    currentLineSpacing: globalSettings.lineSpacing // Pass the current lineSpacing value
+  }), [
+    srtLines,
+    currentSrtLineId,
+    processTextContent,
+    handleLineClick,
+    getFontStyling,
+    globalSettings.lineSpacing // CRITICAL: itemData must update when lineSpacing changes
+  ]);
 
   // --- Bookmark Helper Functions ---
   const isBookmarked = useCallback((sentenceIndex) => {
@@ -1121,11 +1145,12 @@ const TextDisplay = () => {
   // --- Rendering Logic ---
   const renderAudioTranscript = () => {
     if (!srtLines || srtLines.length === 0) return <p className="p-3">Loading transcript...</p>;
-    const ITEM_SIZE = 45;
+    // Calculate itemSize dynamically
+    const calculatedItemSize = (globalSettings.textSize * globalSettings.lineSpacing * 1.2) + 10;
     const LIST_HEIGHT = textContentRef.current ? textContentRef.current.clientHeight - 30 : 600;
     return (
       <div className="audio-transcript-container" style={{ padding: '15px 0', height: '100%', overflow: 'hidden' }}>
-        <List height={LIST_HEIGHT} itemCount={srtLines.length} itemSize={ITEM_SIZE} width="100%" itemData={itemData} overscanCount={5} ref={listRef} style={{ paddingRight: '15px', paddingLeft: '15px' }}>
+        <List height={LIST_HEIGHT} itemCount={srtLines.length} itemSize={calculatedItemSize} width="100%" itemData={itemData} overscanCount={5} ref={listRef} style={{ paddingRight: '15px', paddingLeft: '15px' }}>
             {TranscriptLine}
         </List>
       </div>
@@ -1141,7 +1166,7 @@ const TextDisplay = () => {
        <div
          className="text-content"
          ref={textContentRef}
-         style={{ fontSize: `${globalSettings.textSize}px`, lineHeight: '1.6', fontFamily: getFontFamilyForList(), padding: '15px' }} // Use globalSettings
+         style={{ fontSize: `${globalSettings.textSize}px`, lineHeight: '1.6', fontFamily: getFontFamilyForList() }} // Use globalSettings, removed inline padding
          onMouseUp={handleWordSelection} // Use the new word selection handler
         >
         {paragraphs.map((paragraph, index) => {
@@ -1232,8 +1257,8 @@ const TextDisplay = () => {
   return (
     <div className="text-display-wrapper px-0 mx-0 w-100">
       {/* Header Card - Add Playback Speed Controls */}
-      <Card className="shadow-sm mb-1 border-0 rounded-0">
-        <Card.Body className="py-1 px-2">
+      <Card className="shadow-sm mb-3 border-0 rounded-0">
+        <Card.Body className="p-2">
            <div className="d-flex justify-content-between align-items-center flex-wrap">
              <div>
                <h2 className="mb-1">{text.title}</h2>
@@ -1288,6 +1313,36 @@ const TextDisplay = () => {
                      updateUserSettings({ leftPanelWidth: newWidth }) // Save via API
                          .catch(err => console.error('[Save Settings] Failed to save panel width via API:', err));
                  }} title="Decrease reading area (Narrower)">▶</Button>
+               </ButtonGroup>
+{/* Line Spacing Controls */}
+               <ButtonGroup size="sm" className="me-1">
+                 <OverlayTrigger placement="top" overlay={<Tooltip>Line Spacing: Default (1.5)</Tooltip>}>
+                   <Button
+                     variant={parseFloat(globalSettings.lineSpacing) === 1.5 ? 'primary' : 'outline-secondary'}
+                     onClick={() => handleLineSpacingChange(1.5)}
+                     aria-label="Set line spacing to default"
+                   >
+                     1.5
+                   </Button>
+                 </OverlayTrigger>
+                 <OverlayTrigger placement="top" overlay={<Tooltip>Line Spacing: Relaxed (1.75)</Tooltip>}>
+                   <Button
+                     variant={parseFloat(globalSettings.lineSpacing) === 1.75 ? 'primary' : 'outline-secondary'}
+                     onClick={() => handleLineSpacingChange(1.75)}
+                     aria-label="Set line spacing to relaxed"
+                   >
+                     1.75
+                   </Button>
+                 </OverlayTrigger>
+                 <OverlayTrigger placement="top" overlay={<Tooltip>Line Spacing: Spacious (2.0)</Tooltip>}>
+                   <Button
+                     variant={parseFloat(globalSettings.lineSpacing) === 2.0 ? 'primary' : 'outline-secondary'}
+                     onClick={() => handleLineSpacingChange(2.0)}
+                     aria-label="Set line spacing to spacious"
+                   >
+                     2.0
+                   </Button>
+                 </OverlayTrigger>
                </ButtonGroup>
                {isAudioLesson && ( <Button variant="outline-info" size="sm" onClick={() => setDisplayMode(p => p === 'audio' ? 'text' : 'audio')} title={displayMode === 'audio' ? 'Text View' : 'Audio View'} className="me-1">{displayMode === 'audio' ? 'Text' : 'Audio'} View</Button> )}
                {text && !loading && ( <Button variant="info" size="sm" onClick={handleFullTextTranslation} className="me-1">Translate Text</Button> )}
@@ -1353,10 +1408,10 @@ const TextDisplay = () => {
         {/* Removed Resize Divider */}
 
         {/* Right Panel (Word Info) */}
-        <div className="right-panel" style={{ width: `${100 - leftPanelWidth}%`, height: 'calc(100vh - 130px)', overflowY: 'auto', padding: '6px', position: 'relative' }}>
+        <div className="right-panel" style={{ width: `${100 - leftPanelWidth}%`, height: 'calc(100vh - 130px)', overflowY: 'auto', padding: 'var(--space-sm)', position: 'relative' }}>
            <Card className="border-0 h-100"><Card.Body className="p-2 d-flex flex-column">
              <h5 className="mb-2 flex-shrink-0">Word Info</h5>
-             <div className="flex-grow-1" style={{ overflowY: 'auto', paddingBottom: '5px' }}>{renderSidePanel()}</div>
+             <div className="flex-grow-1" style={{ overflowY: 'auto', paddingBottom: 'var(--space-xs)' }}>{renderSidePanel()}</div>
 
              {/* --- Phase 3: Embedded Dictionary Iframe --- */}
              {embeddedUrl && (

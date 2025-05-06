@@ -23,9 +23,9 @@ This is an early version of the application and is still under active developmen
 *   **Term Selection:** Allows selecting single words or multi-word phrases for translation and saving.
 *   **Book Management:** Import longer texts by pasting content or uploading `.txt` and `.epub` files. Books are automatically split into lessons, and reading progress is tracked. Supports adding multiple tags to books for organization.
 *   **Audio Lessons:** Upload audio (e.g., MP3) and corresponding SRT subtitles for synchronized listening/reading ("karaoke-style").
-*   **User Customization:** Settings for theme (Light/Dark/System), text size, font, and translation behavior.
+*   **User Customization:** Settings for default font and translation behavior. (Theme, text size, and line spacing are now highly customizable with on-the-fly controls - see 'Recent Frontend Enhancements' for details).
 *   **Statistics:** Insights into reading activity, listening time (per language, per day), and vocabulary progress. Includes filtering by various time periods (Today, 7/30/90/180 Days, All Time).
-*   **Batch Operations:** Translate all words, mark all as known, create audio lessons in batches.
+*   **Batch Operations:** Translate all words, mark all as known. Create audio lessons in batches by uploading corresponding audio and SRT files (e.g., `lesson1.mp3` and `lesson1_fr.srt`).
 *   **Listening Time Tracking:** Automatically tracks time spent actively listening to audio lessons and audiobooks.
 *   **Terms Management Page:**
     *   View all saved terms by language.
@@ -33,7 +33,7 @@ This is an early version of the application and is still under active developmen
     *   Search by term or translation.
     *   Sort by term, status, or date added (default: newest first).
     *   Export all terms or filtered terms as CSV.
-    *   Import terms from CSV with optional status.
+    *   Import terms via the UI by uploading a CSV file (Term, Translation[Optional], Status[Optional]).
     *   Remembers last selected language.
 *   **Audiobook Player:** Upload MP3 files for a book to create a persistent audiobook playlist. Tracks playback progress per book and integrates listening time into statistics.
 
@@ -177,7 +177,7 @@ GEMINI_API_KEY="your_gemini_api_key_or_leave_empty"
     docker-compose up --build -d
     ```
 
-3.  The application should now be accessible in your web browser, typically at `http://localhost`.
+3.  The application should now be accessible in your web browser, typically at `http://localhost`. It will automatically log you in with a default user account.
 
 ### Stopping the Application
 

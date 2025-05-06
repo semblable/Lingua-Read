@@ -12,6 +12,7 @@ const defaultSettings = {
   defaultLanguageId: 0,
   autoAdvanceToNextLesson: false,
   showProgressStats: true,
+  lineSpacing: 1.5, // Added lineSpacing
   // Add other settings as needed
 };
 
@@ -47,6 +48,7 @@ export const SettingsProvider = ({ children }) => {
         defaultLanguageId: data.defaultLanguageId || defaultSettings.defaultLanguageId,
         autoAdvanceToNextLesson: data.autoAdvanceToNextLesson ?? defaultSettings.autoAdvanceToNextLesson,
         showProgressStats: data.showProgressStats ?? defaultSettings.showProgressStats,
+        lineSpacing: data.lineSpacing || defaultSettings.lineSpacing, // Fetch lineSpacing
       });
     } catch (err) {
       console.error('[SettingsContext] Failed to load settings:', err);

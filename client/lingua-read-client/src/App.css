@@ -14,18 +14,18 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: var(--ui-background); /* Use themed UI background */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  font-size: calc(10px + 2vmin); /* This can remain or be adjusted based on new typography scale if needed */
+  color: var(--font-color); /* Use themed font color */
 }
 
 .App-link {
-  color: #61dafb;
+  color: var(--link-color); /* Use themed link color */
 }
 
 @keyframes App-logo-spin {
@@ -37,15 +37,35 @@
   }
 }
 
-/* Custom Audiobook Player Background */
-.audiobook-player-custom-bg {
-  /* background-color: #dee2e6; /* Slightly darker gray for light mode */
-  background-color: #adb5bd; /* Even darker gray for light mode (Bootstrap $gray-500) */
+/* General Content Padding */
+.main-content-padding {
+  padding: var(--space-md) var(--space-lg); /* e.g., 16px 24px */
 }
 
-[data-bs-theme="dark"] .audiobook-player-custom-bg {
-  /* background-color: #212529; /* Darker gray for dark mode */
-  background-color: #1c1f23; /* Even darker gray for dark mode */
+/* Ensure full-width containers have internal padding for their content */
+/* This class can be added to the immediate child of a .container-fluid.p-0.m-0 */
+.content-in-fluid {
+  padding-left: var(--space-md); /* 16px */
+  padding-right: var(--space-md); /* 16px */
+}
+
+@media (min-width: 768px) { /* Larger padding for larger screens */
+  .main-content-padding {
+    padding: var(--space-lg) var(--space-xl); /* e.g., 24px 32px */
+  }
+  .content-in-fluid {
+    padding-left: var(--space-lg); /* 24px */
+    padding-right: var(--space-lg); /* 24px */
+  }
+}
+
+/* Custom Audiobook Player Background */
+.audiobook-player-custom-bg {
+  background-color: var(--ui-background-light); /* Use light theme UI background */
+}
+
+.dark-theme .audiobook-player-custom-bg { /* Updated to use .dark-theme class */
+  background-color: var(--ui-background-dark); /* Use dark theme UI background */
 }
 
 /* Removed previous .original/.translated styles */
@@ -53,9 +73,16 @@
 
 /* Improve text visibility in sentence blocks */
 .sentence-block {
-  color: #212529; /* Default dark text for light backgrounds */
+  color: var(--font-color-light); /* Use light theme font color */
+  padding: var(--space-sm); /* Use spacing variable */
+  margin-bottom: var(--space-sm); /* Use spacing variable */
+  background-color: var(--background-color-light);
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--space-xs); /* Use spacing variable */
 }
 
-[data-bs-theme="dark"] .sentence-block {
-  color: #e9ecef; /* Lighter text for dark backgrounds */
+.dark-theme .sentence-block { /* Updated to use .dark-theme class */
+  color: var(--font-color-dark); /* Use dark theme font color */
+  background-color: var(--background-color-dark);
+  border: 1px solid var(--border-color-dark);
 }
