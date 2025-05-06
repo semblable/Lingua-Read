@@ -86,3 +86,12 @@
   background-color: var(--background-color-dark);
   border: 1px solid var(--border-color-dark);
 }
+
+/* Story Generation Preview Area */
+.story-preview-area {
+  background-color: var(--theme-surface-bg); /* Use theme variable for surface background */
+  color: var(--theme-text); /* Use theme variable for text color */
+  padding: var(--space-md); /* Use spacing variable for padding */
+  border: 1px solid var(--theme-border-color); /* Optional: use theme border color */
+  border-radius: var(--space-xs); /* Use spacing variable for border radius */
+}

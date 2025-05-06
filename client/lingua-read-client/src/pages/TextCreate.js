@@ -285,7 +285,7 @@ const TextCreate = () => {
                   <>
                     <Form.Group className="mb-4" controlId="generatedContent">
                       <Form.Label>Generated Story Preview</Form.Label>
-                      <div className="p-3 border rounded bg-light">
+                      <div className="p-3 border rounded story-preview-area">
                         <p style={{ whiteSpace: 'pre-wrap' }}>{content}</p>
                       </div>
                     </Form.Group>
