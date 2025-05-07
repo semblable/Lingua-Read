@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "F:\\docker_lingua\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj": {}
+    "F:\\dev_lingua\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj": {}
   },
   "projects": {
-    "F:\\docker_lingua\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj": {
+    "F:\\dev_lingua\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\docker_lingua\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj",
+        "projectUniqueName": "F:\\dev_lingua\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj",
         "projectName": "LinguaReadApi",
-        "projectPath": "F:\\docker_lingua\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj",
+        "projectPath": "F:\\dev_lingua\\Lingua_Read\\server\\LinguaReadApi\\LinguaReadApi.csproj",
         "packagesPath": "C:\\Users\\kamil\\.nuget\\packages\\",
-        "outputPath": "F:\\docker_lingua\\Lingua_Read\\server\\LinguaReadApi\\obj\\",
+        "outputPath": "F:\\dev_lingua\\Lingua_Read\\server\\LinguaReadApi\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\kamil\\AppData\\Roaming\\NuGet\\NuGet.Config",
