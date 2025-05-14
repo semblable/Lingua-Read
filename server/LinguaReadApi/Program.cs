@@ -137,12 +137,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowClientApp", policy =>
     {
         // Restore specific CORS policy
-        policy.WithOrigins(
-                "http://localhost:3000",
-                "http://localhost:19006",
-                "http://localhost",
-                "http://138.2.128.233" // Add your public frontend origin
-              )
+        policy.WithOrigins("http://localhost:3000", "http://localhost:19006", "http://localhost") // Allow specific frontend origins
               .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Explicitly allow needed methods + OPTIONS for preflight
               .WithHeaders("Content-Type", "Authorization", "Accept") // Explicitly allow common headers + Authorization
               .AllowCredentials(); // Allow cookies/auth headers
