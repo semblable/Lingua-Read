@@ -587,7 +587,7 @@ namespace LinguaReadApi.Controllers
                 catch (Exception ex)
                 {
                     // Log error saving file
-                    Console.WriteLine($"Error saving audiobook file '{file.FileName}' for book {bookId}: {ex.Message}");
+                    Console.WriteLine($"Error saving audiobook file '{file.FileName}' for book {bookId} to path '{absoluteFilePath}': {ex.Message}");
                     // Consider how to handle partial failures - rollback? return error?
                     // For now, continue processing other files but maybe return a specific status code later.
                 }
@@ -601,6 +601,11 @@ namespace LinguaReadApi.Controllers
             // 4. Add new tracks to context and save
             _context.AudiobookTracks.AddRange(addedTracks);
             await _context.SaveChangesAsync();
+
+            foreach(var track in addedTracks)
+            {
+                Console.WriteLine($"Successfully saved audiobook track for BookID {track.BookId}: DB Path='{track.FilePath}', Expected Absolute FS Path='{Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", track.FilePath.Replace('/', Path.DirectorySeparatorChar))}'");
+            }
 
             // 5. Return success response (e.g., list of created track info or just Ok)
             // Returning NoContent for simplicity
