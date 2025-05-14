@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 
 // Dynamically set API URL based on platform
 // For web development use localhost, for mobile use your computer's IP address
-export const API_URL = '/api'; // Ensure relative path for Nginx proxy
+export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000'; // Use environment variable
 
 // Helper function to get token from storage
 const getToken = () => {
