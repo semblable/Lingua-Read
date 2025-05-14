@@ -2,6 +2,12 @@
 FROM node:20 AS build
 WORKDIR /app
 
+# Add an ARG for the API URL
+ARG REACT_APP_API_URL_ARG
+
+# Set the ENV variable from the ARG so npm run build can access it
+ENV REACT_APP_API_URL=$REACT_APP_API_URL_ARG
+
 # Install dependencies
 COPY package.json package-lock.json ./
 RUN npm install --legacy-peer-deps

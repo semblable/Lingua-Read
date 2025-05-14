@@ -37,7 +37,10 @@ services:
       - "5000:5000" # Changed from expose to ports for potentially better connectivity/debugging
 
   frontend:
-    build: ./client/lingua-read-client
+    build:
+      context: ./client/lingua-read-client
+      args:
+        REACT_APP_API_URL_ARG: ${REACT_APP_API_URL}
     restart: unless-stopped
     depends_on:
       - backend
