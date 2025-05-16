@@ -64,7 +64,7 @@ Language settings influence:
 *   Text parsing and sentence splitting
 *   Dictionary lookups
 *   Translation behavior
-*   Batch audio lesson language selection
+
 
 ---
 
@@ -73,7 +73,7 @@ Language settings influence:
 *   **Frontend:** React (using Create React App)
 *   **Backend:** .NET Core (C#)
 *   **Database:** PostgreSQL
-*   **APIs:** Google Gemini Pro, DeepL
+*   **APIs:** Google Gemini DeepL
 
 ---
 
